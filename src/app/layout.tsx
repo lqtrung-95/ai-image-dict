@@ -67,7 +67,7 @@ export const metadata: Metadata = {
       'Capture photos and instantly learn Chinese vocabulary. AI-powered object detection with Chinese characters, pinyin, and translations.',
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://trungle-storage.s3.ap-southeast-2.amazonaws.com/og-image.png',
         width: 1200,
         height: 630,
         alt: 'AI Image Dictionary - Learn Chinese Through Photos',
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     title: 'AI Image Dictionary - Learn Chinese Through Photos',
     description:
       'Capture photos and instantly learn Chinese vocabulary with AI. Get characters, pinyin, and translations.',
-    images: ['/og-image.png'],
+    images: ['https://trungle-storage.s3.ap-southeast-2.amazonaws.com/og-image.png'],
   },
   robots: {
     index: true,
