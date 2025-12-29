@@ -1,0 +1,11 @@
+# Robots.txt for AI Image Dictionary
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ai-image-dictionary.vercel.app/sitemap.xml
+
+# Disallow admin/api routes
+Disallow: /api/
+
