@@ -28,15 +28,54 @@ export function useCamera() {
         audio: false,
       });
 
+      // Check if component is still mounted and video element exists
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
+        
+        // Wait for video to be ready before playing
+        await new Promise<void>((resolve, reject) => {
+          const video = videoRef.current;
+          if (!video) {
+            reject(new Error('Video element not found'));
+            return;
+          }
+          
+          const handleCanPlay = () => {
+            video.removeEventListener('canplay', handleCanPlay);
+            video.removeEventListener('error', handleError);
+            resolve();
+          };
+          
+          const handleError = () => {
+            video.removeEventListener('canplay', handleCanPlay);
+            video.removeEventListener('error', handleError);
+            reject(new Error('Video failed to load'));
+          };
+          
+          video.addEventListener('canplay', handleCanPlay);
+          video.addEventListener('error', handleError);
+        });
+        
+        // Only play if video element still exists
+        if (videoRef.current) {
+          await videoRef.current.play();
+          setStream(mediaStream);
+          setFacingMode(facing);
+          setIsReady(true);
+        } else {
+          // Component unmounted, stop the stream
+          mediaStream.getTracks().forEach((track) => track.stop());
+        }
+      } else {
+        // Component unmounted, stop the stream
+        mediaStream.getTracks().forEach((track) => track.stop());
       }
-
-      setStream(mediaStream);
-      setFacingMode(facing);
-      setIsReady(true);
     } catch (err) {
+      // Ignore AbortError which happens when component unmounts
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      
       const errorMessage =
         err instanceof Error
           ? err.name === 'NotAllowedError'

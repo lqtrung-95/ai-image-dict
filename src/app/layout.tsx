@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { Header } from '@/components/layout/Header';
@@ -20,18 +20,19 @@ export const metadata: Metadata = {
     'Capture photos and learn Chinese vocabulary for everything you see. AI-powered object detection with Chinese translations and pinyin.',
   keywords: ['Chinese', 'vocabulary', 'learning', 'AI', 'image recognition', 'language learning'],
   manifest: '/manifest.json',
-  themeColor: '#7c3aed',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'AI词典',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#7c3aed',
 };
 
 export default function RootLayout({

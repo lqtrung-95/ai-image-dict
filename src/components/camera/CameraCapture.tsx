@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCamera } from '@/hooks/useCamera';
 import { Button } from '@/components/ui/button';
 import { Camera, SwitchCamera, X, AlertCircle } from 'lucide-react';
@@ -15,11 +15,20 @@ interface CameraCaptureProps {
 export function CameraCapture({ onCapture, onClose, className }: CameraCaptureProps) {
   const { videoRef, error, isReady, startCamera, stopCamera, switchCamera, capturePhoto } =
     useCamera();
+  const hasStarted = useRef(false);
 
   useEffect(() => {
-    startCamera('environment');
-    return () => stopCamera();
-  }, [startCamera, stopCamera]);
+    // Only start once to prevent race conditions
+    if (!hasStarted.current) {
+      hasStarted.current = true;
+      startCamera('environment');
+    }
+    
+    return () => {
+      stopCamera();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCapture = () => {
     const imageData = capturePhoto();
