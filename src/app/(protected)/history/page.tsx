@@ -20,6 +20,16 @@ interface Analysis {
   detected_objects: Array<{ id: string }>;
 }
 
+// Proxy image URL for Safari compatibility
+function getImageUrl(url: string) {
+  if (!url) return '';
+  // Use proxy for Supabase signed URLs
+  if (url.includes('supabase')) {
+    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 export default function HistoryPage() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,19 +123,19 @@ export default function HistoryPage() {
           {analyses.map((analysis) => (
             <Card
               key={analysis.id}
-              className="group bg-slate-800/50 border-slate-700 overflow-hidden hover:border-purple-500/50 transition-colors"
+              className="group bg-slate-800/50 border-slate-700 overflow-hidden hover:border-purple-500/50 transition-colors flex flex-col"
             >
-              {/* Use native img for better Safari compatibility */}
-              <div className="relative aspect-video bg-slate-700">
+              {/* Fixed aspect ratio image container */}
+              <div className="relative aspect-[4/3] bg-slate-700 flex-shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={analysis.image_url}
+                  src={getImageUrl(analysis.image_url)}
                   alt="Analysis"
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
                 />
                 {/* Desktop: show on hover */}
-                <div className="hidden md:flex absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                <div className="hidden md:flex absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                   <Link href={`/analysis/${analysis.id}`}>
                     <Button size="sm" className="bg-white/90 text-slate-900 hover:bg-white">
                       <Eye className="w-4 h-4 mr-1" />
@@ -141,15 +151,16 @@ export default function HistoryPage() {
                   </Button>
                 </div>
               </div>
-              <div className="p-4">
-                <p className="text-white font-medium truncate">
+              {/* Content area with fixed structure */}
+              <div className="p-4 flex flex-col flex-grow">
+                <p className="text-white font-medium line-clamp-2 min-h-[3rem]">
                   {analysis.scene_context?.description || 'Photo analysis'}
                 </p>
-                <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center justify-between mt-2">
                   <span className="text-sm text-slate-400">
                     {formatDate(analysis.created_at)}
                   </span>
-                  <span className="text-sm text-purple-400">
+                  <span className="text-sm text-purple-400 font-medium">
                     {analysis.detected_objects?.length || 0} words
                   </span>
                 </div>

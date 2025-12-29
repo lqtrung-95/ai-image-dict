@@ -7,6 +7,16 @@ import { Camera, Upload, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+// Proxy image URL for Safari compatibility
+function getImageUrl(url: string) {
+  if (!url) return '';
+  // Use proxy for Supabase signed URLs
+  if (url.includes('supabase')) {
+    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 interface DetectedObject {
   id: string;
   label_en: string;
@@ -79,11 +89,11 @@ export function AnalysisResult({
 
   return (
     <div className="space-y-6">
-      {/* Image - using native img for Safari compatibility */}
+      {/* Image - using proxy for Safari compatibility */}
       <div className="relative rounded-xl overflow-hidden bg-slate-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={imageUrl}
+          src={getImageUrl(imageUrl)}
           alt="Analyzed photo"
           className="w-full max-h-[50vh] object-contain"
         />
