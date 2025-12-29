@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { VocabularyCard } from '@/components/vocabulary/VocabularyCard';
-import { CollectionPicker } from '@/components/vocabulary/CollectionPicker';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, Share2 } from 'lucide-react';
 import Link from 'next/link';
@@ -33,9 +32,8 @@ export function AnalysisResult({
 }: AnalysisResultProps) {
   const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
   const [savingWord, setSavingWord] = useState<string | null>(null);
-  const [selectedCollection, setSelectedCollection] = useState<string | undefined>();
 
-  const handleSaveWord = async (obj: DetectedObject) => {
+  const handleSaveWord = async (obj: DetectedObject, collectionId?: string) => {
     if (savedWords.has(obj.id)) return;
 
     setSavingWord(obj.id);
@@ -45,7 +43,7 @@ export function AnalysisResult({
         wordPinyin: obj.pinyin,
         wordEn: obj.label_en,
         detectedObjectId: obj.id,
-        collectionId: selectedCollection,
+        collectionId,
       });
       setSavedWords((prev) => new Set([...prev, obj.id]));
     } catch (error) {
@@ -100,16 +98,6 @@ export function AnalysisResult({
         </div>
       )}
 
-      {/* Collection picker */}
-      <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
-        <h3 className="text-sm font-medium text-slate-400 mb-2">Save words to collection</h3>
-        <CollectionPicker
-          value={selectedCollection}
-          onChange={setSelectedCollection}
-          className="w-full sm:w-64"
-        />
-      </div>
-
       {/* Vocabulary sections */}
       {groupedObjects.objects.length > 0 && (
         <section>
@@ -127,7 +115,7 @@ export function AnalysisResult({
                 category="object"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
-                  savingWord === obj.id ? undefined : () => handleSaveWord(obj)
+                  savingWord === obj.id ? undefined : (collectionId) => handleSaveWord(obj, collectionId)
                 }
               />
             ))}
@@ -151,7 +139,7 @@ export function AnalysisResult({
                 category="color"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
-                  savingWord === obj.id ? undefined : () => handleSaveWord(obj)
+                  savingWord === obj.id ? undefined : (collectionId) => handleSaveWord(obj, collectionId)
                 }
               />
             ))}
@@ -175,7 +163,7 @@ export function AnalysisResult({
                 category="action"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
-                  savingWord === obj.id ? undefined : () => handleSaveWord(obj)
+                  savingWord === obj.id ? undefined : (collectionId) => handleSaveWord(obj, collectionId)
                 }
               />
             ))}

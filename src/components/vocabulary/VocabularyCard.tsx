@@ -30,7 +30,7 @@ interface VocabularyCardProps {
   isSaved?: boolean;
   collectionName?: string;
   collectionColor?: string;
-  onSave?: () => void;
+  onSave?: (collectionId?: string) => void;
   onToggleLearned?: (id: string) => void;
   onDelete?: (id: string) => void;
   onAddToCollection?: (id: string, collectionId: string) => void;
@@ -64,10 +64,10 @@ export function VocabularyCard({
     setTimeout(() => setIsPlaying(false), 1000);
   };
 
-  const handleSave = () => {
+  const handleSave = (collectionId?: string) => {
     if (onSave) {
-      onSave();
-      toast.success('Added to vocabulary!');
+      onSave(collectionId);
+      toast.success(collectionId ? 'Added to collection!' : 'Added to vocabulary!');
     }
   };
 
@@ -157,17 +157,46 @@ export function VocabularyCard({
             <Volume2 className="w-4 h-4" />
           </Button>
 
-          {/* Save button (for unsaved words) */}
+          {/* Save button with collection picker (for unsaved words) */}
           {!isSaved && onSave && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSave}
-              className="h-8 w-8 rounded-full text-slate-400 hover:text-green-400 hover:bg-green-500/20"
-              aria-label="Save to vocabulary"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
+            <DropdownMenu onOpenChange={(open) => open && fetchCollections()}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full text-slate-400 hover:text-green-400 hover:bg-green-500/20"
+                  aria-label="Save to vocabulary"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-slate-800 border-slate-700" align="end">
+                <DropdownMenuItem
+                  onClick={() => handleSave()}
+                  className="text-white focus:bg-slate-700 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 mr-2 text-green-400" />
+                  Save to vocabulary
+                </DropdownMenuItem>
+                {collections.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
+                {loadingCollections ? (
+                  <DropdownMenuItem disabled className="text-slate-400">
+                    Loading collections...
+                  </DropdownMenuItem>
+                ) : (
+                  collections.map((collection) => (
+                    <DropdownMenuItem
+                      key={collection.id}
+                      onClick={() => handleSave(collection.id)}
+                      className="text-white focus:bg-slate-700 cursor-pointer"
+                    >
+                      <Folder className="w-4 h-4 mr-2" style={{ color: collection.color }} />
+                      Save to {collection.name}
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {/* Learned toggle (for saved words) */}
