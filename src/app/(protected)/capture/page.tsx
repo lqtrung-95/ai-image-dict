@@ -62,6 +62,7 @@ export default function CapturePage() {
     wordPinyin: string;
     wordEn: string;
     detectedObjectId: string;
+    collectionId?: string;
   }) => {
     const response = await fetch('/api/vocabulary', {
       method: 'POST',

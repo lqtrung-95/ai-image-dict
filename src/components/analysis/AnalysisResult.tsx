@@ -2,20 +2,11 @@
 
 import { useState } from 'react';
 import { VocabularyCard } from '@/components/vocabulary/VocabularyCard';
+import { CollectionPicker } from '@/components/vocabulary/CollectionPicker';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-
-// Proxy image URL for Safari compatibility
-function getImageUrl(url: string) {
-  if (!url) return '';
-  // Use proxy for Supabase signed URLs
-  if (url.includes('supabase')) {
-    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
-  }
-  return url;
-}
 
 interface DetectedObject {
   id: string;
@@ -31,7 +22,7 @@ interface AnalysisResultProps {
   imageUrl: string;
   sceneDescription?: string;
   objects: DetectedObject[];
-  onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string }) => Promise<void>;
+  onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string; collectionId?: string }) => Promise<void>;
 }
 
 export function AnalysisResult({
@@ -42,6 +33,7 @@ export function AnalysisResult({
 }: AnalysisResultProps) {
   const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
   const [savingWord, setSavingWord] = useState<string | null>(null);
+  const [selectedCollection, setSelectedCollection] = useState<string | undefined>();
 
   const handleSaveWord = async (obj: DetectedObject) => {
     if (savedWords.has(obj.id)) return;
@@ -53,6 +45,7 @@ export function AnalysisResult({
         wordPinyin: obj.pinyin,
         wordEn: obj.label_en,
         detectedObjectId: obj.id,
+        collectionId: selectedCollection,
       });
       setSavedWords((prev) => new Set([...prev, obj.id]));
     } catch (error) {
@@ -89,11 +82,11 @@ export function AnalysisResult({
 
   return (
     <div className="space-y-6">
-      {/* Image - using proxy for Safari compatibility */}
+      {/* Image */}
       <div className="relative rounded-xl overflow-hidden bg-slate-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={getImageUrl(imageUrl)}
+          src={imageUrl}
           alt="Analyzed photo"
           className="w-full max-h-[50vh] object-contain"
         />
@@ -106,6 +99,16 @@ export function AnalysisResult({
           <p className="text-white">{sceneDescription}</p>
         </div>
       )}
+
+      {/* Collection picker */}
+      <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
+        <h3 className="text-sm font-medium text-slate-400 mb-2">Save words to collection</h3>
+        <CollectionPicker
+          value={selectedCollection}
+          onChange={setSelectedCollection}
+          className="w-full sm:w-64"
+        />
+      </div>
 
       {/* Vocabulary sections */}
       {groupedObjects.objects.length > 0 && (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -12,7 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { FolderPlus, Folder, Trash2, BookOpen } from 'lucide-react';
+import { FolderPlus, Folder, Trash2, BookOpen, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Collection {
@@ -184,31 +185,38 @@ export default function CollectionsPage() {
           {collections.map((collection) => (
             <Card
               key={collection.id}
-              className="group p-4 bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-colors"
+              className="group bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-colors overflow-hidden"
             >
-              <div className="flex items-start justify-between">
+              <Link href={`/collections/${collection.id}`} className="block p-4">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: `${collection.color}20` }}
                   >
                     <Folder className="w-5 h-5" style={{ color: collection.color }} />
                   </div>
-                  <div>
-                    <h3 className="font-medium text-white">{collection.name}</h3>
+                  <div className="flex-grow min-w-0">
+                    <h3 className="font-medium text-white truncate">{collection.name}</h3>
                     <p className="text-sm text-slate-400 flex items-center gap-1">
                       <BookOpen className="w-3 h-3" />
                       {collection.vocabulary_items?.[0]?.count || 0} words
                     </p>
                   </div>
+                  <ChevronRight className="w-5 h-5 text-slate-500 flex-shrink-0" />
                 </div>
+              </Link>
+              <div className="px-4 pb-3 pt-0 flex justify-end border-t border-slate-700/50">
                 <Button
                   variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(collection.id)}
-                  className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDelete(collection.id);
+                  }}
+                  className="h-8 text-slate-400 hover:text-red-400 hover:bg-red-500/20"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete
                 </Button>
               </div>
             </Card>

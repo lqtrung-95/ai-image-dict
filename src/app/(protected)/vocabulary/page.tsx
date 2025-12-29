@@ -15,6 +15,7 @@ interface VocabularyItem {
   word_en: string;
   is_learned: boolean;
   created_at: string;
+  collection_id?: string | null;
   collections?: { name: string; color: string } | null;
 }
 
@@ -99,6 +100,23 @@ export default function VocabularyPage() {
     }
   };
 
+  const handleAddToCollection = async (id: string, collectionId: string) => {
+    try {
+      const response = await fetch(`/api/vocabulary/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collectionId }),
+      });
+
+      if (response.ok) {
+        // Refetch to get updated collection info
+        fetchVocabulary(searchQuery);
+      }
+    } catch (error) {
+      console.error('Failed to add to collection:', error);
+    }
+  };
+
   const learnedCount = items.filter((i) => i.is_learned).length;
 
   return (
@@ -159,8 +177,11 @@ export default function VocabularyPage() {
                 wordEn={item.word_en}
                 isLearned={item.is_learned}
                 isSaved={true}
+                collectionName={item.collections?.name}
+                collectionColor={item.collections?.color}
                 onToggleLearned={handleToggleLearned}
                 onDelete={handleDelete}
+                onAddToCollection={handleAddToCollection}
               />
             ))}
           </div>

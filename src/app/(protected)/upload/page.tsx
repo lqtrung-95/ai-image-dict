@@ -60,6 +60,7 @@ export default function UploadPage() {
     wordPinyin: string;
     wordEn: string;
     detectedObjectId: string;
+    collectionId?: string;
   }) => {
     const response = await fetch('/api/vocabulary', {
       method: 'POST',

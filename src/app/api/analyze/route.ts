@@ -44,12 +44,12 @@ export async function POST(request: NextRequest) {
       // Continue without storing image - analysis still works
     }
 
-    // Get signed URL for the image (valid for 1 year)
-    const { data: signedUrlData } = await supabase.storage
+    // Get public URL for the image (bucket must be public)
+    const { data: publicUrlData } = supabase.storage
       .from('images')
-      .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year
+      .getPublicUrl(fileName);
 
-    const imageUrl = signedUrlData?.signedUrl || '';
+    const imageUrl = publicUrlData?.publicUrl || '';
 
     // Store analysis in database
     const { data: photoAnalysis, error: dbError } = await supabase

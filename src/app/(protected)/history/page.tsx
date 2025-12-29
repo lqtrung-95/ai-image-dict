@@ -20,16 +20,6 @@ interface Analysis {
   detected_objects: Array<{ id: string }>;
 }
 
-// Proxy image URL for Safari compatibility
-function getImageUrl(url: string) {
-  if (!url) return '';
-  // Use proxy for Supabase signed URLs
-  if (url.includes('supabase')) {
-    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
-  }
-  return url;
-}
-
 export default function HistoryPage() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +119,7 @@ export default function HistoryPage() {
               <div className="relative aspect-[4/3] bg-slate-700 flex-shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={getImageUrl(analysis.image_url)}
+                  src={analysis.image_url}
                   alt="Analysis"
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"
