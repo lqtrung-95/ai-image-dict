@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Camera, Upload, BookOpen, History, LogOut, Menu } from 'lucide-react';
+import { Camera, Upload, BookOpen, History, LogOut, Menu, FolderOpen } from 'lucide-react';
 import { useState } from 'react';
 
 export function Header() {
@@ -56,6 +56,12 @@ export function Header() {
               <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
                 <History className="w-4 h-4 mr-2" />
                 History
+              </Button>
+            </Link>
+            <Link href="/collections">
+              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Collections
               </Button>
             </Link>
           </nav>
@@ -146,6 +152,12 @@ export function Header() {
               <Button variant="ghost" className="w-full justify-start text-slate-300">
                 <History className="w-4 h-4 mr-2" />
                 History
+              </Button>
+            </Link>
+            <Link href="/collections" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start text-slate-300">
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Collections
               </Button>
             </Link>
           </div>

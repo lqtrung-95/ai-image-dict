@@ -19,6 +19,19 @@ export const metadata: Metadata = {
   description:
     'Capture photos and learn Chinese vocabulary for everything you see. AI-powered object detection with Chinese translations and pinyin.',
   keywords: ['Chinese', 'vocabulary', 'learning', 'AI', 'image recognition', 'language learning'],
+  manifest: '/manifest.json',
+  themeColor: '#7c3aed',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'AI词典',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({
