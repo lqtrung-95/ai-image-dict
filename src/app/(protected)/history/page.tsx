@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -116,15 +115,17 @@ export default function HistoryPage() {
               key={analysis.id}
               className="group bg-slate-800/50 border-slate-700 overflow-hidden hover:border-purple-500/50 transition-colors"
             >
-              <div className="relative aspect-video">
-                <Image
+              {/* Use native img for better Safari compatibility */}
+              <div className="relative aspect-video bg-slate-700">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={analysis.image_url}
                   alt="Analysis"
-                  fill
-                  className="object-cover"
-                  unoptimized
+                  className="w-full h-full object-cover"
+                  loading="lazy"
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                {/* Desktop: show on hover */}
+                <div className="hidden md:flex absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                   <Link href={`/analysis/${analysis.id}`}>
                     <Button size="sm" className="bg-white/90 text-slate-900 hover:bg-white">
                       <Eye className="w-4 h-4 mr-1" />
@@ -151,6 +152,23 @@ export default function HistoryPage() {
                   <span className="text-sm text-purple-400">
                     {analysis.detected_objects?.length || 0} words
                   </span>
+                </div>
+                {/* Mobile: always visible action buttons */}
+                <div className="flex md:hidden items-center gap-2 mt-3 pt-3 border-t border-slate-700">
+                  <Link href={`/analysis/${analysis.id}`} className="flex-1">
+                    <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700">
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </Button>
+                  </Link>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                    onClick={() => handleDelete(analysis.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             </Card>

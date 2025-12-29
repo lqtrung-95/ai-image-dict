@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { VocabularyCard } from '@/components/vocabulary/VocabularyCard';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, Share2 } from 'lucide-react';
@@ -80,15 +79,13 @@ export function AnalysisResult({
 
   return (
     <div className="space-y-6">
-      {/* Image */}
+      {/* Image - using native img for Safari compatibility */}
       <div className="relative rounded-xl overflow-hidden bg-slate-800">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={imageUrl}
           alt="Analyzed photo"
-          width={800}
-          height={600}
           className="w-full max-h-[50vh] object-contain"
-          unoptimized
         />
       </div>
 
