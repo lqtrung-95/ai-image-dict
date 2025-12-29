@@ -83,12 +83,30 @@ export async function POST(request: NextRequest) {
     // Check if word already exists in user's vocabulary
     const { data: existing } = await supabase
       .from('vocabulary_items')
-      .select('id')
+      .select('id, collection_id')
       .eq('user_id', user.id)
       .eq('word_zh', wordZh)
       .single();
 
     if (existing) {
+      // If collectionId is provided, update the existing word's collection
+      if (collectionId) {
+        const { data: updated, error: updateError } = await supabase
+          .from('vocabulary_items')
+          .update({ collection_id: collectionId })
+          .eq('id', existing.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('Vocabulary update error:', updateError);
+          return NextResponse.json({ error: 'Failed to update word' }, { status: 500 });
+        }
+
+        return NextResponse.json(updated, { status: 200 });
+      }
+
+      // No collectionId - just return conflict
       return NextResponse.json(
         { error: 'Word already in vocabulary', existingId: existing.id },
         { status: 409 }
