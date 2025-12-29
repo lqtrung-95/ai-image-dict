@@ -55,12 +55,15 @@ export function CollectionPicker({ value, onChange, className }: CollectionPicke
   }
 
   return (
-    <Select value={value || ''} onValueChange={(val) => onChange(val || undefined)}>
+    <Select 
+      value={value || 'none'} 
+      onValueChange={(val) => onChange(val === 'none' ? undefined : val)}
+    >
       <SelectTrigger className={`bg-slate-700/50 border-slate-600 text-white ${className}`}>
         <SelectValue placeholder="Add to collection (optional)" />
       </SelectTrigger>
       <SelectContent className="bg-slate-800 border-slate-700">
-        <SelectItem value="" className="text-slate-400">
+        <SelectItem value="none" className="text-slate-400">
           No collection
         </SelectItem>
         {collections.map((collection) => (
