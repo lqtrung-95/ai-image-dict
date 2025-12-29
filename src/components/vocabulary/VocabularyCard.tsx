@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSpeech } from '@/hooks/useSpeech';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +11,20 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Volume2, Check, Trash2, Plus, FolderPlus, Folder } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+const COLORS = [
+  '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',
+  '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6',
+];
 
 interface Collection {
   id: string;
@@ -57,6 +69,11 @@ export function VocabularyCard({
   const [isPlaying, setIsPlaying] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loadingCollections, setLoadingCollections] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [newCollectionColor, setNewCollectionColor] = useState('#3b82f6');
+  const [creating, setCreating] = useState(false);
+  const [pendingSaveAction, setPendingSaveAction] = useState<'save' | 'add' | null>(null);
 
   const handleSpeak = async () => {
     setIsPlaying(true);
@@ -69,6 +86,48 @@ export function VocabularyCard({
       onSave(collectionId);
       toast.success(collectionId ? 'Added to collection!' : 'Added to vocabulary!');
     }
+  };
+
+  const handleCreateCollection = async () => {
+    if (!newCollectionName.trim()) return;
+
+    setCreating(true);
+    try {
+      const response = await fetch('/api/collections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCollectionName.trim(), color: newCollectionColor }),
+      });
+
+      if (response.ok) {
+        const newCollection = await response.json();
+        setCollections((prev) => [newCollection, ...prev]);
+        
+        // Auto-save/add to the new collection
+        if (pendingSaveAction === 'save') {
+          handleSave(newCollection.id);
+        } else if (pendingSaveAction === 'add' && id && onAddToCollection) {
+          onAddToCollection(id, newCollection.id);
+          toast.success(`Added to ${newCollection.name}!`);
+        }
+        
+        setShowCreateDialog(false);
+        setNewCollectionName('');
+        setPendingSaveAction(null);
+      } else {
+        toast.error('Failed to create collection');
+      }
+    } catch (error) {
+      console.error('Failed to create collection:', error);
+      toast.error('Failed to create collection');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const openCreateDialog = (action: 'save' | 'add') => {
+    setPendingSaveAction(action);
+    setShowCreateDialog(true);
   };
 
   const handleDelete = () => {
@@ -178,7 +237,7 @@ export function VocabularyCard({
                   <Plus className="w-4 h-4 mr-2 text-green-400" />
                   Save to vocabulary
                 </DropdownMenuItem>
-                {collections.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
+                <DropdownMenuSeparator className="bg-slate-700" />
                 {loadingCollections ? (
                   <DropdownMenuItem disabled className="text-slate-400">
                     Loading collections...
@@ -195,6 +254,14 @@ export function VocabularyCard({
                     </DropdownMenuItem>
                   ))
                 )}
+                <DropdownMenuSeparator className="bg-slate-700" />
+                <DropdownMenuItem
+                  onClick={() => openCreateDialog('save')}
+                  className="text-purple-400 focus:bg-slate-700 cursor-pointer"
+                >
+                  <FolderPlus className="w-4 h-4 mr-2" />
+                  Create new collection
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -230,14 +297,10 @@ export function VocabularyCard({
                   <FolderPlus className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-slate-800 border-slate-700">
+              <DropdownMenuContent className="bg-slate-800 border-slate-700" align="end">
                 {loadingCollections ? (
                   <DropdownMenuItem disabled className="text-slate-400">
                     Loading...
-                  </DropdownMenuItem>
-                ) : collections.length === 0 ? (
-                  <DropdownMenuItem disabled className="text-slate-400">
-                    No collections yet
                   </DropdownMenuItem>
                 ) : (
                   collections.map((collection) => (
@@ -251,6 +314,14 @@ export function VocabularyCard({
                     </DropdownMenuItem>
                   ))
                 )}
+                {collections.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
+                <DropdownMenuItem
+                  onClick={() => openCreateDialog('add')}
+                  className="text-purple-400 focus:bg-slate-700 cursor-pointer"
+                >
+                  <FolderPlus className="w-4 h-4 mr-2" />
+                  Create new collection
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -269,6 +340,49 @@ export function VocabularyCard({
           )}
         </div>
       </div>
+
+      {/* Create Collection Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="bg-slate-800 border-slate-700 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white">Create Collection</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Input
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                placeholder="Collection name"
+                className="bg-slate-700/50 border-slate-600 text-white"
+                autoFocus
+              />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400 mb-2">Color</p>
+              <div className="flex flex-wrap gap-2">
+                {COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setNewCollectionColor(color)}
+                    className={cn(
+                      'w-7 h-7 rounded-full transition-transform',
+                      newCollectionColor === color && 'scale-110 ring-2 ring-white'
+                    )}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+            <Button
+              onClick={handleCreateCollection}
+              disabled={!newCollectionName.trim() || creating}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              {creating ? 'Creating...' : 'Create & Save'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
