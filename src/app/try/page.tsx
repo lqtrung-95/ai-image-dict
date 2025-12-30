@@ -11,7 +11,7 @@ import { ErrorMessage } from '@/components/ui/error-boundary';
 import { compressImage, extractBase64 } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Camera, Upload, ArrowLeft, Sparkles, ImagePlus } from 'lucide-react';
+import { Camera, Upload, ArrowLeft, Sparkles } from 'lucide-react';
 
 interface AnalysisData {
   id: string;
@@ -195,21 +195,8 @@ export default function TryPage() {
           </div>
 
           {isMobile ? (
-            // Mobile: Single button - file input handles both camera and gallery
-            <div className="max-w-md mx-auto">
-              <button
-                onClick={() => setMode('upload')}
-                className="group w-full p-8 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all text-center"
-              >
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <ImagePlus className="w-10 h-10 text-purple-400" />
-                </div>
-                <h2 className="text-xl font-semibold text-white mb-2">Take or Upload Photo</h2>
-                <p className="text-slate-400">
-                  Capture with camera or choose from gallery
-                </p>
-              </button>
-            </div>
+            // Mobile: Show PhotoUpload directly - it handles both camera and gallery
+            <PhotoUpload onUpload={handleAnalyze} />
           ) : (
             // Desktop: Two buttons - separate camera and upload options
             <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useSpeech } from '@/hooks/useSpeech';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,13 +31,24 @@ interface Stats {
 }
 
 export function DashboardHome() {
+  const router = useRouter();
   const { user } = useAuth();
   const { speak } = useSpeech();
+  const isMobile = useIsMobile();
   const [wordOfDay, setWordOfDay] = useState<WordOfDay | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // On mobile, navigate directly to upload; on desktop, show modal
+  const handleAddWords = () => {
+    if (isMobile) {
+      router.push('/upload');
+    } else {
+      setShowAddModal(true);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,7 +119,7 @@ export function DashboardHome() {
             </p>
             
             <Button 
-              onClick={() => setShowAddModal(true)}
+              onClick={handleAddWords}
               className="bg-purple-600 hover:bg-purple-700 h-12 px-8 text-base"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -157,7 +170,7 @@ export function DashboardHome() {
         <section className="mb-8">
           <Button 
             variant="outline" 
-            onClick={() => setShowAddModal(true)}
+            onClick={handleAddWords}
             className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 h-11"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -234,7 +247,7 @@ export function DashboardHome() {
   );
 }
 
-// Add Words Modal
+// Add Words Modal (desktop only)
 function AddWordsModal({ 
   open, 
   onOpenChange 
