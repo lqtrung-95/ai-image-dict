@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Camera, Upload, BookOpen, History, LogOut, Menu, FolderOpen, GraduationCap, TrendingUp } from 'lucide-react';
+import { Camera, Upload, BookOpen, History, LogOut, Menu, FolderOpen, GraduationCap, TrendingUp, ImagePlus } from 'lucide-react';
 import { useState } from 'react';
 
 export function Header() {
@@ -142,16 +142,10 @@ export function Header() {
       {user && mobileMenuOpen && (
         <nav className="md:hidden border-t border-slate-700 bg-slate-900 p-4">
           <div className="flex flex-col gap-2">
-            <Link href="/capture" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
-                <Camera className="w-4 h-4 mr-2" />
-                Capture
-              </Button>
-            </Link>
             <Link href="/upload" onClick={() => setMobileMenuOpen(false)}>
               <Button variant="ghost" className="w-full justify-start text-slate-300">
-                <Upload className="w-4 h-4 mr-2" />
-                Upload
+                <ImagePlus className="w-4 h-4 mr-2" />
+                Add Photo
               </Button>
             </Link>
             <Link href="/vocabulary" onClick={() => setMobileMenuOpen(false)}>
