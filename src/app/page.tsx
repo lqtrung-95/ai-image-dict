@@ -1,14 +1,33 @@
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, BookOpen, Sparkles } from 'lucide-react';
-import { DashboardSection } from '@/components/dashboard/DashboardSection';
+import { DashboardHome } from '@/components/dashboard/DashboardHome';
 
 export default function HomePage() {
+  const { user, loading } = useAuth();
+
+  // Show loading state briefly
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="container mx-auto px-4 py-20">
+          <div className="h-64 bg-slate-800/50 rounded-2xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  // Logged-in users see the dashboard
+  if (user) {
+    return <DashboardHome />;
+  }
+
+  // Guests see the marketing page
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Dashboard for logged-in users */}
-      <DashboardSection />
-
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm mb-8">
@@ -30,23 +49,26 @@ export default function HomePage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/capture">
+          <Link href="/try">
             <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white gap-2 w-full sm:w-auto">
               <Camera className="w-5 h-5" />
-              Start Capturing
+              Try It Free
             </Button>
           </Link>
-          <Link href="/upload">
+          <Link href="/signup">
             <Button
               size="lg"
               variant="outline"
               className="border-slate-600 text-slate-200 hover:bg-slate-800 gap-2 w-full sm:w-auto"
             >
-              <Upload className="w-5 h-5" />
-              Upload Photo
+              Create Account
             </Button>
           </Link>
         </div>
+
+        <p className="text-sm text-slate-500 mt-4">
+          No sign-up required to try • Free forever
+        </p>
       </section>
 
       {/* Features Section */}
@@ -56,7 +78,6 @@ export default function HomePage() {
         </h2>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {/* Feature 1 */}
           <div className="text-center p-6 rounded-2xl bg-slate-800/50 border border-slate-700">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
               <Camera className="w-8 h-8 text-purple-400" />
@@ -67,7 +88,6 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Feature 2 */}
           <div className="text-center p-6 rounded-2xl bg-slate-800/50 border border-slate-700">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-pink-500/20 flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-pink-400" />
@@ -78,7 +98,6 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Feature 3 */}
           <div className="text-center p-6 rounded-2xl bg-slate-800/50 border border-slate-700">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center">
               <BookOpen className="w-8 h-8 text-blue-400" />
@@ -125,11 +144,18 @@ export default function HomePage() {
           <p className="text-slate-400 mb-6">
             Create a free account and begin building your Chinese vocabulary today.
           </p>
-          <Link href="/signup">
-            <Button size="lg" className="bg-white text-purple-900 hover:bg-slate-100">
-              Get Started Free
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/try">
+              <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto">
+                Try Without Signup
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="lg" className="bg-white text-purple-900 hover:bg-slate-100 w-full sm:w-auto">
+                Create Free Account
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </div>
