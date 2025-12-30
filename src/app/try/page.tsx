@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { PhotoUpload } from '@/components/upload/PhotoUpload';
 import { AnalyzingState } from '@/components/analysis/AnalysisSkeleton';
 import { TrialResult } from '@/components/analysis/TrialResult';
@@ -10,7 +11,7 @@ import { ErrorMessage } from '@/components/ui/error-boundary';
 import { compressImage, extractBase64 } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Camera, Upload, ArrowLeft, Sparkles } from 'lucide-react';
+import { Camera, Upload, ArrowLeft, Sparkles, ImagePlus } from 'lucide-react';
 
 interface AnalysisData {
   id: string;
@@ -65,6 +66,7 @@ const incrementTrialCount = () => {
 export default function TryPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<Mode>('choose');
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -192,33 +194,52 @@ export default function TryPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <button
-              onClick={() => setMode('camera')}
-              className="group p-8 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all text-left"
-            >
-              <div className="w-16 h-16 mb-4 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Camera className="w-8 h-8 text-purple-400" />
-              </div>
-              <h2 className="text-xl font-semibold text-white mb-2">Use Camera</h2>
-              <p className="text-slate-400">
-                Take a photo of objects around you
-              </p>
-            </button>
+          {isMobile ? (
+            // Mobile: Single button - file input handles both camera and gallery
+            <div className="max-w-md mx-auto">
+              <button
+                onClick={() => setMode('upload')}
+                className="group w-full p-8 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all text-center"
+              >
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <ImagePlus className="w-10 h-10 text-purple-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-white mb-2">Take or Upload Photo</h2>
+                <p className="text-slate-400">
+                  Capture with camera or choose from gallery
+                </p>
+              </button>
+            </div>
+          ) : (
+            // Desktop: Two buttons - separate camera and upload options
+            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <button
+                onClick={() => setMode('camera')}
+                className="group p-8 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all text-left"
+              >
+                <div className="w-16 h-16 mb-4 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Camera className="w-8 h-8 text-purple-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-white mb-2">Use Camera</h2>
+                <p className="text-slate-400">
+                  Take a photo of objects around you
+                </p>
+              </button>
 
-            <button
-              onClick={() => setMode('upload')}
-              className="group p-8 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-blue-500/50 transition-all text-left"
-            >
-              <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Upload className="w-8 h-8 text-blue-400" />
-              </div>
-              <h2 className="text-xl font-semibold text-white mb-2">Upload Photo</h2>
-              <p className="text-slate-400">
-                Choose an image from your device
-              </p>
-            </button>
-          </div>
+              <button
+                onClick={() => setMode('upload')}
+                className="group p-8 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-blue-500/50 transition-all text-left"
+              >
+                <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Upload className="w-8 h-8 text-blue-400" />
+                </div>
+                <h2 className="text-xl font-semibold text-white mb-2">Upload Photo</h2>
+                <p className="text-slate-400">
+                  Choose an image from your device
+                </p>
+              </button>
+            </div>
+          )}
 
           <p className="text-center text-slate-500 text-sm mt-8">
             Your photo is analyzed securely and not stored.

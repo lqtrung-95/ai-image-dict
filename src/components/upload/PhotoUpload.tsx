@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, ImagePlus, X, AlertCircle } from 'lucide-react';
 import { cn, validateImageFile, fileToBase64 } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface PhotoUploadProps {
   onUpload: (imageData: string) => void;
@@ -11,6 +12,7 @@ interface PhotoUploadProps {
 }
 
 export function PhotoUpload({ onUpload, className }: PhotoUploadProps) {
+  const isMobile = useIsMobile();
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -163,11 +165,11 @@ export function PhotoUpload({ onUpload, className }: PhotoUploadProps) {
         </div>
 
         <h3 className="text-lg font-medium text-white mb-2">
-          {isDragging ? 'Drop your image here' : 'Upload a photo'}
+          {isDragging ? 'Drop your image here' : isMobile ? 'Take or choose a photo' : 'Upload a photo'}
         </h3>
 
         <p className="text-slate-400 text-sm mb-4">
-          Drag and drop, paste, or click to select
+          {isMobile ? 'Tap to take a photo or select from gallery' : 'Drag and drop, paste, or click to select'}
         </p>
 
         <p className="text-slate-500 text-xs">Supports JPEG, PNG, WebP (max 5MB)</p>
