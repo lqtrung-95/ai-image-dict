@@ -5,7 +5,13 @@ import Link from 'next/link';
 import { useSpeech } from '@/hooks/useSpeech';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Volume2, Lock, Sparkles, Camera, UserPlus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Volume2, Lock, Sparkles, Camera, UserPlus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DetectedObject {
@@ -37,6 +43,7 @@ export function TrialResult({
 }: TrialResultProps) {
   const { speak } = useSpeech();
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [showSignupModal, setShowSignupModal] = useState(false);
 
   const freeWords = objects.slice(0, FREE_WORDS_LIMIT);
   const lockedWords = objects.slice(FREE_WORDS_LIMIT);
@@ -46,6 +53,10 @@ export function TrialResult({
     setPlayingId(id);
     await speak(wordZh);
     setTimeout(() => setPlayingId(null), 1000);
+  };
+
+  const handleSaveClick = () => {
+    setShowSignupModal(true);
   };
 
   const getExampleSentence = (wordZh: string): string | undefined => {
@@ -127,19 +138,31 @@ export function TrialResult({
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleSpeak(obj.label_zh, obj.id)}
-                  className={cn(
-                    'h-8 w-8 rounded-full',
-                    playingId === obj.id
-                      ? 'text-purple-400 bg-purple-500/20'
-                      : 'text-slate-400 hover:text-white'
-                  )}
-                >
-                  <Volume2 className="w-4 h-4" />
-                </Button>
+                <div className="flex flex-col gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleSpeak(obj.label_zh, obj.id)}
+                    className={cn(
+                      'h-8 w-8 rounded-full',
+                      playingId === obj.id
+                        ? 'text-purple-400 bg-purple-500/20'
+                        : 'text-slate-400 hover:text-white'
+                    )}
+                  >
+                    <Volume2 className="w-4 h-4" />
+                  </Button>
+                  {/* Save button - triggers signup modal */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSaveClick}
+                    className="h-8 w-8 rounded-full text-slate-400 hover:text-green-400 hover:bg-green-500/20"
+                    aria-label="Save to vocabulary"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
@@ -148,15 +171,16 @@ export function TrialResult({
 
       {/* Locked Words */}
       {hasLockedWords && (
-        <section className="relative">
+        <section>
           <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
             <Lock className="w-4 h-4 text-slate-400" />
             {lockedWords.length} More Words
           </h3>
           
-          {/* Blurred preview */}
-          <div className="relative">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 blur-sm pointer-events-none select-none">
+          {/* Locked content with overlay */}
+          <div className="relative rounded-xl overflow-hidden">
+            {/* Blurred cards */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 blur-[6px] opacity-60 pointer-events-none select-none p-1">
               {lockedWords.slice(0, 6).map((obj) => (
                 <Card
                   key={obj.id}
@@ -174,31 +198,28 @@ export function TrialResult({
               ))}
             </div>
             
-            {/* Overlay with CTA */}
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent">
-              <Card className="bg-slate-800 border-purple-500/50 p-6 max-w-sm mx-4 text-center shadow-xl">
-                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
-                  <Lock className="w-6 h-6 text-purple-400" />
+            {/* Centered unlock CTA */}
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-[2px]">
+              <div className="bg-slate-800 border border-purple-500/50 rounded-xl p-6 max-w-sm mx-4 text-center shadow-2xl">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <Lock className="w-7 h-7 text-purple-400" />
                 </div>
                 <h4 className="text-xl font-bold text-white mb-2">
                   Unlock {lockedWords.length} More Words
                 </h4>
-                <p className="text-slate-400 text-sm mb-4">
-                  Create a free account to see all words, save vocabulary, 
-                  practice with flashcards, and track your progress.
+                <p className="text-slate-400 text-sm mb-5">
+                  Sign up free to see all words, save vocabulary, and practice with flashcards.
                 </p>
                 <Link href="/signup">
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700 mb-2">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 mb-3">
                     <UserPlus className="w-4 h-4 mr-2" />
                     Create Free Account
                   </Button>
                 </Link>
-                <Link href="/login">
-                  <Button variant="ghost" className="w-full text-slate-400">
-                    Already have an account? Sign in
-                  </Button>
+                <Link href="/login" className="text-sm text-slate-400 hover:text-white">
+                  Already have an account? Sign in
                 </Link>
-              </Card>
+              </div>
             </div>
           </div>
         </section>
@@ -250,7 +271,43 @@ export function TrialResult({
           </Link>
         </div>
       </Card>
+
+      {/* Signup Modal */}
+      <Dialog open={showSignupModal} onOpenChange={setShowSignupModal}>
+        <DialogContent className="bg-slate-800 border-slate-700 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white text-center">Save to Vocabulary</DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-4">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+              <UserPlus className="w-8 h-8 text-purple-400" />
+            </div>
+            <p className="text-slate-300 mb-6">
+              Create a free account to save words to your vocabulary, practice with flashcards, 
+              and track your learning progress.
+            </p>
+            <div className="space-y-3">
+              <Link href="/signup">
+                <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                  Create Free Account
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="outline" className="w-full border-slate-600 text-slate-300">
+                  Sign In
+                </Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                className="w-full text-slate-500"
+                onClick={() => setShowSignupModal(false)}
+              >
+                Continue browsing
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-

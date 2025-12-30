@@ -55,9 +55,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Reconstruct data URL for display
+    const imageDataUrl = `data:image/jpeg;base64,${base64Image}`;
+
     return NextResponse.json({
       id: `trial-${Date.now()}`,
-      imageUrl: image, // Return the original base64 for display (no storage)
+      imageUrl: imageDataUrl,
       sceneDescription: analysis.sceneDescription,
       objects: allObjects,
       exampleSentences,
