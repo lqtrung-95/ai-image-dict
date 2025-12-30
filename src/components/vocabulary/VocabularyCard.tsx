@@ -37,6 +37,7 @@ interface VocabularyCardProps {
   wordZh: string;
   wordPinyin: string;
   wordEn: string;
+  exampleSentence?: string;
   category?: string;
   isLearned?: boolean;
   isSaved?: boolean;
@@ -54,6 +55,7 @@ export function VocabularyCard({
   wordZh,
   wordPinyin,
   wordEn,
+  exampleSentence,
   category,
   isLearned = false,
   isSaved = false,
@@ -199,6 +201,11 @@ export function VocabularyCard({
           <h3 className="text-2xl font-bold text-white mb-1 truncate">{wordZh}</h3>
           <p className="text-lg text-purple-400 mb-1">{wordPinyin}</p>
           <p className="text-slate-400 truncate">{wordEn}</p>
+          {exampleSentence && (
+            <p className="text-sm text-slate-500 mt-2 italic line-clamp-2">
+              "{exampleSentence}"
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-1">

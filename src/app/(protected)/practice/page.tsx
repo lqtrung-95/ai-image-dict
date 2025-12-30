@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Shuffle, RotateCcw, Trophy, BookOpen, Target } from 'lucide-react';
+import { Shuffle, RotateCcw, Trophy, BookOpen, Target, Flame } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface VocabularyItem {
   id: string;
@@ -42,6 +43,33 @@ export default function PracticePage() {
   const [selectedCollection, setSelectedCollection] = useState<string>('all');
   const [stats, setStats] = useState<PracticeStats>({ total: 0, known: 0, stillLearning: 0 });
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [startTime] = useState(Date.now());
+
+  const recordPracticeSession = async (known: number, total: number) => {
+    try {
+      const durationSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const response = await fetch('/api/stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wordsPracticed: total,
+          wordsKnown: known,
+          durationSeconds,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStreak(data.currentStreak);
+        if (data.currentStreak > 1) {
+          toast.success(`🔥 ${data.currentStreak} day streak!`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to record practice session:', error);
+    }
+  };
 
   const fetchWords = useCallback(async (collectionId?: string) => {
     setLoading(true);
@@ -107,6 +135,9 @@ export default function PracticePage() {
       setCurrentIndex((prev) => prev + 1);
     } else {
       setSessionComplete(true);
+      // Record the practice session
+      const finalKnown = stats.known + 1; // Include current if it was "know"
+      recordPracticeSession(finalKnown, words.length);
     }
   };
 
@@ -174,9 +205,16 @@ export default function PracticePage() {
           <h2 className="text-3xl font-bold text-white mb-2">
             {percentage}% Correct!
           </h2>
-          <p className="text-slate-400 mb-8">
+          <p className="text-slate-400 mb-4">
             You reviewed {stats.total} words
           </p>
+
+          {streak > 0 && (
+            <div className="inline-flex items-center gap-2 bg-orange-500/20 text-orange-400 px-4 py-2 rounded-full mb-6">
+              <Flame className="w-5 h-5" />
+              <span className="font-bold">{streak} day streak!</span>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">

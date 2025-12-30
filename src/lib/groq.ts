@@ -17,6 +17,7 @@ For each item, provide:
 1. English label
 2. Chinese translation (Simplified Chinese characters)
 3. Pinyin with tone marks (e.g., píngguǒ, not pingguo)
+4. A simple example sentence in Chinese with pinyin and English translation
 
 Also provide a brief scene description in English.
 
@@ -24,13 +25,13 @@ Return ONLY valid JSON (no markdown, no code blocks, no explanation):
 {
   "sceneDescription": "A brief description of the scene in English",
   "objects": [
-    { "en": "apple", "zh": "苹果", "pinyin": "píngguǒ", "confidence": 0.95, "category": "object" }
+    { "en": "apple", "zh": "苹果", "pinyin": "píngguǒ", "confidence": 0.95, "example": { "zh": "我喜欢吃苹果。", "pinyin": "Wǒ xǐhuān chī píngguǒ.", "en": "I like eating apples." } }
   ],
   "colors": [
-    { "en": "red", "zh": "红色", "pinyin": "hóngsè" }
+    { "en": "red", "zh": "红色", "pinyin": "hóngsè", "example": { "zh": "这是红色的花。", "pinyin": "Zhè shì hóngsè de huā.", "en": "This is a red flower." } }
   ],
   "actions": [
-    { "en": "running", "zh": "跑步", "pinyin": "pǎobù" }
+    { "en": "running", "zh": "跑步", "pinyin": "pǎobù", "example": { "zh": "他每天跑步。", "pinyin": "Tā měitiān pǎobù.", "en": "He runs every day." } }
   ]
 }`,
           },
@@ -41,7 +42,7 @@ Return ONLY valid JSON (no markdown, no code blocks, no explanation):
         ],
       },
     ],
-    max_tokens: 1500,
+    max_tokens: 2500,
     temperature: 0.3,
   });
 

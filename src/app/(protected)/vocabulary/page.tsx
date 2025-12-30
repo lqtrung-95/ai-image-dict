@@ -13,6 +13,7 @@ interface VocabularyItem {
   word_zh: string;
   word_pinyin: string;
   word_en: string;
+  example_sentence?: string | null;
   is_learned: boolean;
   created_at: string;
   collection_id?: string | null;
@@ -175,6 +176,7 @@ export default function VocabularyPage() {
                 wordZh={item.word_zh}
                 wordPinyin={item.word_pinyin}
                 wordEn={item.word_en}
+                exampleSentence={item.example_sentence || undefined}
                 isLearned={item.is_learned}
                 isSaved={true}
                 collectionName={item.collections?.name}

@@ -16,22 +16,36 @@ interface DetectedObject {
   confidence: number;
 }
 
+interface ExampleSentence {
+  zh: string;
+  pinyin: string;
+  en: string;
+}
+
 interface AnalysisResultProps {
   id: string;
   imageUrl: string;
   sceneDescription?: string;
   objects: DetectedObject[];
-  onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string; collectionId?: string }) => Promise<void>;
+  exampleSentences?: Record<string, ExampleSentence>;
+  onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string; collectionId?: string; exampleSentence?: string }) => Promise<void>;
 }
 
 export function AnalysisResult({
   imageUrl,
   sceneDescription,
   objects,
+  exampleSentences = {},
   onSaveWord,
 }: AnalysisResultProps) {
   const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
   const [savingWord, setSavingWord] = useState<string | null>(null);
+
+  const getExampleSentence = (wordZh: string): string | undefined => {
+    const example = exampleSentences[wordZh];
+    if (!example) return undefined;
+    return `${example.zh} (${example.pinyin}) - ${example.en}`;
+  };
 
   const handleSaveWord = async (obj: DetectedObject, collectionId?: string) => {
     if (savedWords.has(obj.id)) return;
@@ -44,6 +58,7 @@ export function AnalysisResult({
         wordEn: obj.label_en,
         detectedObjectId: obj.id,
         collectionId,
+        exampleSentence: getExampleSentence(obj.label_zh),
       });
       setSavedWords((prev) => new Set([...prev, obj.id]));
     } catch (error) {

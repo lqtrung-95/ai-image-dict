@@ -149,6 +149,97 @@ create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
+-- User stats table (for streaks and progress)
+create table public.user_stats (
+  id uuid references public.profiles(id) on delete cascade primary key,
+  current_streak integer default 0,
+  longest_streak integer default 0,
+  last_practice_date date,
+  total_words_learned integer default 0,
+  total_practice_sessions integer default 0,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Practice sessions table
+create table public.practice_sessions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  words_practiced integer default 0,
+  words_known integer default 0,
+  duration_seconds integer default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Create indexes
+create index idx_practice_sessions_user_id on public.practice_sessions(user_id);
+create index idx_practice_sessions_created_at on public.practice_sessions(created_at desc);
+
+-- Enable RLS
+alter table public.user_stats enable row level security;
+alter table public.practice_sessions enable row level security;
+
+-- RLS Policies for user_stats
+create policy "Users can manage own stats" 
+  on public.user_stats for all 
+  using (auth.uid() = id);
+
+-- RLS Policies for practice_sessions
+create policy "Users can manage own practice sessions" 
+  on public.practice_sessions for all 
+  using (auth.uid() = user_id);
+
+-- Function to update streak on practice
+create or replace function public.update_user_streak(p_user_id uuid)
+returns void
+language plpgsql
+security definer
+as $$
+declare
+  v_last_date date;
+  v_today date := current_date;
+  v_streak integer;
+  v_longest integer;
+begin
+  -- Get current stats
+  select last_practice_date, current_streak, longest_streak 
+  into v_last_date, v_streak, v_longest
+  from public.user_stats where id = p_user_id;
+  
+  -- If no stats exist, create them
+  if not found then
+    insert into public.user_stats (id, current_streak, longest_streak, last_practice_date)
+    values (p_user_id, 1, 1, v_today);
+    return;
+  end if;
+  
+  -- Calculate new streak
+  if v_last_date is null or v_last_date < v_today - 1 then
+    -- Streak broken, start new
+    v_streak := 1;
+  elsif v_last_date = v_today - 1 then
+    -- Continue streak
+    v_streak := v_streak + 1;
+  elsif v_last_date = v_today then
+    -- Already practiced today, no change
+    return;
+  end if;
+  
+  -- Update longest if needed
+  if v_streak > v_longest then
+    v_longest := v_streak;
+  end if;
+  
+  -- Save updated stats
+  update public.user_stats 
+  set current_streak = v_streak,
+      longest_streak = v_longest,
+      last_practice_date = v_today,
+      total_practice_sessions = total_practice_sessions + 1,
+      updated_at = now()
+  where id = p_user_id;
+end;
+$$;
+
 -- Storage bucket for images
 -- Note: Run this in Supabase Dashboard > Storage > Create bucket
 -- Bucket name: images

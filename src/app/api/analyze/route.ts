@@ -71,9 +71,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save analysis' }, { status: 500 });
     }
 
+    // Define types for AI response objects
+    interface AIObject {
+      en: string;
+      zh: string;
+      pinyin: string;
+      confidence?: number;
+      example?: { zh: string; pinyin: string; en: string };
+    }
+
     // Insert detected objects
     const allObjects = [
-      ...(analysis.objects || []).map((obj: { en: string; zh: string; pinyin: string; confidence?: number }) => ({
+      ...(analysis.objects || []).map((obj: AIObject) => ({
         analysis_id: photoAnalysis.id,
         label_en: obj.en,
         label_zh: obj.zh,
@@ -81,7 +90,7 @@ export async function POST(request: NextRequest) {
         confidence: obj.confidence || 0.9,
         category: 'object',
       })),
-      ...(analysis.colors || []).map((obj: { en: string; zh: string; pinyin: string }) => ({
+      ...(analysis.colors || []).map((obj: AIObject) => ({
         analysis_id: photoAnalysis.id,
         label_en: obj.en,
         label_zh: obj.zh,
@@ -89,7 +98,7 @@ export async function POST(request: NextRequest) {
         confidence: 0.95,
         category: 'color',
       })),
-      ...(analysis.actions || []).map((obj: { en: string; zh: string; pinyin: string }) => ({
+      ...(analysis.actions || []).map((obj: AIObject) => ({
         analysis_id: photoAnalysis.id,
         label_en: obj.en,
         label_zh: obj.zh,
@@ -98,6 +107,16 @@ export async function POST(request: NextRequest) {
         category: 'action',
       })),
     ];
+
+    // Build a map of example sentences for the response
+    const exampleSentences: Record<string, { zh: string; pinyin: string; en: string }> = {};
+    [...(analysis.objects || []), ...(analysis.colors || []), ...(analysis.actions || [])].forEach(
+      (obj: AIObject) => {
+        if (obj.example) {
+          exampleSentences[obj.zh] = obj.example;
+        }
+      }
+    );
 
     if (allObjects.length > 0) {
       const { error: objectsError } = await supabase.from('detected_objects').insert(allObjects);
@@ -126,6 +145,7 @@ export async function POST(request: NextRequest) {
       objects: completeAnalysis?.detected_objects || [],
       colors: analysis.colors || [],
       actions: analysis.actions || [],
+      exampleSentences,
     });
   } catch (error) {
     console.error('Analysis error:', error);

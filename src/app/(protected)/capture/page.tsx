@@ -20,6 +20,7 @@ interface AnalysisData {
     category: string;
     confidence: number;
   }>;
+  exampleSentences?: Record<string, { zh: string; pinyin: string; en: string }>;
 }
 
 export default function CapturePage() {
@@ -63,6 +64,7 @@ export default function CapturePage() {
     wordEn: string;
     detectedObjectId: string;
     collectionId?: string;
+    exampleSentence?: string;
   }) => {
     const response = await fetch('/api/vocabulary', {
       method: 'POST',
@@ -106,6 +108,7 @@ export default function CapturePage() {
           imageUrl={analysisData.imageUrl}
           sceneDescription={analysisData.sceneDescription}
           objects={analysisData.objects}
+          exampleSentences={analysisData.exampleSentences}
           onSaveWord={handleSaveWord}
         />
       )}

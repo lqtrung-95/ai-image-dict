@@ -1,10 +1,14 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, BookOpen, Sparkles } from 'lucide-react';
+import { DashboardSection } from '@/components/dashboard/DashboardSection';
 
 export default function HomePage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Dashboard for logged-in users */}
+      <DashboardSection />
+
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm mb-8">
