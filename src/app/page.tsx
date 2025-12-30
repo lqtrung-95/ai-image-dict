@@ -95,7 +95,7 @@ export default function HomePage() {
           <Link href="/try">
             <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2 w-full sm:w-auto h-14 px-8 text-lg shadow-lg shadow-purple-500/25">
               <Camera className="w-5 h-5" />
-              Try It Now — Free
+              Try It Now
             </Button>
           </Link>
         </div>
