@@ -274,36 +274,46 @@ export function TrialResult({
 
       {/* Signup Modal */}
       <Dialog open={showSignupModal} onOpenChange={setShowSignupModal}>
-        <DialogContent className="bg-slate-800 border-slate-700 max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-white text-center">Save to Vocabulary</DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-4">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
-              <UserPlus className="w-8 h-8 text-purple-400" />
-            </div>
-            <p className="text-slate-300 mb-6">
-              Create a free account to save words to your vocabulary, practice with flashcards, 
-              and track your learning progress.
+        <DialogContent className="bg-gradient-to-b from-slate-800 to-slate-900 border-slate-700 max-w-sm p-0 overflow-hidden">
+          {/* Header with gradient */}
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-8 text-center">
+            <div className="text-5xl mb-3">📚</div>
+            <DialogTitle className="text-white text-xl font-bold">
+              Save This Word?
+            </DialogTitle>
+            <p className="text-purple-100 text-sm mt-1">
+              Join free to build your vocabulary
             </p>
-            <div className="space-y-3">
-              <Link href="/signup">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  Create Free Account
+          </div>
+          
+          {/* Content */}
+          <div className="p-6">
+            {/* Quick benefits */}
+            <div className="space-y-2 mb-6">
+              {[
+                { icon: '💾', text: 'Save unlimited words' },
+                { icon: '🎴', text: 'Practice with flashcards' },
+                { icon: '🔥', text: 'Track your streak' },
+              ].map((item) => (
+                <div key={item.text} className="flex items-center gap-3 text-slate-300">
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-sm">{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-2">
+              <Link href="/signup" className="block">
+                <Button className="w-full bg-purple-600 hover:bg-purple-700 h-11">
+                  Sign Up Free
                 </Button>
               </Link>
-              <Link href="/login">
-                <Button variant="outline" className="w-full border-slate-600 text-slate-300">
-                  Sign In
+              <Link href="/login" className="block">
+                <Button variant="ghost" className="w-full text-slate-400 hover:text-white">
+                  Already have an account? Sign in
                 </Button>
               </Link>
-              <Button 
-                variant="ghost" 
-                className="w-full text-slate-500"
-                onClick={() => setShowSignupModal(false)}
-              >
-                Continue browsing
-              </Button>
             </div>
           </div>
         </DialogContent>
