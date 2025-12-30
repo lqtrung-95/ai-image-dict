@@ -67,7 +67,7 @@ export default function HomePage() {
         </div>
 
         <p className="text-sm text-slate-500 mt-4">
-          No sign-up required to try • Free forever
+          No sign-up required • Explore for free
         </p>
       </section>
 
