@@ -7,10 +7,20 @@ import { Card } from '@/components/ui/card';
 import { MultipleChoiceQuiz } from '@/components/quiz/MultipleChoiceQuiz';
 import { ListeningQuiz } from '@/components/quiz/ListeningQuiz';
 import { TypePinyinQuiz } from '@/components/quiz/TypePinyinQuiz';
+import type { LucideIcon } from 'lucide-react';
 import { Brain, Headphones, Keyboard, Trophy, RotateCcw, ArrowLeft, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 
 type QuizMode = 'select' | 'multiple-choice' | 'listening' | 'type-pinyin';
+type QuizColor = 'purple' | 'blue' | 'green';
+
+type QuizModeDefinition = {
+  id: Exclude<QuizMode, 'select'>;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  color: QuizColor;
+};
 
 interface VocabularyItem {
   id: string;
@@ -25,23 +35,35 @@ interface QuizStats {
   total: number;
 }
 
-const QUIZ_MODES = [
+const QUIZ_MODE_COLORS: Record<QuizColor, string> = {
+  purple: 'from-purple-500/20 to-purple-500/5 border-purple-500/30 hover:border-purple-500/50',
+  blue: 'from-blue-500/20 to-blue-500/5 border-blue-500/30 hover:border-blue-500/50',
+  green: 'from-green-500/20 to-green-500/5 border-green-500/30 hover:border-green-500/50',
+};
+
+const QUIZ_ICON_COLORS: Record<QuizColor, string> = {
+  purple: 'text-purple-400',
+  blue: 'text-blue-400',
+  green: 'text-green-400',
+};
+
+const QUIZ_MODES: QuizModeDefinition[] = [
   {
-    id: 'multiple-choice' as const,
+    id: 'multiple-choice',
     title: 'Multiple Choice',
     description: 'Choose the correct translation',
     icon: Brain,
     color: 'purple',
   },
   {
-    id: 'listening' as const,
+    id: 'listening',
     title: 'Listening',
     description: 'Listen and pick the right word',
     icon: Headphones,
     color: 'blue',
   },
   {
-    id: 'type-pinyin' as const,
+    id: 'type-pinyin',
     title: 'Type Pinyin',
     description: 'Type the pronunciation',
     icon: Keyboard,
@@ -249,26 +271,15 @@ export default function QuizPage() {
 
         <div className="space-y-4">
           {QUIZ_MODES.map((quizMode) => {
-            const colors = {
-              purple: 'from-purple-500/20 to-purple-500/5 border-purple-500/30 hover:border-purple-500/50',
-              blue: 'from-blue-500/20 to-blue-500/5 border-blue-500/30 hover:border-blue-500/50',
-              green: 'from-green-500/20 to-green-500/5 border-green-500/30 hover:border-green-500/50',
-            };
-            const iconColors = {
-              purple: 'text-purple-400',
-              blue: 'text-blue-400',
-              green: 'text-green-400',
-            };
-
             return (
               <button
                 key={quizMode.id}
                 onClick={() => setMode(quizMode.id)}
-                className={`w-full p-5 rounded-xl bg-gradient-to-b border text-left transition-all ${colors[quizMode.color]}`}
+                className={`w-full p-5 rounded-xl bg-gradient-to-b border text-left transition-all ${QUIZ_MODE_COLORS[quizMode.color]}`}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-slate-800/50 flex items-center justify-center">
-                    <quizMode.icon className={`w-6 h-6 ${iconColors[quizMode.color]}`} />
+                    <quizMode.icon className={`w-6 h-6 ${QUIZ_ICON_COLORS[quizMode.color]}`} />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">{quizMode.title}</h3>
@@ -322,4 +333,3 @@ export default function QuizPage() {
     </div>
   );
 }
-
