@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server';
 import { analyzeImage } from '@/lib/groq';
 import { extractBase64 } from '@/lib/utils';
 
+// Free tier limit (6 analyses per day for logged-in free users)
+const FREE_DAILY_LIMIT = 6;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -15,6 +18,30 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check usage limit
+    const { data: usageCheck, error: usageError } = await supabase.rpc('check_and_increment_usage', {
+      p_user_id: user.id,
+      p_limit: FREE_DAILY_LIMIT,
+    });
+
+    if (usageError) {
+      console.error('Usage check error:', usageError);
+      // Continue anyway - don't block users due to usage tracking issues
+    } else if (usageCheck && !usageCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Daily limit reached',
+          code: 'LIMIT_EXCEEDED',
+          usage: {
+            current: usageCheck.current,
+            limit: usageCheck.limit,
+            remaining: 0,
+          },
+        },
+        { status: 429 }
+      );
     }
 
     const { image } = await request.json();
@@ -148,6 +175,14 @@ export async function POST(request: NextRequest) {
       colors: analysis.colors || [],
       actions: analysis.actions || [],
       exampleSentences,
+      // Include usage info so UI can show remaining
+      usage: usageCheck
+        ? {
+            current: usageCheck.current,
+            limit: usageCheck.limit,
+            remaining: usageCheck.remaining,
+          }
+        : null,
     });
   } catch (error) {
     console.error('Analysis error:', error);

@@ -240,6 +240,99 @@ begin
 end;
 $$;
 
+-- Daily usage tracking for rate limiting
+create table public.daily_usage (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  usage_date date not null default current_date,
+  analyses_count integer default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(user_id, usage_date)
+);
+
+-- Upgrade interest tracking (for validating demand before building payments)
+create table public.upgrade_interest (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  email text,
+  reason text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Indexes
+create index idx_daily_usage_user_date on public.daily_usage(user_id, usage_date);
+create index idx_upgrade_interest_created on public.upgrade_interest(created_at desc);
+
+-- Enable RLS
+alter table public.daily_usage enable row level security;
+alter table public.upgrade_interest enable row level security;
+
+-- RLS Policies for daily_usage
+create policy "Users can view own usage"
+  on public.daily_usage for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own usage"
+  on public.daily_usage for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own usage"
+  on public.daily_usage for update
+  using (auth.uid() = user_id);
+
+-- RLS Policies for upgrade_interest (users can insert, only admins can view all)
+create policy "Users can insert upgrade interest"
+  on public.upgrade_interest for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can view own upgrade interest"
+  on public.upgrade_interest for select
+  using (auth.uid() = user_id);
+
+-- Function to increment daily usage and check limit
+create or replace function public.check_and_increment_usage(p_user_id uuid, p_limit integer default 10)
+returns jsonb
+language plpgsql
+security definer
+as $$
+declare
+  v_count integer;
+  v_today date := current_date;
+begin
+  -- Get or create today's usage record
+  insert into public.daily_usage (user_id, usage_date, analyses_count)
+  values (p_user_id, v_today, 0)
+  on conflict (user_id, usage_date) do nothing;
+
+  -- Get current count
+  select analyses_count into v_count
+  from public.daily_usage
+  where user_id = p_user_id and usage_date = v_today;
+
+  -- Check if limit exceeded
+  if v_count >= p_limit then
+    return jsonb_build_object(
+      'allowed', false,
+      'current', v_count,
+      'limit', p_limit,
+      'remaining', 0
+    );
+  end if;
+
+  -- Increment count
+  update public.daily_usage
+  set analyses_count = analyses_count + 1
+  where user_id = p_user_id and usage_date = v_today;
+
+  return jsonb_build_object(
+    'allowed', true,
+    'current', v_count + 1,
+    'limit', p_limit,
+    'remaining', p_limit - v_count - 1
+  );
+end;
+$$;
+
 -- Storage bucket for images
 -- Note: Run this in Supabase Dashboard > Storage > Create bucket
 -- Bucket name: images

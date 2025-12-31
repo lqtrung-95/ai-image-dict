@@ -43,6 +43,9 @@ interface VocabularyCardProps {
   isSaved?: boolean;
   collectionName?: string;
   collectionColor?: string;
+  photoUrl?: string | null;
+  photoDate?: string | null;
+  analysisId?: string | null;
   onSave?: (collectionId?: string) => void;
   onToggleLearned?: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -61,6 +64,9 @@ export function VocabularyCard({
   isSaved = false,
   collectionName,
   collectionColor,
+  photoUrl,
+  photoDate,
+  analysisId,
   onSave,
   onToggleLearned,
   onDelete,
@@ -69,6 +75,8 @@ export function VocabularyCard({
 }: VocabularyCardProps) {
   const { speak } = useSpeech();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isExampleExpanded, setIsExampleExpanded] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loadingCollections, setLoadingCollections] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -136,6 +144,7 @@ export function VocabularyCard({
     if (id && onDelete) {
       onDelete(id);
       toast.success('Removed from vocabulary');
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -167,6 +176,14 @@ export function VocabularyCard({
     action: 'bg-green-500/20 text-green-400',
   };
 
+  // Format the date nicely
+  const formattedDate = photoDate
+    ? new Date(photoDate).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      })
+    : null;
+
   return (
     <div
       className={cn(
@@ -176,6 +193,27 @@ export function VocabularyCard({
       )}
     >
       <div className="flex items-start justify-between gap-2">
+        {/* Photo thumbnail */}
+        {photoUrl && (
+          <a
+            href={analysisId ? `/analysis/${analysisId}` : '#'}
+            className="flex-shrink-0 group/photo"
+            title="View original photo"
+          >
+            <div className="w-14 h-14 rounded-lg overflow-hidden border border-slate-600 group-hover/photo:border-purple-500/50 transition-colors">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photoUrl}
+                alt="Source photo"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {formattedDate && (
+              <p className="text-[10px] text-slate-500 text-center mt-1">{formattedDate}</p>
+            )}
+          </a>
+        )}
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {category && (
@@ -202,9 +240,24 @@ export function VocabularyCard({
           <p className="text-lg text-purple-400 mb-1">{wordPinyin}</p>
           <p className="text-slate-400 truncate">{wordEn}</p>
           {exampleSentence && (
-            <p className="text-sm text-slate-500 mt-2 italic line-clamp-2">
-              "{exampleSentence}"
-            </p>
+            <button
+              onClick={() => setIsExampleExpanded(!isExampleExpanded)}
+              className="text-left w-full mt-2 group/example"
+            >
+              <p
+                className={cn(
+                  'text-sm text-slate-500 italic transition-all',
+                  !isExampleExpanded && 'line-clamp-2'
+                )}
+              >
+                &ldquo;{exampleSentence}&rdquo;
+              </p>
+              {!isExampleExpanded && exampleSentence.length > 80 && (
+                <span className="text-xs text-purple-400 opacity-0 group-hover/example:opacity-100 transition-opacity">
+                  Tap to expand
+                </span>
+              )}
+            </button>
           )}
         </div>
 
@@ -333,13 +386,13 @@ export function VocabularyCard({
             </DropdownMenu>
           )}
 
-          {/* Delete button (for saved words) */}
+          {/* Delete button (for saved words) - always visible for mobile accessibility */}
           {isSaved && id && onDelete && (
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleDelete}
-              className="h-8 w-8 rounded-full text-slate-400 hover:text-red-400 hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="h-8 w-8 rounded-full text-slate-500 hover:text-red-400 hover:bg-red-500/20 transition-colors"
               aria-label="Delete"
             >
               <Trash2 className="w-4 h-4" />
@@ -387,6 +440,35 @@ export function VocabularyCard({
             >
               {creating ? 'Creating...' : 'Create & Save'}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="bg-slate-800 border-slate-700 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white">Delete Word?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-slate-400">
+              Are you sure you want to remove <span className="text-white font-medium">{wordZh}</span> ({wordEn}) from your vocabulary?
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 border-slate-600 text-slate-200 hover:bg-slate-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDelete}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

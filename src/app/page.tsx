@@ -101,7 +101,7 @@ export default function HomePage() {
         </div>
         
         <p className="text-sm text-slate-500">
-          No account needed · 3 free tries per day
+          No account needed · 2 free tries per day
         </p>
       </section>
 

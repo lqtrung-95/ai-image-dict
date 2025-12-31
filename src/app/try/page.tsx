@@ -32,7 +32,7 @@ interface AnalysisData {
 
 type Mode = 'choose' | 'camera' | 'upload' | 'analyzing' | 'result' | 'error';
 
-const MAX_TRIALS_PER_DAY = 3;
+const MAX_TRIALS_PER_DAY = 2;
 
 // Helper to get today's date key
 const getTodayKey = () => new Date().toISOString().split('T')[0];

@@ -1,64 +1,17 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CameraCapture } from '@/components/camera/CameraCapture';
 import { AnalyzingState } from '@/components/analysis/AnalysisSkeleton';
 import { AnalysisResult } from '@/components/analysis/AnalysisResult';
 import { ErrorMessage } from '@/components/ui/error-boundary';
-import { compressImage, extractBase64 } from '@/lib/utils';
-
-interface AnalysisData {
-  id: string;
-  imageUrl: string;
-  sceneDescription: string;
-  sceneDescriptionZh?: string;
-  sceneDescriptionPinyin?: string;
-  objects: Array<{
-    id: string;
-    label_en: string;
-    label_zh: string;
-    pinyin: string;
-    category: string;
-    confidence: number;
-  }>;
-  exampleSentences?: Record<string, { zh: string; pinyin: string; en: string }>;
-}
+import { UpgradeModal } from '@/components/upgrade/UpgradeModal';
+import { useAnalyze } from '@/hooks/useAnalyze';
 
 export default function CapturePage() {
   const router = useRouter();
-  const [stage, setStage] = useState<'capture' | 'analyzing' | 'result' | 'error'>('capture');
-  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleCapture = async (imageData: string) => {
-    setStage('analyzing');
-    setError(null);
-
-    try {
-      // Compress image before sending
-      const compressedImage = await compressImage(imageData, 1024);
-      const base64 = extractBase64(compressedImage);
-
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Analysis failed');
-      }
-
-      const data = await response.json();
-      setAnalysisData(data);
-      setStage('result');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze image');
-      setStage('error');
-    }
-  };
+  const { stage, analysisData, error, usage, analyze, reset, dismissLimitModal, isLimitExceeded } =
+    useAnalyze();
 
   const handleSaveWord = async (word: {
     wordZh: string;
@@ -79,32 +32,47 @@ export default function CapturePage() {
     }
   };
 
-  const handleRetry = () => {
-    setStage('capture');
-    setError(null);
-    setAnalysisData(null);
-  };
+  // Map hook stages to page stages
+  const pageStage = stage === 'idle' ? 'capture' : stage === 'limit_exceeded' ? 'capture' : stage;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <h1 className="text-2xl font-bold text-white mb-6">
-        {stage === 'capture' && 'Capture Photo'}
-        {stage === 'analyzing' && 'Analyzing...'}
-        {stage === 'result' && 'Analysis Results'}
-        {stage === 'error' && 'Error'}
+        {pageStage === 'capture' && 'Capture Photo'}
+        {pageStage === 'analyzing' && 'Analyzing...'}
+        {pageStage === 'result' && 'Analysis Results'}
+        {pageStage === 'error' && 'Error'}
       </h1>
 
-      {stage === 'capture' && (
+      {/* Usage indicator */}
+      {usage && pageStage === 'capture' && (
+        <div className="mb-4 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+          <div className="flex justify-between text-sm mb-1">
+            <span className="text-slate-400">Daily analyses</span>
+            <span className="text-slate-300">
+              {usage.remaining} of {usage.limit} remaining
+            </span>
+          </div>
+          <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+              style={{ width: `${((usage.limit - usage.remaining) / usage.limit) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {pageStage === 'capture' && (
         <CameraCapture
-          onCapture={handleCapture}
+          onCapture={analyze}
           onClose={() => router.push('/')}
           className="aspect-[4/3] max-h-[70vh]"
         />
       )}
 
-      {stage === 'analyzing' && <AnalyzingState />}
+      {pageStage === 'analyzing' && <AnalyzingState />}
 
-      {stage === 'result' && analysisData && (
+      {pageStage === 'result' && analysisData && (
         <AnalysisResult
           id={analysisData.id}
           imageUrl={analysisData.imageUrl}
@@ -117,14 +85,20 @@ export default function CapturePage() {
         />
       )}
 
-      {stage === 'error' && (
+      {pageStage === 'error' && (
         <ErrorMessage
           title="Analysis Failed"
           message={error || 'Something went wrong. Please try again.'}
-          onRetry={handleRetry}
+          onRetry={reset}
         />
       )}
+
+      {/* Upgrade Modal for limit exceeded */}
+      <UpgradeModal
+        open={isLimitExceeded}
+        onClose={dismissLimitModal}
+        usage={usage ? { current: usage.current, limit: usage.limit } : undefined}
+      />
     </div>
   );
 }
-

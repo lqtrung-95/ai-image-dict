@@ -9,7 +9,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
+    "native:build": "npm run build && npx cap sync",
+    "native:ios": "npx cap open ios",
+    "native:android": "npx cap open android",
+    "native:run:ios": "npx cap run ios",
+    "native:run:android": "npx cap run android"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",

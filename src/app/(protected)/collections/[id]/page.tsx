@@ -19,7 +19,12 @@ interface VocabularyItem {
   word_zh: string;
   word_pinyin: string;
   word_en: string;
+  example_sentence?: string | null;
   is_learned: boolean;
+  // Photo context
+  photo_url?: string | null;
+  photo_date?: string | null;
+  analysis_id?: string | null;
 }
 
 export default function CollectionDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -158,8 +163,12 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
               wordZh={item.word_zh}
               wordPinyin={item.word_pinyin}
               wordEn={item.word_en}
+              exampleSentence={item.example_sentence || undefined}
               isLearned={item.is_learned}
               isSaved={true}
+              photoUrl={item.photo_url}
+              photoDate={item.photo_date}
+              analysisId={item.analysis_id}
               onToggleLearned={handleToggleLearned}
               onDelete={handleDelete}
             />

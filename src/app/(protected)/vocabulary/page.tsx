@@ -18,6 +18,10 @@ interface VocabularyItem {
   created_at: string;
   collection_id?: string | null;
   collections?: { name: string; color: string } | null;
+  // Photo context
+  photo_url?: string | null;
+  photo_date?: string | null;
+  analysis_id?: string | null;
 }
 
 export default function VocabularyPage() {
@@ -181,6 +185,9 @@ export default function VocabularyPage() {
                 isSaved={true}
                 collectionName={item.collections?.name}
                 collectionColor={item.collections?.color}
+                photoUrl={item.photo_url}
+                photoDate={item.photo_date}
+                analysisId={item.analysis_id}
                 onToggleLearned={handleToggleLearned}
                 onDelete={handleDelete}
                 onAddToCollection={handleAddToCollection}

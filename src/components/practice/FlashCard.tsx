@@ -10,6 +10,8 @@ interface FlashCardProps {
   wordZh: string;
   wordPinyin: string;
   wordEn: string;
+  photoUrl?: string | null;
+  photoDate?: string | null;
   onKnow: () => void;
   onStillLearning: () => void;
 }
@@ -18,12 +20,22 @@ export function FlashCard({
   wordZh,
   wordPinyin,
   wordEn,
+  photoUrl,
+  photoDate,
   onKnow,
   onStillLearning,
 }: FlashCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const { speak } = useSpeech();
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Format the date nicely
+  const formattedDate = photoDate
+    ? new Date(photoDate).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      })
+    : null;
 
   const handleSpeak = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -74,7 +86,7 @@ export function FlashCard({
             <p className="text-white/60 text-sm">Tap to reveal</p>
           </div>
 
-          {/* Back - Pinyin & English */}
+          {/* Back - Pinyin & English with Photo Context */}
           <div
             className={cn(
               'absolute inset-0 w-full h-full backface-hidden rotate-y-180',
@@ -94,6 +106,23 @@ export function FlashCard({
             >
               <Volume2 className="w-5 h-5" />
             </Button>
+
+            {/* Photo context thumbnail */}
+            {photoUrl && (
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-500/50 shadow-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photoUrl}
+                    alt="Where you learned this"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {formattedDate && (
+                  <span className="text-xs text-slate-400">{formattedDate}</span>
+                )}
+              </div>
+            )}
 
             <h1 className="text-5xl font-bold text-white mb-2">{wordZh}</h1>
             <p className="text-2xl text-purple-400 mb-2">{wordPinyin}</p>

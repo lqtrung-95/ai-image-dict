@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Capacitor native platforms (uncomment if you don't want to track native code)
+# /ios/
+# /android/
+
+# Capacitor local config
+capacitor.config.local.ts

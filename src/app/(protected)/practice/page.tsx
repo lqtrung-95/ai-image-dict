@@ -20,6 +20,8 @@ interface VocabularyItem {
   word_zh: string;
   word_pinyin: string;
   word_en: string;
+  photo_url?: string | null;
+  photo_date?: string | null;
 }
 
 interface Collection {
@@ -317,6 +319,8 @@ export default function PracticePage() {
           wordZh={currentWord.word_zh}
           wordPinyin={currentWord.word_pinyin}
           wordEn={currentWord.word_en}
+          photoUrl={currentWord.photo_url}
+          photoDate={currentWord.photo_date}
           onKnow={handleKnow}
           onStillLearning={handleStillLearning}
         />

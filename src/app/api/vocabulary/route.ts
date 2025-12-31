@@ -21,9 +21,20 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
+    // Join through detected_objects to photo_analyses to get the original photo
     let query = supabase
       .from('vocabulary_items')
-      .select('*, collections(name, color)', { count: 'exact' })
+      .select(
+        `
+        *,
+        collections(name, color),
+        detected_objects(
+          analysis_id,
+          photo_analyses(id, image_url, created_at)
+        )
+      `,
+        { count: 'exact' }
+      )
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -45,10 +56,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch vocabulary' }, { status: 500 });
     }
 
+    // Flatten the nested photo context for easier frontend consumption
+    interface DetectedObject {
+      analysis_id: string;
+      photo_analyses: {
+        id: string;
+        image_url: string;
+        created_at: string;
+      } | null;
+    }
+
+    interface VocabularyItemRaw {
+      id: string;
+      detected_objects: DetectedObject | null;
+      [key: string]: unknown;
+    }
+
+    const items = (data || []).map((item: VocabularyItemRaw) => {
+      const photoAnalysis = item.detected_objects?.photo_analyses;
+      return {
+        ...item,
+        // Add flattened photo context
+        photo_url: photoAnalysis?.image_url || null,
+        photo_date: photoAnalysis?.created_at || null,
+        analysis_id: photoAnalysis?.id || null,
+      };
+    });
+
     return NextResponse.json({
-      items: data || [],
+      items,
       total: count || 0,
-      hasMore: (offset + limit) < (count || 0),
+      hasMore: offset + limit < (count || 0),
     });
   } catch (error) {
     console.error('Vocabulary error:', error);

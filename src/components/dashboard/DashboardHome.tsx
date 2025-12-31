@@ -159,11 +159,18 @@ export function DashboardHome() {
           <p className="text-slate-400 text-sm mb-4">
             {wordsToLearn} {wordsToLearn === 1 ? 'word' : 'words'} waiting for review
           </p>
-          <Link href="/practice">
-            <Button className="w-full bg-purple-600 hover:bg-purple-700 h-11">
-              Start Practice
-            </Button>
-          </Link>
+          <div className="flex gap-3">
+            <Link href="/practice" className="flex-1">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700 h-11">
+                Flashcards
+              </Button>
+            </Link>
+            <Link href="/quiz" className="flex-1">
+              <Button variant="outline" className="w-full border-purple-500/50 text-purple-400 hover:bg-purple-500/10 h-11">
+                Quiz
+              </Button>
+            </Link>
+          </div>
         </section>
 
         {/* 3. Secondary Action - Add words */}

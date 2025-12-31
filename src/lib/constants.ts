@@ -8,13 +8,17 @@ export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const IMAGE_COMPRESSION_QUALITY = 0.8;
 export const MAX_IMAGE_DIMENSION = 1024;
 
+// API base URL - uses relative paths on web, absolute URL on native apps
+// Set NEXT_PUBLIC_API_BASE_URL in .env for native builds (e.g., https://your-app.vercel.app)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
 // API endpoints
 export const API_ROUTES = {
-  ANALYZE: '/api/analyze',
-  VOCABULARY: '/api/vocabulary',
-  COLLECTIONS: '/api/collections',
-  ANALYSES: '/api/analyses',
-  TTS: '/api/tts',
+  ANALYZE: `${API_BASE}/api/analyze`,
+  VOCABULARY: `${API_BASE}/api/vocabulary`,
+  COLLECTIONS: `${API_BASE}/api/collections`,
+  ANALYSES: `${API_BASE}/api/analyses`,
+  TTS: `${API_BASE}/api/tts`,
 } as const;
 
 // Groq models (Llama 4 Scout with vision support)

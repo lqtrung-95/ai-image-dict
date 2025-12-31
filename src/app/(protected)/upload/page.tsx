@@ -1,62 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import { PhotoUpload } from '@/components/upload/PhotoUpload';
 import { AnalyzingState } from '@/components/analysis/AnalysisSkeleton';
 import { AnalysisResult } from '@/components/analysis/AnalysisResult';
 import { ErrorMessage } from '@/components/ui/error-boundary';
-import { compressImage, extractBase64 } from '@/lib/utils';
-
-interface AnalysisData {
-  id: string;
-  imageUrl: string;
-  sceneDescription: string;
-  sceneDescriptionZh?: string;
-  sceneDescriptionPinyin?: string;
-  objects: Array<{
-    id: string;
-    label_en: string;
-    label_zh: string;
-    pinyin: string;
-    category: string;
-    confidence: number;
-  }>;
-  exampleSentences?: Record<string, { zh: string; pinyin: string; en: string }>;
-}
+import { UpgradeModal } from '@/components/upgrade/UpgradeModal';
+import { useAnalyze } from '@/hooks/useAnalyze';
 
 export default function UploadPage() {
-  const [stage, setStage] = useState<'upload' | 'analyzing' | 'result' | 'error'>('upload');
-  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleUpload = async (imageData: string) => {
-    setStage('analyzing');
-    setError(null);
-
-    try {
-      // Compress image before sending
-      const compressedImage = await compressImage(imageData, 1024);
-      const base64 = extractBase64(compressedImage);
-
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Analysis failed');
-      }
-
-      const data = await response.json();
-      setAnalysisData(data);
-      setStage('result');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze image');
-      setStage('error');
-    }
-  };
+  const { stage, analysisData, error, usage, analyze, reset, dismissLimitModal, isLimitExceeded } =
+    useAnalyze();
 
   const handleSaveWord = async (word: {
     wordZh: string;
@@ -77,26 +30,41 @@ export default function UploadPage() {
     }
   };
 
-  const handleRetry = () => {
-    setStage('upload');
-    setError(null);
-    setAnalysisData(null);
-  };
+  // Map hook stages to page stages
+  const pageStage = stage === 'idle' ? 'upload' : stage === 'limit_exceeded' ? 'upload' : stage;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <h1 className="text-2xl font-bold text-white mb-6">
-        {stage === 'upload' && 'Upload Photo'}
-        {stage === 'analyzing' && 'Analyzing...'}
-        {stage === 'result' && 'Analysis Results'}
-        {stage === 'error' && 'Error'}
+        {pageStage === 'upload' && 'Upload Photo'}
+        {pageStage === 'analyzing' && 'Analyzing...'}
+        {pageStage === 'result' && 'Analysis Results'}
+        {pageStage === 'error' && 'Error'}
       </h1>
 
-      {stage === 'upload' && <PhotoUpload onUpload={handleUpload} />}
+      {/* Usage indicator */}
+      {usage && pageStage === 'upload' && (
+        <div className="mb-4 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+          <div className="flex justify-between text-sm mb-1">
+            <span className="text-slate-400">Daily analyses</span>
+            <span className="text-slate-300">
+              {usage.remaining} of {usage.limit} remaining
+            </span>
+          </div>
+          <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+              style={{ width: `${((usage.limit - usage.remaining) / usage.limit) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
 
-      {stage === 'analyzing' && <AnalyzingState />}
+      {pageStage === 'upload' && <PhotoUpload onUpload={analyze} />}
 
-      {stage === 'result' && analysisData && (
+      {pageStage === 'analyzing' && <AnalyzingState />}
+
+      {pageStage === 'result' && analysisData && (
         <AnalysisResult
           id={analysisData.id}
           imageUrl={analysisData.imageUrl}
@@ -109,14 +77,20 @@ export default function UploadPage() {
         />
       )}
 
-      {stage === 'error' && (
+      {pageStage === 'error' && (
         <ErrorMessage
           title="Analysis Failed"
           message={error || 'Something went wrong. Please try again.'}
-          onRetry={handleRetry}
+          onRetry={reset}
         />
       )}
+
+      {/* Upgrade Modal for limit exceeded */}
+      <UpgradeModal
+        open={isLimitExceeded}
+        onClose={dismissLimitModal}
+        usage={usage ? { current: usage.current, limit: usage.limit } : undefined}
+      />
     </div>
   );
 }
-
