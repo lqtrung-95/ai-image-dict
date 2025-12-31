@@ -19,11 +19,13 @@ For each item, provide:
 3. Pinyin with tone marks (e.g., píngguǒ, not pingguo)
 4. A simple example sentence in Chinese with pinyin and English translation
 
-Also provide a brief scene description in English.
+Also provide a brief scene description in both English and Chinese (with pinyin).
 
 Return ONLY valid JSON (no markdown, no code blocks, no explanation):
 {
   "sceneDescription": "A brief description of the scene in English",
+  "sceneDescriptionZh": "场景的中文描述",
+  "sceneDescriptionPinyin": "Chǎngjǐng de zhōngwén miáoshù",
   "objects": [
     { "en": "apple", "zh": "苹果", "pinyin": "píngguǒ", "confidence": 0.95, "example": { "zh": "我喜欢吃苹果。", "pinyin": "Wǒ xǐhuān chī píngguǒ.", "en": "I like eating apples." } }
   ],

@@ -26,6 +26,8 @@ interface DetectedObject {
 interface TrialResultProps {
   imageUrl: string;
   sceneDescription?: string;
+  sceneDescriptionZh?: string;
+  sceneDescriptionPinyin?: string;
   objects: DetectedObject[];
   exampleSentences?: Record<string, { zh: string; pinyin: string; en: string }>;
   onTryAgain: () => void;
@@ -37,6 +39,8 @@ const FREE_WORDS_LIMIT = 3;
 export function TrialResult({
   imageUrl,
   sceneDescription,
+  sceneDescriptionZh,
+  sceneDescriptionPinyin,
   objects,
   exampleSentences = {},
   onTryAgain,
@@ -101,9 +105,15 @@ export function TrialResult({
 
       {/* Scene description */}
       {sceneDescription && (
-        <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
-          <h3 className="text-sm font-medium text-slate-400 mb-1">Scene Description</h3>
-          <p className="text-white">{sceneDescription}</p>
+        <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
+          <h3 className="text-sm font-medium text-slate-400">Scene Description</h3>
+          {sceneDescriptionZh && (
+            <p className="text-xl text-white">{sceneDescriptionZh}</p>
+          )}
+          {sceneDescriptionPinyin && (
+            <p className="text-purple-400 text-sm">{sceneDescriptionPinyin}</p>
+          )}
+          <p className="text-slate-300">{sceneDescription}</p>
         </div>
       )}
 

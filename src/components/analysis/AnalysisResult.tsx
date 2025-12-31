@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { VocabularyCard } from '@/components/vocabulary/VocabularyCard';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, Share2 } from 'lucide-react';
+import { Camera, Upload, Share2, ImagePlus } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface DetectedObject {
   id: string;
@@ -26,6 +27,8 @@ interface AnalysisResultProps {
   id: string;
   imageUrl: string;
   sceneDescription?: string;
+  sceneDescriptionZh?: string;
+  sceneDescriptionPinyin?: string;
   objects: DetectedObject[];
   exampleSentences?: Record<string, ExampleSentence>;
   onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string; collectionId?: string; exampleSentence?: string }) => Promise<void>;
@@ -34,10 +37,13 @@ interface AnalysisResultProps {
 export function AnalysisResult({
   imageUrl,
   sceneDescription,
+  sceneDescriptionZh,
+  sceneDescriptionPinyin,
   objects,
   exampleSentences = {},
   onSaveWord,
 }: AnalysisResultProps) {
+  const isMobile = useIsMobile();
   const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
   const [savingWord, setSavingWord] = useState<string | null>(null);
 
@@ -107,9 +113,15 @@ export function AnalysisResult({
 
       {/* Scene description */}
       {sceneDescription && (
-        <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700">
-          <h3 className="text-sm font-medium text-slate-400 mb-1">Scene Description</h3>
-          <p className="text-white">{sceneDescription}</p>
+        <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
+          <h3 className="text-sm font-medium text-slate-400">Scene Description</h3>
+          {sceneDescriptionZh && (
+            <p className="text-xl text-white">{sceneDescriptionZh}</p>
+          )}
+          {sceneDescriptionPinyin && (
+            <p className="text-purple-400 text-sm">{sceneDescriptionPinyin}</p>
+          )}
+          <p className="text-slate-300">{sceneDescription}</p>
         </div>
       )}
 
@@ -188,18 +200,31 @@ export function AnalysisResult({
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-700">
-        <Link href="/capture">
-          <Button variant="outline" className="border-slate-600 text-slate-200">
-            <Camera className="w-4 h-4 mr-2" />
-            Capture Another
-          </Button>
-        </Link>
-        <Link href="/upload">
-          <Button variant="outline" className="border-slate-600 text-slate-200">
-            <Upload className="w-4 h-4 mr-2" />
-            Upload Another
-          </Button>
-        </Link>
+        {isMobile ? (
+          // Mobile: Single button - file input handles both camera and gallery
+          <Link href="/upload">
+            <Button variant="outline" className="border-slate-600 text-slate-200">
+              <ImagePlus className="w-4 h-4 mr-2" />
+              Add Another
+            </Button>
+          </Link>
+        ) : (
+          // Desktop: Two buttons
+          <>
+            <Link href="/capture">
+              <Button variant="outline" className="border-slate-600 text-slate-200">
+                <Camera className="w-4 h-4 mr-2" />
+                Capture Another
+              </Button>
+            </Link>
+            <Link href="/upload">
+              <Button variant="outline" className="border-slate-600 text-slate-200">
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Another
+              </Button>
+            </Link>
+          </>
+        )}
         <Button
           variant="outline"
           onClick={handleShare}

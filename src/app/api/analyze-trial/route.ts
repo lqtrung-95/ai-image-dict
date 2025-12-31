@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
       id: `trial-${Date.now()}`,
       imageUrl: imageDataUrl,
       sceneDescription: analysis.sceneDescription,
+      sceneDescriptionZh: analysis.sceneDescriptionZh,
+      sceneDescriptionPinyin: analysis.sceneDescriptionPinyin,
       objects: allObjects,
       exampleSentences,
       isTrial: true,

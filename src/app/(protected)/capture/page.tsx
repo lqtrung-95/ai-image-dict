@@ -12,6 +12,8 @@ interface AnalysisData {
   id: string;
   imageUrl: string;
   sceneDescription: string;
+  sceneDescriptionZh?: string;
+  sceneDescriptionPinyin?: string;
   objects: Array<{
     id: string;
     label_en: string;
@@ -107,6 +109,8 @@ export default function CapturePage() {
           id={analysisData.id}
           imageUrl={analysisData.imageUrl}
           sceneDescription={analysisData.sceneDescription}
+          sceneDescriptionZh={analysisData.sceneDescriptionZh}
+          sceneDescriptionPinyin={analysisData.sceneDescriptionPinyin}
           objects={analysisData.objects}
           exampleSentences={analysisData.exampleSentences}
           onSaveWord={handleSaveWord}

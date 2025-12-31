@@ -142,6 +142,8 @@ export async function POST(request: NextRequest) {
       id: photoAnalysis.id,
       imageUrl: imageUrl,
       sceneDescription: analysis.sceneDescription,
+      sceneDescriptionZh: analysis.sceneDescriptionZh,
+      sceneDescriptionPinyin: analysis.sceneDescriptionPinyin,
       objects: completeAnalysis?.detected_objects || [],
       colors: analysis.colors || [],
       actions: analysis.actions || [],
