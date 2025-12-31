@@ -139,6 +139,7 @@ export function AnalysisResult({
                 wordZh={obj.label_zh}
                 wordPinyin={obj.pinyin}
                 wordEn={obj.label_en}
+                exampleSentence={getExampleSentence(obj.label_zh)}
                 category="object"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
@@ -163,6 +164,7 @@ export function AnalysisResult({
                 wordZh={obj.label_zh}
                 wordPinyin={obj.pinyin}
                 wordEn={obj.label_en}
+                exampleSentence={getExampleSentence(obj.label_zh)}
                 category="color"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
@@ -187,6 +189,7 @@ export function AnalysisResult({
                 wordZh={obj.label_zh}
                 wordPinyin={obj.pinyin}
                 wordEn={obj.label_en}
+                exampleSentence={getExampleSentence(obj.label_zh)}
                 category="action"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
