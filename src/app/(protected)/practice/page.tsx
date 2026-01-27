@@ -12,8 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Shuffle, RotateCcw, Trophy, BookOpen, Target, Flame } from 'lucide-react';
+import { Shuffle, RotateCcw, Trophy, BookOpen, Target, Flame, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  type SrsRating,
+  type SrsState,
+  getIntervalPreviews,
+} from '@/lib/spaced-repetition-sm2-algorithm';
 
 interface VocabularyItem {
   id: string;
@@ -22,6 +27,10 @@ interface VocabularyItem {
   word_en: string;
   photo_url?: string | null;
   photo_date?: string | null;
+  easiness_factor: number;
+  interval_days: number;
+  repetitions: number;
+  correct_streak: number;
 }
 
 interface Collection {
@@ -32,8 +41,10 @@ interface Collection {
 
 interface PracticeStats {
   total: number;
-  known: number;
-  stillLearning: number;
+  again: number;
+  hard: number;
+  good: number;
+  easy: number;
 }
 
 export default function PracticePage() {
@@ -43,20 +54,31 @@ export default function PracticePage() {
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>('all');
-  const [stats, setStats] = useState<PracticeStats>({ total: 0, known: 0, stillLearning: 0 });
+  const [stats, setStats] = useState<PracticeStats>({
+    total: 0,
+    again: 0,
+    hard: 0,
+    good: 0,
+    easy: 0,
+  });
   const [sessionComplete, setSessionComplete] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [dueCount, setDueCount] = useState(0);
   const [startTime] = useState(Date.now());
+  const [sessionId] = useState<string | null>(null);
 
-  const recordPracticeSession = async (known: number, total: number) => {
+  const recordPracticeSession = async () => {
     try {
       const durationSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const wordsKnown = stats.good + stats.easy;
+      const wordsPracticed = stats.again + stats.hard + stats.good + stats.easy;
+
       const response = await fetch('/api/stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          wordsPracticed: total,
-          wordsKnown: known,
+          wordsPracticed,
+          wordsKnown,
           durationSeconds,
         }),
       });
@@ -65,7 +87,7 @@ export default function PracticePage() {
         const data = await response.json();
         setStreak(data.currentStreak);
         if (data.currentStreak > 1) {
-          toast.success(`🔥 ${data.currentStreak} day streak!`);
+          toast.success(`${data.currentStreak} day streak!`);
         }
       }
     } catch (error) {
@@ -73,11 +95,11 @@ export default function PracticePage() {
     }
   };
 
-  const fetchWords = useCallback(async (collectionId?: string) => {
+  const fetchDueWords = useCallback(async (collectionId?: string) => {
     setLoading(true);
     setSessionComplete(false);
     setCurrentIndex(0);
-    setStats({ total: 0, known: 0, stillLearning: 0 });
+    setStats({ total: 0, again: 0, hard: 0, good: 0, easy: 0 });
 
     try {
       const params = new URLSearchParams();
@@ -85,16 +107,16 @@ export default function PracticePage() {
         params.set('collection', collectionId);
       }
 
-      const response = await fetch(`/api/vocabulary?${params}`);
+      const response = await fetch(`/api/practice/due-words?${params}`);
       if (response.ok) {
         const data = await response.json();
-        // Shuffle the words
         const shuffled = [...data.items].sort(() => Math.random() - 0.5);
         setWords(shuffled);
+        setDueCount(data.dueCount);
         setStats((prev) => ({ ...prev, total: shuffled.length }));
       }
     } catch (error) {
-      console.error('Failed to fetch words:', error);
+      console.error('Failed to fetch due words:', error);
     } finally {
       setLoading(false);
     }
@@ -113,33 +135,45 @@ export default function PracticePage() {
   }, []);
 
   useEffect(() => {
-    fetchWords();
+    fetchDueWords();
     fetchCollections();
-  }, [fetchWords, fetchCollections]);
+  }, [fetchDueWords, fetchCollections]);
 
   const handleCollectionChange = (value: string) => {
     setSelectedCollection(value);
-    fetchWords(value === 'all' ? undefined : value);
+    fetchDueWords(value === 'all' ? undefined : value);
   };
 
-  const handleKnow = () => {
-    setStats((prev) => ({ ...prev, known: prev.known + 1 }));
-    goToNext();
-  };
+  const handleRate = async (rating: SrsRating) => {
+    const currentWord = words[currentIndex];
+    if (!currentWord) return;
 
-  const handleStillLearning = () => {
-    setStats((prev) => ({ ...prev, stillLearning: prev.stillLearning + 1 }));
-    goToNext();
-  };
+    // Update local stats
+    const ratingKey = { 1: 'again', 2: 'hard', 3: 'good', 4: 'easy' }[rating] as keyof PracticeStats;
+    setStats((prev) => ({ ...prev, [ratingKey]: prev[ratingKey] + 1 }));
 
-  const goToNext = () => {
+    // Record attempt to API
+    try {
+      await fetch('/api/word-attempts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vocabularyItemId: currentWord.id,
+          sessionId,
+          quizMode: 'flashcard',
+          rating,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to record attempt:', error);
+    }
+
+    // Move to next word or complete session
     if (currentIndex < words.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       setSessionComplete(true);
-      // Record the practice session
-      const finalKnown = stats.known + 1; // Include current if it was "know"
-      recordPracticeSession(finalKnown, words.length);
+      recordPracticeSession();
     }
   };
 
@@ -147,7 +181,7 @@ export default function PracticePage() {
     const shuffled = [...words].sort(() => Math.random() - 0.5);
     setWords(shuffled);
     setCurrentIndex(0);
-    setStats({ total: words.length, known: 0, stillLearning: 0 });
+    setStats({ total: words.length, again: 0, hard: 0, good: 0, easy: 0 });
     setSessionComplete(false);
   };
 
@@ -159,6 +193,18 @@ export default function PracticePage() {
 
   const currentWord = words[currentIndex];
   const progress = words.length > 0 ? ((currentIndex + 1) / words.length) * 100 : 0;
+
+  // Calculate interval previews for current word
+  const currentSrsState: SrsState | null = currentWord
+    ? {
+        easinessFactor: currentWord.easiness_factor || 2.5,
+        intervalDays: currentWord.interval_days || 0,
+        repetitions: currentWord.repetitions || 0,
+        correctStreak: currentWord.correct_streak || 0,
+      }
+    : null;
+
+  const intervalPreviews = currentSrsState ? getIntervalPreviews(currentSrsState) : undefined;
 
   if (loading) {
     return (
@@ -177,23 +223,36 @@ export default function PracticePage() {
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
             <BookOpen className="w-8 h-8 text-slate-500" />
           </div>
-          <h2 className="text-xl font-medium text-white mb-2">No words to practice</h2>
+          <h2 className="text-xl font-medium text-white mb-2">No words due for review</h2>
           <p className="text-slate-400 mb-6">
-            Add some vocabulary first by analyzing photos!
+            {dueCount === 0
+              ? 'Add some vocabulary by analyzing photos, or check back tomorrow!'
+              : 'Great job! Come back later for more practice.'}
           </p>
-          <Button
-            onClick={() => router.push('/capture')}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            Capture Photo
-          </Button>
+          <div className="flex gap-3 justify-center">
+            <Button
+              onClick={() => router.push('/capture')}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              Capture Photo
+            </Button>
+            <Button
+              onClick={() => router.push('/progress')}
+              variant="outline"
+              className="border-slate-600"
+            >
+              View Progress
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   if (sessionComplete) {
-    const percentage = Math.round((stats.known / stats.total) * 100);
+    const totalAnswered = stats.again + stats.hard + stats.good + stats.easy;
+    const correctCount = stats.good + stats.easy;
+    const percentage = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
 
     return (
       <div className="container mx-auto px-4 py-6 max-w-lg">
@@ -205,10 +264,10 @@ export default function PracticePage() {
           </div>
 
           <h2 className="text-3xl font-bold text-white mb-2">
-            {percentage}% Correct!
+            {percentage}% Success!
           </h2>
           <p className="text-slate-400 mb-4">
-            You reviewed {stats.total} words
+            You reviewed {totalAnswered} words
           </p>
 
           {streak > 0 && (
@@ -218,14 +277,22 @@ export default function PracticePage() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
-              <p className="text-3xl font-bold text-green-400">{stats.known}</p>
-              <p className="text-sm text-green-400/80">Known</p>
+          <div className="grid grid-cols-4 gap-2 mb-8">
+            <div className="bg-red-500/10 rounded-xl p-3 border border-red-500/30">
+              <p className="text-2xl font-bold text-red-400">{stats.again}</p>
+              <p className="text-xs text-red-400/80">Again</p>
             </div>
-            <div className="bg-orange-500/10 rounded-xl p-4 border border-orange-500/30">
-              <p className="text-3xl font-bold text-orange-400">{stats.stillLearning}</p>
-              <p className="text-sm text-orange-400/80">Still Learning</p>
+            <div className="bg-orange-500/10 rounded-xl p-3 border border-orange-500/30">
+              <p className="text-2xl font-bold text-orange-400">{stats.hard}</p>
+              <p className="text-xs text-orange-400/80">Hard</p>
+            </div>
+            <div className="bg-green-500/10 rounded-xl p-3 border border-green-500/30">
+              <p className="text-2xl font-bold text-green-400">{stats.good}</p>
+              <p className="text-xs text-green-400/80">Good</p>
+            </div>
+            <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/30">
+              <p className="text-2xl font-bold text-blue-400">{stats.easy}</p>
+              <p className="text-xs text-blue-400/80">Easy</p>
             </div>
           </div>
 
@@ -239,10 +306,10 @@ export default function PracticePage() {
               Practice Again
             </Button>
             <Button
-              onClick={() => router.push('/vocabulary')}
+              onClick={() => router.push('/progress')}
               className="flex-1 bg-purple-600 hover:bg-purple-700"
             >
-              View Vocabulary
+              View Progress
             </Button>
           </div>
         </Card>
@@ -262,6 +329,12 @@ export default function PracticePage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {dueCount > 0 && (
+            <div className="flex items-center gap-1 text-sm text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full">
+              <Calendar className="w-4 h-4" />
+              <span>{dueCount} due</span>
+            </div>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -321,23 +394,30 @@ export default function PracticePage() {
           wordEn={currentWord.word_en}
           photoUrl={currentWord.photo_url}
           photoDate={currentWord.photo_date}
-          onKnow={handleKnow}
-          onStillLearning={handleStillLearning}
+          intervalPreviews={intervalPreviews}
+          onRate={handleRate}
         />
       )}
 
       {/* Stats */}
-      <div className="flex justify-center gap-6 mt-8">
+      <div className="flex justify-center gap-4 mt-8">
         <div className="text-center">
-          <p className="text-2xl font-bold text-green-400">{stats.known}</p>
-          <p className="text-xs text-slate-500">Known</p>
+          <p className="text-xl font-bold text-red-400">{stats.again}</p>
+          <p className="text-xs text-slate-500">Again</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-orange-400">{stats.stillLearning}</p>
-          <p className="text-xs text-slate-500">Learning</p>
+          <p className="text-xl font-bold text-orange-400">{stats.hard}</p>
+          <p className="text-xs text-slate-500">Hard</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold text-green-400">{stats.good}</p>
+          <p className="text-xs text-slate-500">Good</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold text-blue-400">{stats.easy}</p>
+          <p className="text-xs text-slate-500">Easy</p>
         </div>
       </div>
     </div>
   );
 }
-

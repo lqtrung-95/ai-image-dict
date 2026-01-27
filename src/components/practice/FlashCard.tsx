@@ -5,6 +5,7 @@ import { useSpeech } from '@/hooks/useSpeech';
 import { Button } from '@/components/ui/button';
 import { Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { SrsRating } from '@/lib/spaced-repetition-sm2-algorithm';
 
 interface FlashCardProps {
   wordZh: string;
@@ -12,8 +13,47 @@ interface FlashCardProps {
   wordEn: string;
   photoUrl?: string | null;
   photoDate?: string | null;
-  onKnow: () => void;
-  onStillLearning: () => void;
+  intervalPreviews?: Record<SrsRating, number>;
+  onRate: (rating: SrsRating) => void;
+}
+
+const RATING_CONFIG: Record<SrsRating, { label: string; emoji: string; color: string; bgColor: string; borderColor: string }> = {
+  1: {
+    label: 'Again',
+    emoji: '🔄',
+    color: 'text-red-400',
+    bgColor: 'bg-red-500/20 hover:bg-red-500/30',
+    borderColor: 'border-red-500/50',
+  },
+  2: {
+    label: 'Hard',
+    emoji: '😓',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/20 hover:bg-orange-500/30',
+    borderColor: 'border-orange-500/50',
+  },
+  3: {
+    label: 'Good',
+    emoji: '👍',
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20 hover:bg-green-500/30',
+    borderColor: 'border-green-500/50',
+  },
+  4: {
+    label: 'Easy',
+    emoji: '🎯',
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/20 hover:bg-blue-500/30',
+    borderColor: 'border-blue-500/50',
+  },
+};
+
+function formatIntervalPreview(days: number): string {
+  if (days === 0) return 'now';
+  if (days === 1) return '1d';
+  if (days < 7) return `${days}d`;
+  if (days < 30) return `${Math.round(days / 7)}w`;
+  return `${Math.round(days / 30)}mo`;
 }
 
 export function FlashCard({
@@ -22,14 +62,13 @@ export function FlashCard({
   wordEn,
   photoUrl,
   photoDate,
-  onKnow,
-  onStillLearning,
+  intervalPreviews,
+  onRate,
 }: FlashCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const { speak } = useSpeech();
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Format the date nicely
   const formattedDate = photoDate
     ? new Date(photoDate).toLocaleDateString('en-US', {
         month: 'short',
@@ -46,6 +85,11 @@ export function FlashCard({
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
+  };
+
+  const handleRate = (rating: SrsRating) => {
+    setIsFlipped(false);
+    onRate(rating);
   };
 
   return (
@@ -131,28 +175,36 @@ export function FlashCard({
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* SRS Rating Buttons - 4 Anki-style buttons */}
       {isFlipped && (
-        <div className="flex gap-4 mt-6 animate-fade-in">
-          <Button
-            onClick={() => {
-              setIsFlipped(false);
-              onStillLearning();
-            }}
-            variant="outline"
-            className="flex-1 h-14 text-lg border-orange-500/50 text-orange-400 hover:bg-orange-500/10"
-          >
-            Still Learning 📚
-          </Button>
-          <Button
-            onClick={() => {
-              setIsFlipped(false);
-              onKnow();
-            }}
-            className="flex-1 h-14 text-lg bg-green-600 hover:bg-green-700"
-          >
-            Know It! ✓
-          </Button>
+        <div className="grid grid-cols-4 gap-2 mt-6 animate-fade-in">
+          {([1, 2, 3, 4] as SrsRating[]).map((rating) => {
+            const config = RATING_CONFIG[rating];
+            const interval = intervalPreviews?.[rating];
+
+            return (
+              <Button
+                key={rating}
+                onClick={() => handleRate(rating)}
+                variant="outline"
+                className={cn(
+                  'h-16 flex flex-col gap-0.5 px-2',
+                  config.borderColor,
+                  config.color,
+                  config.bgColor
+                )}
+              >
+                <span className="text-sm font-medium">
+                  {config.emoji} {config.label}
+                </span>
+                {interval !== undefined && (
+                  <span className="text-xs opacity-70">
+                    {formatIntervalPreview(interval)}
+                  </span>
+                )}
+              </Button>
+            );
+          })}
         </div>
       )}
 
@@ -164,4 +216,3 @@ export function FlashCard({
     </div>
   );
 }
-

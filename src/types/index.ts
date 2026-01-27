@@ -59,6 +59,34 @@ export interface VocabularyItem {
   exampleSentence?: string;
   isLearned: boolean;
   createdAt: Date;
+  // SRS (Spaced Repetition System) fields
+  easinessFactor?: number;
+  intervalDays?: number;
+  nextReviewDate?: Date | string;
+  repetitions?: number;
+  lastReviewedAt?: Date | string;
+  correctStreak?: number;
+  hskLevel?: number;
+}
+
+// SRS types
+export interface SrsState {
+  easinessFactor: number;
+  intervalDays: number;
+  repetitions: number;
+  correctStreak: number;
+}
+
+export interface WordPracticeAttempt {
+  id: string;
+  userId: string;
+  vocabularyItemId: string;
+  sessionId?: string;
+  quizMode: 'flashcard' | 'multiple-choice' | 'listening' | 'pinyin';
+  rating: 1 | 2 | 3 | 4;
+  isCorrect: boolean;
+  responseTimeMs?: number;
+  createdAt: Date;
 }
 
 // Collection types

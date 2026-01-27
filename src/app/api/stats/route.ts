@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// GET /api/stats - Get user stats
+// GET /api/stats - Get user stats including SRS metrics
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -44,10 +44,83 @@ export async function GET() {
       .eq('user_id', user.id)
       .eq('is_learned', true);
 
-    // Get words learned per day (last 7 days)
+    // Get today's date for SRS queries
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    // Get words due today (SRS)
+    const { count: dueToday } = await supabase
+      .from('vocabulary_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_learned', false)
+      .lte('next_review_date', todayStr);
+
+    // Get words mastered this week
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+    const { count: masteredThisWeek } = await supabase
+      .from('vocabulary_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_learned', true)
+      .gte('last_reviewed_at', sevenDaysAgo.toISOString());
+
+    // Get average easiness factor
+    const { data: efData } = await supabase
+      .from('vocabulary_items')
+      .select('easiness_factor')
+      .eq('user_id', user.id)
+      .not('easiness_factor', 'is', null);
+
+    const averageEaseFactor = efData && efData.length > 0
+      ? efData.reduce((sum, item) => sum + (item.easiness_factor || 2.5), 0) / efData.length
+      : 2.5;
+
+    // Get HSK distribution
+    const { data: hskData } = await supabase
+      .from('vocabulary_items')
+      .select('hsk_level')
+      .eq('user_id', user.id);
+
+    const hskDistribution: Record<string, number> = {
+      hsk1: 0,
+      hsk2: 0,
+      hsk3: 0,
+      hsk4: 0,
+      hsk5: 0,
+      hsk6: 0,
+      unclassified: 0,
+    };
+
+    hskData?.forEach((item) => {
+      if (item.hsk_level && item.hsk_level >= 1 && item.hsk_level <= 6) {
+        hskDistribution[`hsk${item.hsk_level}`]++;
+      } else {
+        hskDistribution.unclassified++;
+      }
+    });
+
+    // Get review forecast (next 7 days)
+    const reviewForecast: Array<{ date: string; count: number }> = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+
+      const { count } = await supabase
+        .from('vocabulary_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_learned', false)
+        .eq('next_review_date', dateStr);
+
+      reviewForecast.push({ date: dateStr, count: count || 0 });
+    }
+
+    // Get words added per day (last 7 days)
     const { data: recentWords } = await supabase
       .from('vocabulary_items')
       .select('created_at')
@@ -72,16 +145,16 @@ export async function GET() {
     });
 
     // Check if streak is still valid (practiced today or yesterday)
-    const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     const lastPractice = stats?.last_practice_date;
-    
+
     let currentStreak = stats?.current_streak || 0;
-    if (lastPractice && lastPractice !== today && lastPractice !== yesterday) {
+    if (lastPractice && lastPractice !== todayStr && lastPractice !== yesterday) {
       currentStreak = 0; // Streak broken
     }
 
     return NextResponse.json({
+      // Basic stats
       currentStreak,
       longestStreak: stats?.longest_streak || 0,
       totalWords: totalWords || 0,
@@ -89,6 +162,13 @@ export async function GET() {
       totalPracticeSessions: stats?.total_practice_sessions || 0,
       lastPracticeDate: stats?.last_practice_date,
       wordsPerDay: Object.entries(wordsPerDay).map(([date, count]) => ({ date, count })),
+
+      // SRS stats
+      dueToday: dueToday || 0,
+      masteredThisWeek: masteredThisWeek || 0,
+      averageEaseFactor: Math.round(averageEaseFactor * 100) / 100,
+      hskDistribution,
+      reviewForecast,
     });
   } catch (error) {
     console.error('Stats error:', error);
@@ -140,4 +220,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
-

@@ -52,6 +52,14 @@ create table public.vocabulary_items (
   word_en text not null,
   example_sentence text,
   is_learned boolean default false,
+  -- SRS (Spaced Repetition System) fields
+  easiness_factor float default 2.5,
+  interval_days integer default 0,
+  next_review_date date default current_date,
+  repetitions integer default 0,
+  last_reviewed_at timestamp with time zone,
+  correct_streak integer default 0,
+  hsk_level integer, -- 1-6, NULL for unclassified
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -64,8 +72,12 @@ create index idx_vocabulary_items_collection_id on public.vocabulary_items(colle
 create index idx_collections_user_id on public.collections(user_id);
 
 -- Full text search index for vocabulary
-create index idx_vocabulary_items_search on public.vocabulary_items 
+create index idx_vocabulary_items_search on public.vocabulary_items
   using gin(to_tsvector('simple', word_zh || ' ' || word_pinyin || ' ' || word_en));
+
+-- SRS index for due words query
+create index idx_vocabulary_items_due on public.vocabulary_items(user_id, next_review_date)
+  where is_learned = false;
 
 -- Enable Row Level Security
 alter table public.profiles enable row level security;
@@ -184,8 +196,34 @@ create policy "Users can manage own stats"
   using (auth.uid() = id);
 
 -- RLS Policies for practice_sessions
-create policy "Users can manage own practice sessions" 
-  on public.practice_sessions for all 
+create policy "Users can manage own practice sessions"
+  on public.practice_sessions for all
+  using (auth.uid() = user_id);
+
+-- Word practice attempts table (per-word SRS tracking)
+create table public.word_practice_attempts (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  vocabulary_item_id uuid references public.vocabulary_items(id) on delete cascade not null,
+  session_id uuid references public.practice_sessions(id) on delete set null,
+  quiz_mode varchar(20), -- 'flashcard', 'multiple-choice', 'listening', 'pinyin'
+  rating integer, -- 1=Again, 2=Hard, 3=Good, 4=Easy (SM-2 style)
+  is_correct boolean,
+  response_time_ms integer,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Indexes for word_practice_attempts
+create index idx_word_practice_attempts_user on public.word_practice_attempts(user_id);
+create index idx_word_practice_attempts_vocab on public.word_practice_attempts(vocabulary_item_id);
+create index idx_word_practice_attempts_created on public.word_practice_attempts(created_at desc);
+
+-- Enable RLS for word_practice_attempts
+alter table public.word_practice_attempts enable row level security;
+
+-- RLS Policy for word_practice_attempts
+create policy "Users can manage own word attempts"
+  on public.word_practice_attempts for all
   using (auth.uid() = user_id);
 
 -- Function to update streak on practice
