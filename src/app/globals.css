@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Exclude non-source directories from Tailwind content scanning */
+@source not "../../.claude";
+@source not "../../.opencode";
+@source not "../../.cursor";
+@source not "../../plans";
+@source not "../../docs";
+@source not "../../supabase";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

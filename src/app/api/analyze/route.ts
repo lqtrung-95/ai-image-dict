@@ -20,6 +20,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Ensure user profile exists (handles users created before triggers were fixed)
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (!existingProfile) {
+      await supabase.from('profiles').insert({
+        id: user.id,
+        display_name: user.email || 'User',
+      });
+      await supabase.from('user_stats').insert({
+        id: user.id,
+        current_streak: 0,
+        longest_streak: 0,
+      });
+    }
+
     // Check usage limit
     const { data: usageCheck, error: usageError } = await supabase.rpc('check_and_increment_usage', {
       p_user_id: user.id,
@@ -104,6 +123,7 @@ export async function POST(request: NextRequest) {
       zh: string;
       pinyin: string;
       confidence?: number;
+      hskLevel?: number | null;
       example?: { zh: string; pinyin: string; en: string };
     }
 
@@ -137,10 +157,15 @@ export async function POST(request: NextRequest) {
 
     // Build a map of example sentences for the response
     const exampleSentences: Record<string, { zh: string; pinyin: string; en: string }> = {};
+    // Build a map of HSK levels for the response
+    const hskLevels: Record<string, number | null> = {};
     [...(analysis.objects || []), ...(analysis.colors || []), ...(analysis.actions || [])].forEach(
       (obj: AIObject) => {
         if (obj.example) {
           exampleSentences[obj.zh] = obj.example;
+        }
+        if (obj.hskLevel !== undefined) {
+          hskLevels[obj.zh] = obj.hskLevel;
         }
       }
     );
@@ -175,6 +200,7 @@ export async function POST(request: NextRequest) {
       colors: analysis.colors || [],
       actions: analysis.actions || [],
       exampleSentences,
+      hskLevels,
       // Include usage info so UI can show remaining
       usage: usageCheck
         ? {

@@ -5,8 +5,11 @@ import { VocabularyCard } from '@/components/vocabulary/VocabularyCard';
 import { VocabularyListSkeleton } from '@/components/vocabulary/VocabularyCardSkeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, BookOpen } from 'lucide-react';
+import { Search, BookOpen, Download } from 'lucide-react';
 import { debounce } from '@/lib/utils';
+import { WordDetailModal } from '@/components/vocabulary/WordDetailModal';
+import { WordOfDayCard } from '@/components/word-of-day/word-of-day-card';
+import { AnkiExportButton } from '@/components/export/anki-export-button';
 
 interface VocabularyItem {
   id: string;
@@ -16,12 +19,18 @@ interface VocabularyItem {
   example_sentence?: string | null;
   is_learned: boolean;
   created_at: string;
-  collection_id?: string | null;
-  collections?: { name: string; color: string } | null;
+  list_ids?: string[];
+  lists?: { id: string; name: string; color: string }[] | null;
   // Photo context
   photo_url?: string | null;
   photo_date?: string | null;
   analysis_id?: string | null;
+  // SRS fields
+  hsk_level?: number | null;
+  next_review_date?: string | null;
+  easiness_factor?: number;
+  repetitions?: number;
+  correct_streak?: number;
 }
 
 export default function VocabularyPage() {
@@ -30,6 +39,8 @@ export default function VocabularyPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [selectedWord, setSelectedWord] = useState<VocabularyItem | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const fetchVocabulary = useCallback(async (search = '') => {
     setLoading(true);
@@ -105,20 +116,20 @@ export default function VocabularyPage() {
     }
   };
 
-  const handleAddToCollection = async (id: string, collectionId: string) => {
+  const handleAddToList = async (id: string, listId: string) => {
     try {
       const response = await fetch(`/api/vocabulary/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ collectionId }),
+        body: JSON.stringify({ listId }),
       });
 
       if (response.ok) {
-        // Refetch to get updated collection info
+        // Refetch to get updated list info
         fetchVocabulary(searchQuery);
       }
     } catch (error) {
-      console.error('Failed to add to collection:', error);
+      console.error('Failed to add to list:', error);
     }
   };
 
@@ -126,6 +137,8 @@ export default function VocabularyPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
+      <WordOfDayCard />
+
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">My Vocabulary</h1>
@@ -144,6 +157,7 @@ export default function VocabularyPage() {
             className="pl-10 bg-slate-800/50 border-slate-600 text-white"
           />
         </div>
+        <AnkiExportButton />
       </div>
 
       {loading ? (
@@ -183,14 +197,18 @@ export default function VocabularyPage() {
                 exampleSentence={item.example_sentence || undefined}
                 isLearned={item.is_learned}
                 isSaved={true}
-                collectionName={item.collections?.name}
-                collectionColor={item.collections?.color}
+                listName={item.lists?.[0]?.name}
+                listColor={item.lists?.[0]?.color}
                 photoUrl={item.photo_url}
                 photoDate={item.photo_date}
                 analysisId={item.analysis_id}
                 onToggleLearned={handleToggleLearned}
                 onDelete={handleDelete}
-                onAddToCollection={handleAddToCollection}
+                onAddToList={handleAddToList}
+                onClick={() => {
+                  setSelectedWord(item);
+                  setModalOpen(true);
+                }}
               />
             ))}
           </div>
@@ -210,6 +228,24 @@ export default function VocabularyPage() {
           )}
         </>
       )}
+
+      <WordDetailModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        word={selectedWord ? {
+          id: selectedWord.id,
+          wordZh: selectedWord.word_zh,
+          wordPinyin: selectedWord.word_pinyin,
+          wordEn: selectedWord.word_en,
+          exampleSentence: selectedWord.example_sentence || undefined,
+          hskLevel: selectedWord.hsk_level,
+          nextReviewDate: selectedWord.next_review_date,
+          easinessFactor: selectedWord.easiness_factor,
+          repetitions: selectedWord.repetitions,
+          correctStreak: selectedWord.correct_streak,
+          isLearned: selectedWord.is_learned,
+        } : null}
+      />
     </div>
   );
 }

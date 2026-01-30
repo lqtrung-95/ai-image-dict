@@ -24,7 +24,9 @@ export default function SignupPage() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+
+    // Sign up the user
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -34,10 +36,33 @@ export default function SignupPage() {
       },
     });
 
-    if (error) {
-      setError(error.message);
+    if (signUpError) {
+      setError(signUpError.message);
       setLoading(false);
       return;
+    }
+
+    // Create profile manually if user was created
+    if (authData.user) {
+      try {
+        // Create profile
+        await supabase.from('profiles').insert({
+          id: authData.user.id,
+          display_name: displayName || email,
+        });
+
+        // Create user stats
+        await supabase.from('user_stats').insert({
+          id: authData.user.id,
+          current_streak: 0,
+          longest_streak: 0,
+          total_words_learned: 0,
+          total_practice_sessions: 0,
+        });
+      } catch (err) {
+        // Non-critical error, user can still use the app
+        console.log('Profile creation skipped:', err);
+      }
     }
 
     setSuccess(true);

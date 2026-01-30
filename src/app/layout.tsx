@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { Header } from '@/components/layout/Header';
+import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
+import { OnlineStatusProvider } from '@/components/online-status-provider';
 import './globals.css';
 
 const geistSans = Geist({
@@ -116,9 +118,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-900`}>
-        <Header />
-        <main className="min-h-[calc(100vh-4rem)]">{children}</main>
-        <Toaster richColors position="top-center" />
+        <OnlineStatusProvider>
+          <Header />
+          <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+          <Toaster richColors position="top-center" />
+          <ServiceWorkerRegistration />
+        </OnlineStatusProvider>
       </body>
     </html>
   );

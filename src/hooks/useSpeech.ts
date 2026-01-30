@@ -1,13 +1,37 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 export function useSpeech() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
+
+  // Cleanup function to revoke object URL and reset audio
+  const cleanupAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupAudio();
+    };
+  }, [cleanupAudio]);
 
   // Primary: Google Text-to-Speech API
   const speakWithGoogle = useCallback(async (text: string): Promise<boolean> => {
     try {
+      // Cleanup previous audio before creating new one
+      cleanupAudio();
+
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -18,19 +42,29 @@ export function useSpeech() {
 
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
+      audioUrlRef.current = audioUrl;
 
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
 
-      audioRef.current = new Audio(audioUrl);
-      await audioRef.current.play();
+      // Cleanup after playback ends
+      audio.onended = () => {
+        cleanupAudio();
+      };
+
+      // Cleanup on error
+      audio.onerror = () => {
+        cleanupAudio();
+      };
+
+      await audio.play();
       return true;
     } catch (error) {
       console.warn('Google TTS failed, falling back to Web Speech:', error);
+      cleanupAudio();
       return false;
     }
-  }, []);
+  }, [cleanupAudio]);
 
   // Fallback: Browser Web Speech API
   const speakWithWebSpeech = useCallback((text: string, lang: string = 'zh-CN') => {
@@ -70,16 +104,12 @@ export function useSpeech() {
   );
 
   const stop = useCallback(() => {
-    // Stop Google TTS audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
+    cleanupAudio();
     // Stop Web Speech
     if ('speechSynthesis' in window) {
       speechSynthesis.cancel();
     }
-  }, []);
+  }, [cleanupAudio]);
 
   return { speak, stop };
 }

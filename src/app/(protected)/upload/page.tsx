@@ -16,8 +16,9 @@ export default function UploadPage() {
     wordPinyin: string;
     wordEn: string;
     detectedObjectId: string;
-    collectionId?: string;
+    listId?: string;
     exampleSentence?: string;
+    hskLevel?: number | null;
   }) => {
     const response = await fetch('/api/vocabulary', {
       method: 'POST',
@@ -73,7 +74,9 @@ export default function UploadPage() {
           sceneDescriptionPinyin={analysisData.sceneDescriptionPinyin}
           objects={analysisData.objects}
           exampleSentences={analysisData.exampleSentences}
+          hskLevels={analysisData.hskLevels}
           onSaveWord={handleSaveWord}
+          onUploadAnother={reset}
         />
       )}
 

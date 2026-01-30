@@ -15,6 +15,7 @@ interface DetectedObject {
   pinyin: string;
   category: string;
   confidence: number;
+  hsk_level?: number | null;
 }
 
 interface ExampleSentence {
@@ -31,7 +32,9 @@ interface AnalysisResultProps {
   sceneDescriptionPinyin?: string;
   objects: DetectedObject[];
   exampleSentences?: Record<string, ExampleSentence>;
-  onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string; collectionId?: string; exampleSentence?: string }) => Promise<void>;
+  hskLevels?: Record<string, number | null>;
+  onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string; listId?: string; exampleSentence?: string; hskLevel?: number | null }) => Promise<void>;
+  onUploadAnother?: () => void;
 }
 
 export function AnalysisResult({
@@ -41,7 +44,9 @@ export function AnalysisResult({
   sceneDescriptionPinyin,
   objects,
   exampleSentences = {},
+  hskLevels = {},
   onSaveWord,
+  onUploadAnother,
 }: AnalysisResultProps) {
   const isMobile = useIsMobile();
   const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
@@ -53,7 +58,12 @@ export function AnalysisResult({
     return `${example.zh} (${example.pinyin}) - ${example.en}`;
   };
 
-  const handleSaveWord = async (obj: DetectedObject, collectionId?: string) => {
+  const getHskLevel = (wordZh: string, objectHskLevel?: number | null): number | null | undefined => {
+    // Prefer object's HSK level, fall back to hskLevels map
+    return objectHskLevel ?? hskLevels[wordZh] ?? undefined;
+  };
+
+  const handleSaveWord = async (obj: DetectedObject, listId?: string) => {
     if (savedWords.has(obj.id)) return;
 
     setSavingWord(obj.id);
@@ -63,8 +73,9 @@ export function AnalysisResult({
         wordPinyin: obj.pinyin,
         wordEn: obj.label_en,
         detectedObjectId: obj.id,
-        collectionId,
+        listId,
         exampleSentence: getExampleSentence(obj.label_zh),
+        hskLevel: getHskLevel(obj.label_zh, obj.hsk_level),
       });
       setSavedWords((prev) => new Set([...prev, obj.id]));
     } catch (error) {
@@ -143,7 +154,7 @@ export function AnalysisResult({
                 category="object"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
-                  savingWord === obj.id ? undefined : (collectionId) => handleSaveWord(obj, collectionId)
+                  savingWord === obj.id ? undefined : (listId) => handleSaveWord(obj, listId)
                 }
               />
             ))}
@@ -168,7 +179,7 @@ export function AnalysisResult({
                 category="color"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
-                  savingWord === obj.id ? undefined : (collectionId) => handleSaveWord(obj, collectionId)
+                  savingWord === obj.id ? undefined : (listId) => handleSaveWord(obj, listId)
                 }
               />
             ))}
@@ -193,7 +204,7 @@ export function AnalysisResult({
                 category="action"
                 isSaved={savedWords.has(obj.id)}
                 onSave={
-                  savingWord === obj.id ? undefined : (collectionId) => handleSaveWord(obj, collectionId)
+                  savingWord === obj.id ? undefined : (listId) => handleSaveWord(obj, listId)
                 }
               />
             ))}
@@ -204,13 +215,15 @@ export function AnalysisResult({
       {/* Actions */}
       <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-700">
         {isMobile ? (
-          // Mobile: Single button - file input handles both camera and gallery
-          <Link href="/upload">
-            <Button variant="outline" className="border-slate-600 text-slate-200">
-              <ImagePlus className="w-4 h-4 mr-2" />
-              Add Another
-            </Button>
-          </Link>
+          // Mobile: Single button
+          <Button
+            variant="outline"
+            className="border-slate-600 text-slate-200"
+            onClick={onUploadAnother}
+          >
+            <ImagePlus className="w-4 h-4 mr-2" />
+            Add Another
+          </Button>
         ) : (
           // Desktop: Two buttons
           <>
@@ -220,12 +233,14 @@ export function AnalysisResult({
                 Capture Another
               </Button>
             </Link>
-            <Link href="/upload">
-              <Button variant="outline" className="border-slate-600 text-slate-200">
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Another
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              className="border-slate-600 text-slate-200"
+              onClick={onUploadAnother}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Another
+            </Button>
           </>
         )}
         <Button

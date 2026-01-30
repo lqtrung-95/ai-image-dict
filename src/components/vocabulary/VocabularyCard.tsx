@@ -26,7 +26,7 @@ const COLORS = [
   '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6',
 ];
 
-interface Collection {
+interface VocabularyList {
   id: string;
   name: string;
   color: string;
@@ -41,15 +41,16 @@ interface VocabularyCardProps {
   category?: string;
   isLearned?: boolean;
   isSaved?: boolean;
-  collectionName?: string;
-  collectionColor?: string;
+  listName?: string;
+  listColor?: string;
   photoUrl?: string | null;
   photoDate?: string | null;
   analysisId?: string | null;
-  onSave?: (collectionId?: string) => void;
+  onSave?: (listId?: string) => void;
   onToggleLearned?: (id: string) => void;
   onDelete?: (id: string) => void;
-  onAddToCollection?: (id: string, collectionId: string) => void;
+  onAddToList?: (id: string, listId: string) => void;
+  onClick?: () => void;
   className?: string;
 }
 
@@ -62,26 +63,27 @@ export function VocabularyCard({
   category,
   isLearned = false,
   isSaved = false,
-  collectionName,
-  collectionColor,
+  listName,
+  listColor,
   photoUrl,
   photoDate,
   analysisId,
   onSave,
   onToggleLearned,
   onDelete,
-  onAddToCollection,
+  onAddToList,
+  onClick,
   className,
 }: VocabularyCardProps) {
   const { speak } = useSpeech();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isExampleExpanded, setIsExampleExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [loadingCollections, setLoadingCollections] = useState(false);
+  const [lists, setLists] = useState<VocabularyList[]>([]);
+  const [loadingLists, setLoadingLists] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newCollectionName, setNewCollectionName] = useState('');
-  const [newCollectionColor, setNewCollectionColor] = useState('#3b82f6');
+  const [newListName, setNewListName] = useState('');
+  const [newListColor, setNewListColor] = useState('#3b82f6');
   const [creating, setCreating] = useState(false);
   const [pendingSaveAction, setPendingSaveAction] = useState<'save' | 'add' | null>(null);
 
@@ -91,45 +93,45 @@ export function VocabularyCard({
     setTimeout(() => setIsPlaying(false), 1000);
   };
 
-  const handleSave = (collectionId?: string) => {
+  const handleSave = (listId?: string) => {
     if (onSave) {
-      onSave(collectionId);
-      toast.success(collectionId ? 'Added to collection!' : 'Added to vocabulary!');
+      onSave(listId);
+      toast.success(listId ? 'Added to list!' : 'Added to vocabulary!');
     }
   };
 
-  const handleCreateCollection = async () => {
-    if (!newCollectionName.trim()) return;
+  const handleCreateList = async () => {
+    if (!newListName.trim()) return;
 
     setCreating(true);
     try {
-      const response = await fetch('/api/collections', {
+      const response = await fetch('/api/lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCollectionName.trim(), color: newCollectionColor }),
+        body: JSON.stringify({ name: newListName.trim(), color: newListColor }),
       });
 
       if (response.ok) {
-        const newCollection = await response.json();
-        setCollections((prev) => [newCollection, ...prev]);
-        
-        // Auto-save/add to the new collection
+        const newList = await response.json();
+        setLists((prev) => [newList, ...prev]);
+
+        // Auto-save/add to the new list
         if (pendingSaveAction === 'save') {
-          handleSave(newCollection.id);
-        } else if (pendingSaveAction === 'add' && id && onAddToCollection) {
-          onAddToCollection(id, newCollection.id);
-          toast.success(`Added to ${newCollection.name}!`);
+          handleSave(newList.id);
+        } else if (pendingSaveAction === 'add' && id && onAddToList) {
+          onAddToList(id, newList.id);
+          toast.success(`Added to ${newList.name}!`);
         }
-        
+
         setShowCreateDialog(false);
-        setNewCollectionName('');
+        setNewListName('');
         setPendingSaveAction(null);
       } else {
-        toast.error('Failed to create collection');
+        toast.error('Failed to create list');
       }
     } catch (error) {
-      console.error('Failed to create collection:', error);
-      toast.error('Failed to create collection');
+      console.error('Failed to create list:', error);
+      toast.error('Failed to create list');
     } finally {
       setCreating(false);
     }
@@ -148,25 +150,25 @@ export function VocabularyCard({
     }
   };
 
-  const fetchCollections = async () => {
-    if (collections.length > 0) return;
-    setLoadingCollections(true);
+  const fetchLists = async () => {
+    if (lists.length > 0) return;
+    setLoadingLists(true);
     try {
-      const response = await fetch('/api/collections');
+      const response = await fetch('/api/lists');
       if (response.ok) {
         const data = await response.json();
-        setCollections(data);
+        setLists(data);
       }
     } catch (error) {
-      console.error('Failed to fetch collections:', error);
+      console.error('Failed to fetch lists:', error);
     } finally {
-      setLoadingCollections(false);
+      setLoadingLists(false);
     }
   };
 
-  const handleAddToCollection = (collectionId: string) => {
-    if (id && onAddToCollection) {
-      onAddToCollection(id, collectionId);
+  const handleAddToList = (listId: string) => {
+    if (id && onAddToList) {
+      onAddToList(id, listId);
     }
   };
 
@@ -189,8 +191,10 @@ export function VocabularyCard({
       className={cn(
         'group p-4 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-colors',
         isLearned && 'border-green-500/30 bg-green-900/10',
+        onClick && 'cursor-pointer',
         className
       )}
+      onClick={onClick}
     >
       <div className="flex items-start justify-between gap-2">
         {/* Photo thumbnail */}
@@ -226,13 +230,13 @@ export function VocabularyCard({
                 {category}
               </span>
             )}
-            {collectionName && (
+            {listName && (
               <span
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium"
-                style={{ backgroundColor: `${collectionColor}20`, color: collectionColor }}
+                style={{ backgroundColor: `${listColor}20`, color: listColor }}
               >
                 <Folder className="w-3 h-3" />
-                {collectionName}
+                {listName}
               </span>
             )}
           </div>
@@ -276,9 +280,9 @@ export function VocabularyCard({
             <Volume2 className="w-4 h-4" />
           </Button>
 
-          {/* Save button with collection picker (for unsaved words) */}
+          {/* Save button with list picker (for unsaved words) */}
           {!isSaved && onSave && (
-            <DropdownMenu onOpenChange={(open) => open && fetchCollections()}>
+            <DropdownMenu onOpenChange={(open) => open && fetchLists()}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
@@ -298,19 +302,19 @@ export function VocabularyCard({
                   Save to vocabulary
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-700" />
-                {loadingCollections ? (
+                {loadingLists ? (
                   <DropdownMenuItem disabled className="text-slate-400">
-                    Loading collections...
+                    Loading lists...
                   </DropdownMenuItem>
                 ) : (
-                  collections.map((collection) => (
+                  lists.map((list) => (
                     <DropdownMenuItem
-                      key={collection.id}
-                      onClick={() => handleSave(collection.id)}
+                      key={list.id}
+                      onClick={() => handleSave(list.id)}
                       className="text-white focus:bg-slate-700 cursor-pointer"
                     >
-                      <Folder className="w-4 h-4 mr-2" style={{ color: collection.color }} />
-                      Save to {collection.name}
+                      <Folder className="w-4 h-4 mr-2" style={{ color: list.color }} />
+                      Save to {list.name}
                     </DropdownMenuItem>
                   ))
                 )}
@@ -320,7 +324,7 @@ export function VocabularyCard({
                   className="text-purple-400 focus:bg-slate-700 cursor-pointer"
                 >
                   <FolderPlus className="w-4 h-4 mr-2" />
-                  Create new collection
+                  Create new list
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -344,43 +348,43 @@ export function VocabularyCard({
             </Button>
           )}
 
-          {/* Add to collection dropdown (for saved words) */}
-          {isSaved && id && onAddToCollection && (
-            <DropdownMenu onOpenChange={(open) => open && fetchCollections()}>
+          {/* Add to list dropdown (for saved words) */}
+          {isSaved && id && onAddToList && (
+            <DropdownMenu onOpenChange={(open) => open && fetchLists()}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full text-slate-400 hover:text-purple-400 hover:bg-purple-500/20"
-                  aria-label="Add to collection"
+                  aria-label="Add to list"
                 >
                   <FolderPlus className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-slate-800 border-slate-700" align="end">
-                {loadingCollections ? (
+                {loadingLists ? (
                   <DropdownMenuItem disabled className="text-slate-400">
                     Loading...
                   </DropdownMenuItem>
                 ) : (
-                  collections.map((collection) => (
+                  lists.map((list) => (
                     <DropdownMenuItem
-                      key={collection.id}
-                      onClick={() => handleAddToCollection(collection.id)}
+                      key={list.id}
+                      onClick={() => handleAddToList(list.id)}
                       className="text-white focus:bg-slate-700 cursor-pointer"
                     >
-                      <Folder className="w-4 h-4 mr-2" style={{ color: collection.color }} />
-                      {collection.name}
+                      <Folder className="w-4 h-4 mr-2" style={{ color: list.color }} />
+                      {list.name}
                     </DropdownMenuItem>
                   ))
                 )}
-                {collections.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
+                {lists.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
                 <DropdownMenuItem
                   onClick={() => openCreateDialog('add')}
                   className="text-purple-400 focus:bg-slate-700 cursor-pointer"
                 >
                   <FolderPlus className="w-4 h-4 mr-2" />
-                  Create new collection
+                  Create new list
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -401,18 +405,18 @@ export function VocabularyCard({
         </div>
       </div>
 
-      {/* Create Collection Dialog */}
+      {/* Create List Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="bg-slate-800 border-slate-700 max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-white">Create Collection</DialogTitle>
+            <DialogTitle className="text-white">Create List</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Input
-                value={newCollectionName}
-                onChange={(e) => setNewCollectionName(e.target.value)}
-                placeholder="Collection name"
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+                placeholder="List name"
                 className="bg-slate-700/50 border-slate-600 text-white"
                 autoFocus
               />
@@ -423,10 +427,10 @@ export function VocabularyCard({
                 {COLORS.map((color) => (
                   <button
                     key={color}
-                    onClick={() => setNewCollectionColor(color)}
+                    onClick={() => setNewListColor(color)}
                     className={cn(
                       'w-7 h-7 rounded-full transition-transform',
-                      newCollectionColor === color && 'scale-110 ring-2 ring-white'
+                      newListColor === color && 'scale-110 ring-2 ring-white'
                     )}
                     style={{ backgroundColor: color }}
                   />
@@ -434,8 +438,8 @@ export function VocabularyCard({
               </div>
             </div>
             <Button
-              onClick={handleCreateCollection}
-              disabled={!newCollectionName.trim() || creating}
+              onClick={handleCreateList}
+              disabled={!newListName.trim() || creating}
               className="w-full bg-purple-600 hover:bg-purple-700"
             >
               {creating ? 'Creating...' : 'Create & Save'}

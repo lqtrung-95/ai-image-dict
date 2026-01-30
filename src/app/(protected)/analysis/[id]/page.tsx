@@ -55,6 +55,9 @@ export default function AnalysisPage({ params }: { params: Promise<{ id: string 
     wordPinyin: string;
     wordEn: string;
     detectedObjectId: string;
+    listId?: string;
+    exampleSentence?: string;
+    hskLevel?: number | null;
   }) => {
     const response = await fetch('/api/vocabulary', {
       method: 'POST',
@@ -98,6 +101,7 @@ export default function AnalysisPage({ params }: { params: Promise<{ id: string 
         sceneDescription={analysis.scene_context?.description}
         objects={analysis.detected_objects}
         onSaveWord={handleSaveWord}
+        onUploadAnother={() => router.push('/upload')}
       />
     </div>
   );

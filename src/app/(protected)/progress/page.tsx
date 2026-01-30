@@ -16,6 +16,9 @@ import {
   Clock,
   BarChart3,
 } from 'lucide-react';
+import { DailyGoalProgressWidget } from '@/components/progress/daily-goal-progress-widget';
+import { ActivityHeatmap } from '@/components/dashboard/activity-heatmap';
+import { WordStateProgressBar } from '@/components/dashboard/word-state-progress-bar';
 
 interface Stats {
   currentStreak: number;
@@ -58,15 +61,34 @@ export default function ProgressPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activityData, setActivityData] = useState<{ date: string; wordsReviewed: number }[]>([]);
+  const [detailedStats, setDetailedStats] = useState<{
+    wordsByState: { new: number; learning: number; reviewing: number; mastered: number };
+  } | null>(null);
 
   const fetchStats = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/stats');
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      const data = await response.json();
+      const [statsRes, activityRes, detailedRes] = await Promise.all([
+        fetch('/api/stats'),
+        fetch('/api/stats/activity?days=84'),
+        fetch('/api/stats/detailed'),
+      ]);
+
+      if (!statsRes.ok) throw new Error('Failed to fetch stats');
+      const data = await statsRes.json();
       setStats(data);
+
+      if (activityRes.ok) {
+        const activityJson = await activityRes.json();
+        setActivityData(activityJson.activity || []);
+      }
+
+      if (detailedRes.ok) {
+        const detailedJson = await detailedRes.json();
+        setDetailedStats(detailedJson);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load progress');
     } finally {
@@ -104,6 +126,40 @@ export default function ProgressPage() {
   }
 
   if (!stats) return null;
+
+  // Empty state - no vocabulary yet
+  if (stats.totalWords === 0) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <h1 className="text-2xl font-bold text-white mb-6">Your Progress</h1>
+        <div className="text-center py-16">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
+            <TrendingUp className="w-8 h-8 text-slate-500" />
+          </div>
+          <h2 className="text-xl font-medium text-white mb-2">No progress yet</h2>
+          <p className="text-slate-400 mb-6 max-w-md mx-auto">
+            Start building your vocabulary by analyzing photos. Your progress stats will appear here!
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              onClick={() => router.push('/capture')}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Capture Photo
+            </Button>
+            <Button
+              onClick={() => router.push('/upload')}
+              variant="outline"
+              className="border-slate-600"
+            >
+              Upload Image
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const masteryRate = stats.totalWords > 0
     ? Math.round((stats.learnedWords / stats.totalWords) * 100)
@@ -147,6 +203,9 @@ export default function ProgressPage() {
           </div>
         </Card>
       )}
+
+      {/* Daily Goals Widget */}
+      <DailyGoalProgressWidget />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -288,6 +347,23 @@ export default function ProgressPage() {
           </div>
         </Card>
       </div>
+
+      {/* Activity Heatmap */}
+      {activityData.length > 0 && (
+        <div className="mb-8">
+          <ActivityHeatmap activity={activityData} />
+        </div>
+      )}
+
+      {/* Word State Progress */}
+      {detailedStats && (
+        <div className="mb-8">
+          <WordStateProgressBar
+            wordsByState={detailedStats.wordsByState}
+            totalWords={stats?.totalWords || 0}
+          />
+        </div>
+      )}
 
       {/* Words Added Chart */}
       <Card className="bg-slate-800/50 border-slate-700 p-6 mb-8">

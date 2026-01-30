@@ -33,7 +33,7 @@ interface VocabularyItem {
   correct_streak: number;
 }
 
-interface Collection {
+interface VocabularyList {
   id: string;
   name: string;
   color: string;
@@ -52,8 +52,8 @@ export default function PracticePage() {
   const [words, setWords] = useState<VocabularyItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState<string>('all');
+  const [lists, setLists] = useState<VocabularyList[]>([]);
+  const [selectedList, setSelectedList] = useState<string>('all');
   const [stats, setStats] = useState<PracticeStats>({
     total: 0,
     again: 0,
@@ -95,7 +95,7 @@ export default function PracticePage() {
     }
   };
 
-  const fetchDueWords = useCallback(async (collectionId?: string) => {
+  const fetchDueWords = useCallback(async (listId?: string) => {
     setLoading(true);
     setSessionComplete(false);
     setCurrentIndex(0);
@@ -103,8 +103,8 @@ export default function PracticePage() {
 
     try {
       const params = new URLSearchParams();
-      if (collectionId && collectionId !== 'all') {
-        params.set('collection', collectionId);
+      if (listId && listId !== 'all') {
+        params.set('list', listId);
       }
 
       const response = await fetch(`/api/practice/due-words?${params}`);
@@ -122,25 +122,25 @@ export default function PracticePage() {
     }
   }, []);
 
-  const fetchCollections = useCallback(async () => {
+  const fetchLists = useCallback(async () => {
     try {
-      const response = await fetch('/api/collections');
+      const response = await fetch('/api/lists');
       if (response.ok) {
         const data = await response.json();
-        setCollections(data);
+        setLists(data);
       }
     } catch (error) {
-      console.error('Failed to fetch collections:', error);
+      console.error('Failed to fetch lists:', error);
     }
   }, []);
 
   useEffect(() => {
     fetchDueWords();
-    fetchCollections();
-  }, [fetchDueWords, fetchCollections]);
+    fetchLists();
+  }, [fetchDueWords, fetchLists]);
 
-  const handleCollectionChange = (value: string) => {
-    setSelectedCollection(value);
+  const handleListChange = (value: string) => {
+    setSelectedList(value);
     fetchDueWords(value === 'all' ? undefined : value);
   };
 
@@ -346,9 +346,9 @@ export default function PracticePage() {
         </div>
       </div>
 
-      {/* Collection Filter */}
+      {/* List Filter */}
       <div className="mb-6">
-        <Select value={selectedCollection} onValueChange={handleCollectionChange}>
+        <Select value={selectedList} onValueChange={handleListChange}>
           <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white">
             <SelectValue placeholder="All words" />
           </SelectTrigger>
@@ -359,18 +359,18 @@ export default function PracticePage() {
                 All words ({words.length})
               </div>
             </SelectItem>
-            {collections.map((collection) => (
+            {lists.map((list) => (
               <SelectItem
-                key={collection.id}
-                value={collection.id}
+                key={list.id}
+                value={list.id}
                 className="text-white focus:bg-slate-700"
               >
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: collection.color }}
+                    style={{ backgroundColor: list.color }}
                   />
-                  {collection.name}
+                  {list.name}
                 </div>
               </SelectItem>
             ))}

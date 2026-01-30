@@ -18,6 +18,7 @@ interface AnalysisData {
     confidence: number;
   }>;
   exampleSentences?: Record<string, { zh: string; pinyin: string; en: string }>;
+  hskLevels?: Record<string, number | null>;
   usage?: {
     current: number;
     limit: number;

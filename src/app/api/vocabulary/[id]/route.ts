@@ -56,34 +56,71 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { isLearned, collectionId } = body;
+    const { isLearned, listId } = body;
 
     const updates: Record<string, unknown> = {};
     if (typeof isLearned === 'boolean') {
       updates.is_learned = isLearned;
     }
-    if (collectionId !== undefined) {
-      updates.collection_id = collectionId || null;
+
+    // Handle list assignment via junction table
+    if (listId !== undefined) {
+      if (listId) {
+        // Add to list (ignore duplicate)
+        await supabase
+          .from('list_vocabulary_items')
+          .insert({
+            list_id: listId,
+            vocabulary_item_id: id,
+          })
+          .select()
+          .single();
+      } else {
+        // Remove from all lists (listId is null/empty)
+        await supabase
+          .from('list_vocabulary_items')
+          .delete()
+          .eq('vocabulary_item_id', id);
+      }
     }
 
-    if (Object.keys(updates).length === 0) {
+    if (Object.keys(updates).length === 0 && listId === undefined) {
       return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from('vocabulary_items')
-      .update(updates)
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single();
+    // Only update vocabulary_items if there are actual column updates
+    let result = null;
+    if (Object.keys(updates).length > 0) {
+      const { data, error } = await supabase
+        .from('vocabulary_items')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Vocabulary update error:', error);
-      return NextResponse.json({ error: 'Failed to update word' }, { status: 500 });
+      if (error) {
+        console.error('Vocabulary update error:', error);
+        return NextResponse.json({ error: 'Failed to update word' }, { status: 500 });
+      }
+      result = data;
+    } else {
+      // Just fetch the item if no column updates
+      const { data, error } = await supabase
+        .from('vocabulary_items')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Vocabulary fetch error:', error);
+        return NextResponse.json({ error: 'Failed to fetch word' }, { status: 500 });
+      }
+      result = data;
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Vocabulary error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

@@ -46,13 +46,13 @@ export interface VocabularyWord {
   en: string;
   zh: string;
   pinyin: string;
+  hskLevel?: number | null;
 }
 
 export interface VocabularyItem {
   id: string;
   userId: string;
   detectedObjectId?: string;
-  collectionId?: string;
   wordZh: string;
   wordPinyin: string;
   wordEn: string;
@@ -118,5 +118,149 @@ export interface AnalysisResponse {
 export interface ApiError {
   error: string;
   code?: string;
+}
+
+// =====================================================
+// VOCABULARY LISTS (Personal word collections with M:N)
+// =====================================================
+
+export interface VocabularyList {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  color: string;
+  isPublic: boolean;
+  wordCount?: number;
+  learnedCount?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ListVocabularyItem {
+  id: string;
+  listId: string;
+  vocabularyItemId: string;
+  addedAt: Date;
+}
+
+// =====================================================
+// VOCABULARY COURSES (Community-shared curated sets)
+// =====================================================
+
+export interface VocabularyCourse {
+  id: string;
+  creatorId: string;
+  creatorName?: string;
+  name: string;
+  description?: string;
+  coverImageUrl?: string;
+  difficultyLevel: 1 | 2 | 3 | 4 | 5 | 6;
+  isPublished: boolean;
+  subscriberCount: number;
+  ratingAvg: number | null;
+  ratingCount: number;
+  wordCount?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CourseVocabularyItem {
+  id: string;
+  courseId: string;
+  wordZh: string;
+  wordPinyin: string;
+  wordEn: string;
+  exampleSentence?: string;
+  hskLevel?: number;
+  sortOrder: number;
+  createdAt: Date;
+}
+
+export interface CourseSubscription {
+  id: string;
+  userId: string;
+  courseId: string;
+  progressPercent: number;
+  wordsLearned: number;
+  lastPracticedAt?: Date;
+  subscribedAt: Date;
+}
+
+export interface CourseRating {
+  id: string;
+  userId: string;
+  courseId: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  review?: string;
+  createdAt: Date;
+}
+
+// =====================================================
+// VOCABULARY IMPORTS (External source imports)
+// =====================================================
+
+export type ImportSourceType = 'url' | 'text';
+export type ImportStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+export interface VocabularyImport {
+  id: string;
+  userId: string;
+  sourceType: ImportSourceType;
+  sourceUrl?: string;
+  sourceTitle?: string;
+  wordsExtracted: number;
+  wordsSaved: number;
+  status: ImportStatus;
+  errorMessage?: string;
+  createdAt: Date;
+}
+
+export interface ExtractedWord {
+  zh: string;
+  pinyin: string;
+  en: string;
+  example?: string;
+  hskLevel?: number;
+}
+
+// =====================================================
+// STATISTICS & PROGRESS
+// =====================================================
+
+export type WordState = 'new' | 'learning' | 'reviewing' | 'mastered';
+
+export interface VocabularyStats {
+  totalWords: number;
+  wordsByState: Record<WordState, number>;
+  hskDistribution: { level: number; count: number }[];
+  dueToday: number;
+  dueThisWeek: number;
+  streakDays: number;
+  longestStreak: number;
+}
+
+export interface ListProgress {
+  listId: string;
+  name: string;
+  color: string;
+  totalWords: number;
+  learnedWords: number;
+  progressPercent: number;
+}
+
+export interface CourseProgress {
+  courseId: string;
+  name: string;
+  totalWords: number;
+  wordsLearned: number;
+  progressPercent: number;
+  lastPracticedAt?: Date;
+}
+
+export interface WeeklyActivity {
+  date: string;
+  wordsReviewed: number;
+  minutesPracticed?: number;
 }
 
