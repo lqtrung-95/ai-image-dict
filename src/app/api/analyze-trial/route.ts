@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
     const allObjects = [
       ...(analysis.objects || []).map((obj: { en: string; zh: string; pinyin: string; confidence?: number; example?: object }) => ({
         id: `trial-obj-${Math.random().toString(36).substr(2, 9)}`,
-        label_en: obj.en,
-        label_zh: obj.zh,
+        en: obj.en,
+        zh: obj.zh,
         pinyin: obj.pinyin,
         confidence: obj.confidence || 0.9,
         category: 'object',
@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
       })),
       ...(analysis.colors || []).map((obj: { en: string; zh: string; pinyin: string; example?: object }) => ({
         id: `trial-color-${Math.random().toString(36).substr(2, 9)}`,
-        label_en: obj.en,
-        label_zh: obj.zh,
+        en: obj.en,
+        zh: obj.zh,
         pinyin: obj.pinyin,
         confidence: 0.95,
         category: 'color',
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
       })),
       ...(analysis.actions || []).map((obj: { en: string; zh: string; pinyin: string; example?: object }) => ({
         id: `trial-action-${Math.random().toString(36).substr(2, 9)}`,
-        label_en: obj.en,
-        label_zh: obj.zh,
+        en: obj.en,
+        zh: obj.zh,
         pinyin: obj.pinyin,
         confidence: 0.85,
         category: 'action',
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const exampleSentences: Record<string, { zh: string; pinyin: string; en: string }> = {};
     allObjects.forEach((obj) => {
       if (obj.example) {
-        exampleSentences[obj.label_zh] = obj.example as { zh: string; pinyin: string; en: string };
+        exampleSentences[obj.zh] = obj.example as { zh: string; pinyin: string; en: string };
       }
     });
 
