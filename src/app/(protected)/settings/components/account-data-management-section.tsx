@@ -21,6 +21,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 export function AccountDataManagementSection() {
   const [isExporting, setIsExporting] = useState(false);
@@ -32,7 +33,7 @@ export function AccountDataManagementSection() {
   const handleExportData = async () => {
     setIsExporting(true);
     try {
-      const response = await fetch('/api/user/export');
+      const response = await apiFetch('/api/user/export');
 
       if (!response.ok) {
         throw new Error('Failed to export data');
@@ -78,9 +79,8 @@ export function AccountDataManagementSection() {
     setDeleteStep('deleting');
 
     try {
-      const response = await fetch('/api/user/delete', {
+      const response = await apiFetch('/api/user/delete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ confirmation: confirmationText }),
       });
 

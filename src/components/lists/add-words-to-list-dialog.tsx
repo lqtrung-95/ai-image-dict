@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Loader2, Check } from 'lucide-react';
+import { apiFetch } from '@/lib/api-client';
 import { VocabularyItem } from '@/types';
 
 interface AddWordsToListDialogProps {
@@ -46,7 +47,7 @@ export function AddWordsToListDialog({
   const fetchWords = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/vocabulary?limit=200');
+      const response = await apiFetch('/api/vocabulary?limit=200');
       if (response.ok) {
         const data = await response.json();
         // Filter out words already in the list

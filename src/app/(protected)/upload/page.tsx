@@ -6,6 +6,7 @@ import { AnalysisResult } from '@/components/analysis/AnalysisResult';
 import { ErrorMessage } from '@/components/ui/error-boundary';
 import { UpgradeModal } from '@/components/upgrade/UpgradeModal';
 import { useAnalyze } from '@/hooks/useAnalyze';
+import { apiFetch } from '@/lib/api-client';
 
 export default function UploadPage() {
   const { stage, analysisData, error, usage, analyze, reset, dismissLimitModal, isLimitExceeded } =
@@ -20,9 +21,8 @@ export default function UploadPage() {
     exampleSentence?: string;
     hskLevel?: number | null;
   }) => {
-    const response = await fetch('/api/vocabulary', {
+    const response = await apiFetch('/api/vocabulary', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(word),
     });
 

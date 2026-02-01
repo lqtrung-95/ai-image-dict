@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Target, BookOpen, Clock, CheckCircle, Settings, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api-client';
 
 interface DailyGoal {
   id: string;
@@ -34,7 +35,7 @@ export function DailyGoalProgressWidget() {
   useEffect(() => {
     const fetchGoals = async () => {
       try {
-        const response = await fetch('/api/daily-goals');
+        const response = await apiFetch('/api/daily-goals');
         if (response.ok) {
           const data = await response.json();
           setGoals(data.goals || []);

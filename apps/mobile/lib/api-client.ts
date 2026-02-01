@@ -52,6 +52,7 @@ class ApiClient {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'GET',
       headers,
+      credentials: 'omit', // Don't send cookies, use Bearer token instead
     });
     return this.handleResponse<T>(response);
   }
@@ -61,6 +62,7 @@ class ApiClient {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'POST',
       headers,
+      credentials: 'omit',
       body: JSON.stringify(body),
     });
     return this.handleResponse<T>(response);
@@ -71,6 +73,7 @@ class ApiClient {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'PUT',
       headers,
+      credentials: 'omit',
       body: JSON.stringify(body),
     });
     return this.handleResponse<T>(response);
@@ -81,6 +84,7 @@ class ApiClient {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'DELETE',
       headers,
+      credentials: 'omit',
     });
     return this.handleResponse<T>(response);
   }
@@ -95,6 +99,7 @@ class ApiClient {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      credentials: 'omit',
       body: formData,
     });
     return this.handleResponse<T>(response);

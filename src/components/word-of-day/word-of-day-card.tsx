@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, BookmarkX, BookmarkCheck, Volume2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 import { useSpeech } from '@/hooks/useSpeech';
 
 interface WordOfDay {
@@ -37,7 +38,7 @@ export function WordOfDayCard() {
 
   const fetchWordOfDay = async () => {
     try {
-      const response = await fetch('/api/word-of-day');
+      const response = await apiFetch('/api/word-of-day');
       if (response.ok) {
         const data = await response.json();
         setWord(data.word);
@@ -53,9 +54,8 @@ export function WordOfDayCard() {
   const handleAction = async (action: 'save' | 'dismiss') => {
     setActionLoading(true);
     try {
-      const response = await fetch('/api/word-of-day', {
+      const response = await apiFetch('/api/word-of-day', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
 

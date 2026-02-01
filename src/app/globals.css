@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Prevent white flash on page load - set dark background immediately */
+html {
+  background-color: #0f172a !important;
+}
+
 /* Exclude non-source directories from Tailwind content scanning */
 @source not "../../.claude";
 @source not "../../.opencode";

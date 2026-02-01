@@ -20,6 +20,7 @@ import {
 import { Volume2, Check, Trash2, Plus, FolderPlus, Folder } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 const COLORS = [
   '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',
@@ -105,9 +106,8 @@ export function VocabularyCard({
 
     setCreating(true);
     try {
-      const response = await fetch('/api/lists', {
+      const response = await apiFetch('/api/lists', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newListName.trim(), color: newListColor }),
       });
 
@@ -154,7 +154,7 @@ export function VocabularyCard({
     if (lists.length > 0) return;
     setLoadingLists(true);
     try {
-      const response = await fetch('/api/lists');
+      const response = await apiFetch('/api/lists');
       if (response.ok) {
         const data = await response.json();
         setLists(data);

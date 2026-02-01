@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Check, X, RefreshCw, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface VocabularyItem {
   id: string;
@@ -33,7 +34,7 @@ export function QuizGame() {
 
   const fetchVocabulary = useCallback(async () => {
     try {
-      const response = await fetch('/api/vocabulary?limit=30');
+      const response = await apiFetch('/api/vocabulary?limit=30');
       if (response.ok) {
         const data = await response.json();
         setVocabulary(data.items || []);

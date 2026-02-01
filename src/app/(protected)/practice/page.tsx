@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Shuffle, RotateCcw, Trophy, BookOpen, Target, Flame, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 import {
   type SrsRating,
   type SrsState,
@@ -73,9 +74,8 @@ export default function PracticePage() {
       const wordsKnown = stats.good + stats.easy;
       const wordsPracticed = stats.again + stats.hard + stats.good + stats.easy;
 
-      const response = await fetch('/api/stats', {
+      const response = await apiFetch('/api/stats', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           wordsPracticed,
           wordsKnown,
@@ -107,7 +107,7 @@ export default function PracticePage() {
         params.set('list', listId);
       }
 
-      const response = await fetch(`/api/practice/due-words?${params}`);
+      const response = await apiFetch(`/api/practice/due-words?${params}`);
       if (response.ok) {
         const data = await response.json();
         const shuffled = [...data.items].sort(() => Math.random() - 0.5);
@@ -124,7 +124,7 @@ export default function PracticePage() {
 
   const fetchLists = useCallback(async () => {
     try {
-      const response = await fetch('/api/lists');
+      const response = await apiFetch('/api/lists');
       if (response.ok) {
         const data = await response.json();
         setLists(data);
@@ -154,9 +154,8 @@ export default function PracticePage() {
 
     // Record attempt to API
     try {
-      await fetch('/api/word-attempts', {
+      await apiFetch('/api/word-attempts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           vocabularyItemId: currentWord.id,
           sessionId,

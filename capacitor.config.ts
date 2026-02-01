@@ -2,22 +2,23 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.aiimagedict.app',
-  appName: 'AI词典',
-  webDir: 'out',
+  appName: 'AI Image Dictionary',
+  webDir: 'dist',
   server: {
-    // Use your deployed Vercel URL for API calls
-    // This allows the native app to call your existing API routes
-    url: process.env.CAPACITOR_SERVER_URL,
+    // Use deployed Vercel app for SPA experience
+    url: 'https://ai-image-dict.vercel.app',
+    allowNavigation: ['ai-image-dict.vercel.app', '*.supabase.co'],
     cleartext: false,
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
       backgroundColor: '#0f172a',
-      showSpinner: false,
+      showSpinner: true,
+      spinnerColor: '#a855f7',
     },
     StatusBar: {
-      style: 'dark',
+      style: 'DARK',
       backgroundColor: '#0f172a',
     },
     Keyboard: {
@@ -28,13 +29,13 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
-    scheme: 'AI词典',
+    allowsLinkPreview: false,
   },
   android: {
     backgroundColor: '#0f172a',
     allowMixedContent: false,
+    captureInput: true,
   },
 };
 
 export default config;
-

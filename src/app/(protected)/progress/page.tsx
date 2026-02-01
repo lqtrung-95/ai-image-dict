@@ -16,6 +16,7 @@ import {
   Clock,
   BarChart3,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/api-client';
 import { DailyGoalProgressWidget } from '@/components/progress/daily-goal-progress-widget';
 import { ActivityHeatmap } from '@/components/dashboard/activity-heatmap';
 import { WordStateProgressBar } from '@/components/dashboard/word-state-progress-bar';
@@ -71,9 +72,9 @@ export default function ProgressPage() {
     setError(null);
     try {
       const [statsRes, activityRes, detailedRes] = await Promise.all([
-        fetch('/api/stats'),
-        fetch('/api/stats/activity?days=84'),
-        fetch('/api/stats/detailed'),
+        apiFetch('/api/stats'),
+        apiFetch('/api/stats/activity?days=84'),
+        apiFetch('/api/stats/detailed'),
       ]);
 
       if (!statsRes.ok) throw new Error('Failed to fetch stats');

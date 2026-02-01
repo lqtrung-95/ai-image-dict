@@ -10,6 +10,7 @@ import { TypePinyinQuiz } from '@/components/quiz/TypePinyinQuiz';
 import type { LucideIcon } from 'lucide-react';
 import { Brain, Headphones, Keyboard, Trophy, RotateCcw, ArrowLeft, Flame } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 type QuizMode = 'select' | 'multiple-choice' | 'listening' | 'type-pinyin';
 type QuizColor = 'purple' | 'blue' | 'green';
@@ -84,7 +85,7 @@ export default function QuizPage() {
   const fetchWords = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/vocabulary?limit=20');
+      const response = await apiFetch('/api/vocabulary?limit=20');
       if (response.ok) {
         const data = await response.json();
         // Shuffle and take words for quiz
@@ -105,9 +106,8 @@ export default function QuizPage() {
   const recordSession = async () => {
     try {
       const durationSeconds = Math.floor((Date.now() - startTime) / 1000);
-      const response = await fetch('/api/stats', {
+      const response = await apiFetch('/api/stats', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           wordsPracticed: stats.total,
           wordsKnown: stats.correct,

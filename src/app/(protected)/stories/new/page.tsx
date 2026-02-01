@@ -10,6 +10,7 @@ import { ChevronLeft, Check, ImageIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api-client';
 
 interface Photo {
   id: string;
@@ -69,9 +70,8 @@ export default function NewStoryPage() {
 
     setCreating(true);
     try {
-      const response = await fetch('/api/stories', {
+      const response = await apiFetch('/api/stories', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           description,

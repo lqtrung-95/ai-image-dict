@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sparkles, Zap, Camera, BookOpen, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface UpgradeModalProps {
   open: boolean;
@@ -32,9 +33,8 @@ export function UpgradeModal({ open, onClose, usage }: UpgradeModalProps) {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/upgrade-interest', {
+      const res = await apiFetch('/api/upgrade-interest', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email || null,
           reason: 'limit_reached',

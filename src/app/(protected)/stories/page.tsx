@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { BookOpen, Plus, Image as ImageIcon, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface Story {
   id: string;
@@ -26,7 +27,7 @@ export default function StoriesPage() {
 
   const fetchStories = async () => {
     try {
-      const response = await fetch('/api/stories');
+      const response = await apiFetch('/api/stories');
       if (response.ok) {
         const data = await response.json();
         setStories(data.stories || []);
@@ -43,7 +44,7 @@ export default function StoriesPage() {
     if (!confirm('Are you sure you want to delete this story?')) return;
 
     try {
-      const response = await fetch(`/api/stories/${id}`, { method: 'DELETE' });
+      const response = await apiFetch(`/api/stories/${id}`, { method: 'DELETE' });
       if (response.ok) {
         setStories((prev) => prev.filter((s) => s.id !== id));
         toast.success('Story deleted');

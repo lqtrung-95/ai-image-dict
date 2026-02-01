@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { compressImage, extractBase64 } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 
 interface AnalysisData {
   id: string;
@@ -49,9 +50,8 @@ export function useAnalyze() {
       const compressedImage = await compressImage(imageData, 1024);
       const base64 = extractBase64(compressedImage);
 
-      const response = await fetch('/api/analyze', {
+      const response = await apiFetch('/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64 }),
       });
 

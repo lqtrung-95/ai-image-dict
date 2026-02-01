@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#db2777"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#bg)"/>
+  <!-- Camera body -->
+  <rect x="36" y="58" width="120" height="90" rx="12" fill="white" opacity="0.95"/>
+  <!-- Camera lens -->
+  <circle cx="96" cy="103" r="32" fill="#1e293b"/>
+  <circle cx="96" cy="103" r="24" fill="#334155"/>
+  <circle cx="96" cy="103" r="16" fill="#7c3aed"/>
+  <circle cx="90" cy="97" r="5" fill="white" opacity="0.6"/>
+  <!-- Camera flash -->
+  <rect x="52" y="68" width="20" height="12" rx="3" fill="#fbbf24"/>
+  <!-- Chinese character 词 (word/vocabulary) -->
+  <text x="96" y="175" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">词典</text>
+</svg>

@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Loader2, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -35,9 +36,8 @@ export default function CreateCoursePage() {
 
     setCreating(true);
     try {
-      const response = await fetch('/api/courses', {
+      const response = await apiFetch('/api/courses', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || null,

@@ -6,6 +6,7 @@ import { AnalysisResult } from '@/components/analysis/AnalysisResult';
 import { AnalysisSkeleton } from '@/components/analysis/AnalysisSkeleton';
 import { ErrorMessage } from '@/components/ui/error-boundary';
 import { createClient } from '@/lib/supabase/client';
+import { apiFetch } from '@/lib/api-client';
 
 interface AnalysisData {
   id: string;
@@ -59,9 +60,8 @@ export default function AnalysisPage({ params }: { params: Promise<{ id: string 
     exampleSentence?: string;
     hskLevel?: number | null;
   }) => {
-    const response = await fetch('/api/vocabulary', {
+    const response = await apiFetch('/api/vocabulary', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(word),
     });
 

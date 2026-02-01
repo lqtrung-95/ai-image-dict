@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '@/lib/api-client';
 import { VocabularyList } from '@/types';
 
 interface UseVocabularyListsResult {
@@ -22,7 +23,7 @@ export function useVocabularyLists(): UseVocabularyListsResult {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/lists');
+      const response = await apiFetch('/api/lists');
       if (!response.ok) throw new Error('Failed to fetch lists');
       const data = await response.json();
       setLists(data);
@@ -39,9 +40,8 @@ export function useVocabularyLists(): UseVocabularyListsResult {
 
   const createList = async (data: { name: string; description?: string; color?: string; isPublic?: boolean }): Promise<VocabularyList | null> => {
     try {
-      const response = await fetch('/api/lists', {
+      const response = await apiFetch('/api/lists', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error('Failed to create list');
@@ -55,9 +55,8 @@ export function useVocabularyLists(): UseVocabularyListsResult {
 
   const updateList = async (id: string, data: Partial<VocabularyList>): Promise<boolean> => {
     try {
-      const response = await fetch(`/api/lists/${id}`, {
+      const response = await apiFetch(`/api/lists/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error('Failed to update list');
@@ -73,7 +72,7 @@ export function useVocabularyLists(): UseVocabularyListsResult {
     try {
       // Optimistic update
       setLists((prev) => prev.filter((l) => l.id !== id));
-      const response = await fetch(`/api/lists/${id}`, { method: 'DELETE' });
+      const response = await apiFetch(`/api/lists/${id}`, { method: 'DELETE' });
       if (!response.ok) {
         fetchLists(); // Revert on error
         return false;
@@ -87,9 +86,8 @@ export function useVocabularyLists(): UseVocabularyListsResult {
 
   const addWordsToList = async (listId: string, wordIds: string[]): Promise<number> => {
     try {
-      const response = await fetch(`/api/lists/${listId}/words`, {
+      const response = await apiFetch(`/api/lists/${listId}/words`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ wordIds }),
       });
       if (!response.ok) throw new Error('Failed to add words');
@@ -104,9 +102,8 @@ export function useVocabularyLists(): UseVocabularyListsResult {
 
   const removeWordsFromList = async (listId: string, wordIds: string[]): Promise<boolean> => {
     try {
-      const response = await fetch(`/api/lists/${listId}/words`, {
+      const response = await apiFetch(`/api/lists/${listId}/words`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ wordIds }),
       });
       if (!response.ok) throw new Error('Failed to remove words');

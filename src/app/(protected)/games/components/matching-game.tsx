@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Check, X, RefreshCw, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface VocabularyItem {
   id: string;
@@ -35,7 +36,7 @@ export function MatchingGame() {
 
   const fetchVocabulary = useCallback(async () => {
     try {
-      const response = await fetch('/api/vocabulary?limit=20');
+      const response = await apiFetch('/api/vocabulary?limit=20');
       if (response.ok) {
         const data = await response.json();
         setVocabulary(data.items || []);

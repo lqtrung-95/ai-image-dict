@@ -12,6 +12,7 @@ import { compressImage, extractBase64 } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Camera, Upload, ArrowLeft, Sparkles } from 'lucide-react';
+import { apiFetch } from '@/lib/api-client';
 
 interface AnalysisData {
   id: string;
@@ -108,9 +109,8 @@ export default function TryPage() {
       const compressedImage = await compressImage(imageData, 1024);
       const base64 = extractBase64(compressedImage);
 
-      const response = await fetch('/api/analyze-trial', {
+      const response = await apiFetch('/api/analyze-trial', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64 }),
       });
 

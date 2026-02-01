@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Settings, Target, BookOpen, Clock, CheckCircle, Save, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 import { AccountDataManagementSection } from './components/account-data-management-section';
 import { ProfileSettingsSection } from './components/profile-settings-section';
 
@@ -74,7 +75,7 @@ export default function SettingsPage() {
 
   const fetchGoals = async () => {
     try {
-      const response = await fetch('/api/daily-goals');
+      const response = await apiFetch('/api/daily-goals');
       if (response.ok) {
         const data = await response.json();
         setGoals(data.goals || []);
@@ -102,9 +103,8 @@ export default function SettingsPage() {
   const saveGoal = async (goalType: string) => {
     setSaving(goalType);
     try {
-      const response = await fetch('/api/daily-goals', {
+      const response = await apiFetch('/api/daily-goals', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           goalType,
           targetValue: localValues[goalType],
@@ -128,9 +128,8 @@ export default function SettingsPage() {
     // Auto-save when toggling
     setSaving(goalType);
     try {
-      await fetch('/api/daily-goals', {
+      await apiFetch('/api/daily-goals', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           goalType,
           targetValue: localValues[goalType],

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Import, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 import { ImportSourceSelector } from '@/components/import/import-source-selector';
 import { ImportPreviewTable } from '@/components/import/import-preview-table';
 import { ExtractedWord, VocabularyList, ImportSourceType } from '@/types';
@@ -29,7 +30,7 @@ export default function ImportPage() {
 
   const fetchLists = async () => {
     try {
-      const response = await fetch('/api/lists');
+      const response = await apiFetch('/api/lists');
       if (response.ok) {
         const data = await response.json();
         setLists(data);
@@ -42,9 +43,8 @@ export default function ImportPage() {
   const handleExtract = async (type: ImportSourceType, source: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/import', {
+      const response = await apiFetch('/api/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, source }),
       });
 
@@ -75,9 +75,8 @@ export default function ImportPage() {
 
     setSaving(true);
     try {
-      const response = await fetch('/api/import/save', {
+      const response = await apiFetch('/api/import/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           importId: importResult.importId,
           words: selectedWords,

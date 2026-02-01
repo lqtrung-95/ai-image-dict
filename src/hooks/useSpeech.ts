@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
+import { apiFetch } from '@/lib/api-client';
 
 export function useSpeech() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -32,9 +33,8 @@ export function useSpeech() {
       // Cleanup previous audio before creating new one
       cleanupAudio();
 
-      const response = await fetch('/api/tts', {
+      const response = await apiFetch('/api/tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, lang: 'zh-CN' }),
       });
 

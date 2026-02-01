@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Volume2, Plus, Camera, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 
 interface WordOfDay {
   id: string;
@@ -54,8 +55,8 @@ export function DashboardHome() {
     const fetchData = async () => {
       try {
         const [wordRes, statsRes] = await Promise.all([
-          fetch('/api/word-of-day'),
-          fetch('/api/stats'),
+          apiFetch('/api/word-of-day'),
+          apiFetch('/api/stats'),
         ]);
 
         if (wordRes.ok) {

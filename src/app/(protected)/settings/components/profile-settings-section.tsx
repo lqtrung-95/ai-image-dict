@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Camera, Loader2, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api-client';
 
 interface Profile {
   id: string;
@@ -27,7 +28,7 @@ export function ProfileSettingsSection() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/user/profile');
+      const response = await apiFetch('/api/user/profile');
       if (response.ok) {
         const data = await response.json();
         setProfile(data.profile);
@@ -43,9 +44,8 @@ export function ProfileSettingsSection() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await fetch('/api/user/profile', {
+      const response = await apiFetch('/api/user/profile', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ displayName: displayName.trim() }),
       });
 

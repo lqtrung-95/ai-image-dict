@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Trash2, ImageIcon, BookOpen, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api-client';
 
 interface VocabularyItem {
   id: string;
@@ -58,7 +59,7 @@ export default function StoryDetailPage() {
 
   const fetchStory = async () => {
     try {
-      const response = await fetch(`/api/stories/${storyId}`);
+      const response = await apiFetch(`/api/stories/${storyId}`);
       if (response.ok) {
         const data = await response.json();
         setStory(data.story);
@@ -76,7 +77,7 @@ export default function StoryDetailPage() {
   const handleGenerateStory = async () => {
     setGenerating(true);
     try {
-      const response = await fetch(`/api/stories/${storyId}`, {
+      const response = await apiFetch(`/api/stories/${storyId}`, {
         method: 'POST',
       });
 
@@ -98,7 +99,7 @@ export default function StoryDetailPage() {
     if (!confirm('Are you sure you want to delete this story?')) return;
 
     try {
-      const response = await fetch(`/api/stories/${storyId}`, {
+      const response = await apiFetch(`/api/stories/${storyId}`, {
         method: 'DELETE',
       });
 
@@ -124,9 +125,8 @@ export default function StoryDetailPage() {
     setPlayingAudio(id);
 
     try {
-      const response = await fetch('/api/tts', {
+      const response = await apiFetch('/api/tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, lang: 'zh-CN' }),
       });
 

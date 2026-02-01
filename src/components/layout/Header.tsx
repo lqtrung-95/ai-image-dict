@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { apiFetch } from '@/lib/api-client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +46,7 @@ export function Header() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/user/profile');
+      const response = await apiFetch('/api/user/profile');
       if (response.ok) {
         const data = await response.json();
         setProfile(data.profile);
