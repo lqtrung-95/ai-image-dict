@@ -36,6 +36,46 @@ export default function CaptureModal() {
 
   const slideAnim = useRef(new Animated.Value(height)).current;
 
+  // Helper function to get category color
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'object':
+        return 'rgba(59, 130, 246, 0.2)';
+      case 'color':
+        return 'rgba(236, 72, 153, 0.2)';
+      case 'action':
+        return 'rgba(16, 185, 129, 0.2)';
+      default:
+        return 'rgba(124, 58, 237, 0.2)';
+    }
+  };
+
+  // TTS function
+  const speakWord = (word: string) => {
+    // TODO: Implement TTS using expo-speech or similar
+    console.log('Speaking:', word);
+    Alert.alert('Text to Speech', `Playing pronunciation for: ${word}`);
+  };
+
+  // Save word function
+  const saveWord = async (obj: { en: string; zh: string; pinyin: string; category: string }) => {
+    try {
+      await apiClient.post('/api/vocabulary', {
+        wordZh: obj.zh,
+        wordPinyin: obj.pinyin,
+        wordEn: obj.en,
+      });
+      Alert.alert('Success', 'Word saved to your vocabulary!');
+    } catch (error: any) {
+      if (error.message?.includes('already in vocabulary')) {
+        Alert.alert('Info', 'This word is already in your vocabulary.');
+      } else {
+        console.error('Failed to save word:', error);
+        Alert.alert('Error', 'Failed to save word. Please try again.');
+      }
+    }
+  };
+
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -272,19 +312,45 @@ export default function CaptureModal() {
                       // Full content for authenticated users
                       <View style={styles.wordContent}>
                         <View style={styles.wordHeader}>
-                          <View>
+                          <View style={styles.wordInfo}>
+                            {/* Category Badge */}
+                            <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(obj.category) }]}>
+                              <Text style={styles.categoryText}>{obj.category}</Text>
+                            </View>
+
+                            {/* Chinese Character */}
                             <Text style={[styles.chineseText, { color: isDark ? '#fff' : '#000' }]}>
                               {obj.zh}
                             </Text>
+
+                            {/* Pinyin */}
                             <Text style={styles.pinyinText}>{obj.pinyin}</Text>
+
+                            {/* English Meaning */}
                             <Text style={[styles.englishText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
                               {obj.en}
                             </Text>
                           </View>
-                          <TouchableOpacity style={styles.saveButton}>
-                            <Ionicons name="bookmark-outline" size={20} color="#7c3aed" />
-                          </TouchableOpacity>
+
+                          {/* Action Buttons */}
+                          <View style={styles.actionButtons}>
+                            {/* Speaker Button for TTS */}
+                            <TouchableOpacity
+                              style={styles.iconButton}
+                              onPress={() => speakWord(obj.zh)}>
+                              <Ionicons name="volume-high" size={20} color="#7c3aed" />
+                            </TouchableOpacity>
+
+                            {/* Save Button */}
+                            <TouchableOpacity
+                              style={styles.iconButton}
+                              onPress={() => saveWord(obj)}>
+                              <Ionicons name="bookmark-outline" size={20} color="#7c3aed" />
+                            </TouchableOpacity>
+                          </View>
                         </View>
+
+                        {/* Confidence Badge */}
                         <View style={styles.confidenceBadge}>
                           <Text style={styles.confidenceText}>
                             {Math.round(obj.confidence * 100)}% confidence
@@ -563,6 +629,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  wordInfo: {
+    flex: 1,
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#7c3aed',
+    textTransform: 'capitalize',
+  },
   chineseText: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -575,6 +657,15 @@ const styles = StyleSheet.create({
   englishText: {
     fontSize: 14,
     marginTop: 4,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  iconButton: {
+    padding: 8,
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    borderRadius: 12,
   },
   saveButton: {
     padding: 8,

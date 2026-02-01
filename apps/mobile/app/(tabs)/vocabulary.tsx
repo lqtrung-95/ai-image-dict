@@ -32,10 +32,11 @@ export default function VocabularyScreen() {
   const loadWords = async () => {
     if (!isAuthenticated) return;
     try {
-      const response = await apiClient.get<VocabularyItem[]>('/api/vocabulary');
-      setWords(response);
+      const response = await apiClient.get<{ items: VocabularyItem[]; total: number; hasMore: boolean }>('/api/vocabulary');
+      setWords(response.items || []);
     } catch (error) {
       console.error('Failed to load vocabulary:', error);
+      setWords([]);
     }
   };
 
