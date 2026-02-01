@@ -177,6 +177,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Ensure user profile exists (required for foreign key constraint)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({ id: user.id, display_name: user.user_metadata?.display_name || 'User' }, { onConflict: 'id' });
+
+    if (profileError) {
+      console.error('[vocabulary/POST] Profile upsert error:', profileError);
+    }
+
     const body = await request.json();
 
     // Validate and sanitize inputs
