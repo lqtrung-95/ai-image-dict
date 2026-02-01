@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClientWithAuth } from '@/lib/supabase/api-auth';
+import { createClientWithAuth, getAuthUser } from '@/lib/supabase/api-auth';
 import {
   calculateNextReview,
   SrsRating,
@@ -16,10 +16,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClientWithAuth(request);
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -149,10 +146,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClientWithAuth(request);
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
