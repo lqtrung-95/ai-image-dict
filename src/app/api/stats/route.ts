@@ -6,6 +6,8 @@ export const dynamic = 'force-dynamic';
 // GET /api/stats - Get user stats including SRS metrics
 export async function GET(request: NextRequest) {
   try {
+    console.log('[stats/GET] Headers:', Object.fromEntries(request.headers.entries()));
+
     const supabase = await createClientWithAuth(request);
 
     const { user, error: authError } = await getAuthUser(request);

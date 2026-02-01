@@ -52,8 +52,10 @@ export async function getAuthUser(request?: NextRequest) {
   console.log('[getAuthUser] Checking auth...');
 
   // For mobile requests with Bearer token, verify directly with Supabase
-  const authHeader = request?.headers.get('authorization');
+  // Headers are case-insensitive, check both cases
+  const authHeader = request?.headers.get('authorization') || request?.headers.get('Authorization');
   console.log('[getAuthUser] Auth header:', authHeader ? 'present' : 'missing');
+  console.log('[getAuthUser] All headers:', Object.fromEntries(request?.headers.entries() || []));
 
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.replace('Bearer ', '');
