@@ -4,6 +4,8 @@ import { extractWebArticle } from '@/lib/import/web-article-extractor';
 import { extractVocabulary } from '@/lib/import/vocabulary-extractor';
 import { ExtractedWord, ImportSourceType } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface ImportRequest {
   type: ImportSourceType;
   source: string;

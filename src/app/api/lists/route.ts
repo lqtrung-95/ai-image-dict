@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClientWithAuth } from '@/lib/supabase/api-auth';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/lists - Get user's vocabulary lists with word counts
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -52,7 +54,7 @@ export async function GET() {
 // POST /api/lists - Create new vocabulary list
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {

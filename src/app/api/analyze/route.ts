@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { analyzeImage } from '@/lib/groq';
 import { extractBase64 } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 // Free tier limit (6 analyses per day for logged-in free users)
 const FREE_DAILY_LIMIT = 6;
 

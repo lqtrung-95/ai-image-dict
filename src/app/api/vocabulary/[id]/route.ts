@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClientWithAuth } from '@/lib/supabase/api-auth';
+
+export const dynamic = 'force-dynamic';
 
 // DELETE /api/vocabulary/[id] - Remove word from vocabulary
 export async function DELETE(
@@ -7,7 +9,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
     const { id } = await params;
 
     const {
@@ -43,7 +45,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
     const { id } = await params;
 
     const {

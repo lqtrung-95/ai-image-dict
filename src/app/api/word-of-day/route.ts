@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
 // POST /api/word-of-day - Save or dismiss word of the day
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
 
     const {
       data: { user },

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 // Simple in-memory rate limiter (resets on server restart)
 // For production, use Redis or database-backed rate limiting
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();

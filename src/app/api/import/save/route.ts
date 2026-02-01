@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { ExtractedWord } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface SaveRequest {
   importId: string;
   words: ExtractedWord[];

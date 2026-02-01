@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sanitizeString, validateUUID, ValidationError } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/stories - List user's photo stories
 export async function GET() {
   try {

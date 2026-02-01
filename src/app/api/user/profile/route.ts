@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClientWithAuth } from '@/lib/supabase/api-auth';
 import { sanitizeString } from '@/lib/validation';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/user/profile - Get current user profile
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
 
     const {
       data: { user },
@@ -37,7 +39,7 @@ export async function GET() {
 // PATCH /api/user/profile - Update profile
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
 
     const {
       data: { user },

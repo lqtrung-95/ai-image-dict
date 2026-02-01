@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { sanitizeString, validateUUID, ValidationError } from '@/lib/validation';
 import { generateStoryFromWords } from '@/lib/groq';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/stories/[id] - Get a specific story with details
 export async function GET(
   request: NextRequest,
