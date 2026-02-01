@@ -234,13 +234,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if word already exists in user's vocabulary
-    // Use service role client to bypass RLS since we've already authenticated the user
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
     const { data: existing } = await supabaseAdmin
       .from('vocabulary_items')
       .select('id')
