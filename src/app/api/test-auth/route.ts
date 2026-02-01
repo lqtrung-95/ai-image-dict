@@ -4,8 +4,9 @@ import { getAuthUser } from '@/lib/supabase/api-auth';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  const allHeaders = Object.fromEntries(request.headers.entries());
+  const headers = Object.fromEntries(request.headers.entries());
+  const authHeader = headers['authorization'];
+  console.log('[test-auth] All header keys:', Object.keys(headers));
 
   // Try to get user if token exists
   let userInfo = null;
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     hasAuthHeader: !!authHeader,
     authHeaderPrefix: authHeader ? authHeader.substring(0, 20) + '...' : null,
-    allHeaders: Object.keys(allHeaders),
+    allHeaders: Object.keys(headers),
     user: userInfo,
     error,
     timestamp: new Date().toISOString(),

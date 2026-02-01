@@ -52,10 +52,11 @@ export async function getAuthUser(request?: NextRequest) {
   console.log('[getAuthUser] Checking auth...');
 
   // For mobile requests with Bearer token, verify directly with Supabase
-  // Headers are case-insensitive, check both cases
-  const authHeader = request?.headers.get('authorization') || request?.headers.get('Authorization');
+  // Headers are case-insensitive per HTTP spec, but Next.js normalizes to lowercase
+  const headers = Object.fromEntries(request?.headers.entries() || []);
+  const authHeader = headers['authorization'];
   console.log('[getAuthUser] Auth header:', authHeader ? 'present' : 'missing');
-  console.log('[getAuthUser] All headers:', Object.fromEntries(request?.headers.entries() || []));
+  console.log('[getAuthUser] All header keys:', Object.keys(headers));
 
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.replace('Bearer ', '');
