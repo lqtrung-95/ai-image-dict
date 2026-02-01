@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { createClientWithAuth, getAuthUser } from '@/lib/supabase/api-auth';
 import { sanitizeString, validateHSKLevel, validateSearchQuery, validateUUID, ValidationError } from '@/lib/validation';
 
@@ -177,8 +178,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Create admin client to bypass RLS
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
     // Ensure user profile exists (required for foreign key constraint)
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .upsert({ id: user.id, display_name: user.user_metadata?.display_name || 'User' }, { onConflict: 'id' });
 
@@ -226,7 +234,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if word already exists in user's vocabulary
-    const { data: existing } = await supabase
+    // Use service role client to bypass RLS since we've already authenticated the user
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    const { data: existing } = await supabaseAdmin
       .from('vocabulary_items')
       .select('id')
       .eq('user_id', user.id)
@@ -236,7 +251,7 @@ export async function POST(request: NextRequest) {
     if (existing) {
       // If listId is provided, add word to that list via junction table
       if (listId) {
-        const { error: junctionError } = await supabase
+        const { error: junctionError } = await supabaseAdmin
           .from('list_vocabulary_items')
           .insert({
             list_id: listId,
@@ -266,8 +281,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Insert new vocabulary item
-    const { data, error } = await supabase
+    // Insert new vocabulary item using admin client to bypass RLS
+    const { data, error } = await supabaseAdmin
       .from('vocabulary_items')
       .insert({
         user_id: user.id,
@@ -288,7 +303,7 @@ export async function POST(request: NextRequest) {
 
     // If listId provided, add to list via junction table
     if (listId && data) {
-      const { error: junctionError } = await supabase
+      const { error: junctionError } = await supabaseAdmin
         .from('list_vocabulary_items')
         .insert({
           list_id: listId,
