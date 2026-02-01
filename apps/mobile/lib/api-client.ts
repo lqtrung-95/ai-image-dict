@@ -16,25 +16,40 @@ class ApiClient {
 
   private async getAuthHeaders(): Promise<Record<string, string>> {
     try {
+      console.log('[API] Fetching session from Supabase...');
       const { data, error } = await supabase.auth.getSession();
       if (error) {
-        console.error('Session error:', error);
+        console.error('[API] Session error:', error);
       }
       const token = data.session?.access_token;
+      console.log('[API] Token exists:', !!token);
+      console.log('[API] Token length:', token ? token.length : 0);
 
-      return {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('[API] Added Authorization header');
+      } else {
+        console.log('[API] No token available');
+      }
+
+      return headers;
     } catch (e) {
-      console.error('Failed to get auth headers:', e);
+      console.error('[API] Failed to get auth headers:', e);
       return { 'Content-Type': 'application/json' };
     }
   }
 
   private async handleResponse<T>(response: Response): Promise<T> {
+    console.log('[API] Response status:', response.status);
+    console.log('[API] Response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.log('[API] Error response body:', errorText);
       let error: ApiError;
       try {
         error = JSON.parse(errorText);
