@@ -84,8 +84,9 @@ export function validateChineseWord(word: unknown): string {
 // Validate pinyin
 export function validatePinyin(pinyin: unknown): string {
   const str = sanitizeString(pinyin, 100);
-  // Allow letters, tone marks, and spaces
-  if (!/^[a-zA-Z\u0101-\u0128\u014d-\u016b\u01d0-\u01d4\s]+$/.test(str)) {
+  // Allow letters, tone marks (various Unicode ranges), tone numbers, and spaces
+  // This covers: standard letters, accented vowels for tones, spaces, and tone numbers (1-4)
+  if (!/^[a-zA-Z\u0101-\u0128\u014d-\u016b\u01d0-\u01d4\u01d6-\u01dc\u1e3f\u0144\u01f9\s\d]*$/i.test(str)) {
     throw new ValidationError('Invalid pinyin format');
   }
   return str;

@@ -13,6 +13,7 @@ import {
   Modal,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -50,28 +51,39 @@ export default function CaptureModal() {
     }
   };
 
-  // TTS function
+  // TTS function using expo-speech
   const speakWord = (word: string) => {
-    // TODO: Implement TTS using expo-speech or similar
     console.log('Speaking:', word);
-    Alert.alert('Text to Speech', `Playing pronunciation for: ${word}`);
+    try {
+      Speech.speak(word, {
+        language: 'zh-CN',
+        pitch: 1.0,
+        rate: 0.8,
+      });
+    } catch (error) {
+      console.error('Speech error:', error);
+      Alert.alert('Error', 'Unable to play pronunciation');
+    }
   };
 
   // Save word function
   const saveWord = async (obj: { en: string; zh: string; pinyin: string; category: string }) => {
+    console.log('[saveWord] Saving word:', obj);
     try {
-      await apiClient.post('/api/vocabulary', {
+      const payload = {
         wordZh: obj.zh,
         wordPinyin: obj.pinyin,
         wordEn: obj.en,
-      });
+      };
+      console.log('[saveWord] Payload:', payload);
+      await apiClient.post('/api/vocabulary', payload);
       Alert.alert('Success', 'Word saved to your vocabulary!');
     } catch (error: any) {
+      console.error('[saveWord] Failed:', error);
       if (error.message?.includes('already in vocabulary')) {
         Alert.alert('Info', 'This word is already in your vocabulary.');
       } else {
-        console.error('Failed to save word:', error);
-        Alert.alert('Error', 'Failed to save word. Please try again.');
+        Alert.alert('Error', error?.message || 'Failed to save word. Please try again.');
       }
     }
   };

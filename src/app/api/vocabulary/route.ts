@@ -210,6 +210,7 @@ export async function POST(request: NextRequest) {
       hskLevel = validateHSKLevel(body.hskLevel);
     } catch (err) {
       if (err instanceof ValidationError) {
+        console.error('[vocabulary/POST] Validation error:', err.message, 'Body:', body);
         return NextResponse.json({ error: err.message }, { status: 400 });
       }
       throw err;
@@ -272,8 +273,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Vocabulary insert error:', error);
-      return NextResponse.json({ error: 'Failed to save word' }, { status: 500 });
+      console.error('[vocabulary/POST] Insert error:', error);
+      return NextResponse.json({ error: 'Failed to save word', details: error.message }, { status: 500 });
     }
 
     // If listId provided, add to list via junction table
