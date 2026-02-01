@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClientWithAuth } from '@/lib/supabase/api-auth';
 import { sanitizeString, validateHSKLevel, validateSearchQuery, validateUUID, ValidationError } from '@/lib/validation';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/vocabulary - List user's vocabulary
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
 
     const {
       data: { user },
@@ -170,7 +172,7 @@ export async function GET(request: NextRequest) {
 // POST /api/vocabulary - Save word to vocabulary
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
 
     const {
       data: { user },

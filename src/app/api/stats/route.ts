@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClientWithAuth } from '@/lib/supabase/api-auth';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/stats - Get user stats including SRS metrics
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
 
     const {
       data: { user },
@@ -179,7 +181,7 @@ export async function GET() {
 // POST /api/stats/practice - Record a practice session
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClientWithAuth(request);
 
     const {
       data: { user },

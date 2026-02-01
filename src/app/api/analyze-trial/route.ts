@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { analyzeImage } from '@/lib/groq';
 import { extractBase64 } from '@/lib/utils';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/analyze-trial - Trial analysis for non-logged-in users
 export async function POST(request: NextRequest) {
   try {
+    console.log('[analyze-trial] Received request');
+    console.log('[analyze-trial] Headers:', Object.fromEntries(request.headers.entries()));
+
     const { image } = await request.json();
     if (!image) {
+      console.log('[analyze-trial] No image provided');
       return NextResponse.json({ error: 'Image required' }, { status: 400 });
     }
+
+    console.log('[analyze-trial] Image received, length:', image.length);
 
     // Extract base64 from data URL
     const base64Image = extractBase64(image);
@@ -69,7 +77,7 @@ export async function POST(request: NextRequest) {
       isTrial: true,
     });
   } catch (error) {
-    console.error('Trial analysis error:', error);
+    console.error('[analyze-trial] Error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Analysis failed' },
       { status: 500 }
