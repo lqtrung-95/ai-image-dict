@@ -136,8 +136,21 @@ export async function GET(request: NextRequest) {
 
     interface VocabularyItemRaw {
       id: string;
+      user_id: string;
+      word_zh: string;
+      word_pinyin: string;
+      word_en: string;
+      example_sentence?: string;
+      is_learned: boolean;
+      created_at: string;
+      easiness_factor?: number;
+      interval_days?: number;
+      next_review_date?: string;
+      repetitions?: number;
+      last_reviewed_at?: string;
+      correct_streak?: number;
+      hsk_level?: number;
       detected_objects: DetectedObject | null;
-      [key: string]: unknown;
     }
 
     interface ListVocabularyItem {
@@ -151,12 +164,27 @@ export async function GET(request: NextRequest) {
 
     const items = (data || []).map((item: VocabularyItemRaw) => {
       const photoAnalysis = item.detected_objects?.photo_analyses;
+      // Map snake_case database fields to camelCase for frontend
       return {
-        ...item,
+        id: item.id,
+        userId: item.user_id,
+        wordZh: item.word_zh,
+        wordPinyin: item.word_pinyin,
+        wordEn: item.word_en,
+        exampleSentence: item.example_sentence,
+        isLearned: item.is_learned,
+        createdAt: item.created_at,
+        easinessFactor: item.easiness_factor,
+        intervalDays: item.interval_days,
+        nextReviewDate: item.next_review_date,
+        repetitions: item.repetitions,
+        lastReviewedAt: item.last_reviewed_at,
+        correctStreak: item.correct_streak,
+        hskLevel: item.hsk_level,
         // Add flattened photo context
-        photo_url: photoAnalysis?.image_url || null,
-        photo_date: photoAnalysis?.created_at || null,
-        analysis_id: photoAnalysis?.id || null,
+        photoUrl: photoAnalysis?.image_url || null,
+        photoDate: photoAnalysis?.created_at || null,
+        analysisId: photoAnalysis?.id || null,
       };
     });
 
