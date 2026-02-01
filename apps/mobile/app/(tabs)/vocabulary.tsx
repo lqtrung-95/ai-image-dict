@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   TextInput,
   StyleSheet,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
@@ -32,7 +32,9 @@ export default function VocabularyScreen() {
   const loadWords = async () => {
     if (!isAuthenticated) return;
     try {
+      console.log('[Vocabulary] Loading words...');
       const response = await apiClient.get<{ items: VocabularyItem[]; total: number; hasMore: boolean }>('/api/vocabulary');
+      console.log('[Vocabulary] Loaded', response.items?.length || 0, 'words');
       setWords(response.items || []);
     } catch (error) {
       console.error('Failed to load vocabulary:', error);
@@ -46,9 +48,12 @@ export default function VocabularyScreen() {
     setRefreshing(false);
   };
 
-  useEffect(() => {
-    loadWords();
-  }, [isAuthenticated]);
+  // Reload when screen comes into focus (e.g., after navigating back from capture)
+  useFocusEffect(
+    useCallback(() => {
+      loadWords();
+    }, [isAuthenticated])
+  );
 
   const filteredWords = words.filter((word) => {
     const matchesSearch =
