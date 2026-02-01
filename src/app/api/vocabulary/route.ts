@@ -16,6 +16,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Use admin client to bypass RLS
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
     const searchParams = request.nextUrl.searchParams;
     let listId: string | null = null;
     let search: string | null = null;
@@ -41,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     // If filtering by list, query via junction table
     if (listId) {
-      const { data: listItems, error: listError, count } = await supabase
+      const { data: listItems, error: listError, count } = await supabaseAdmin
         .from('list_vocabulary_items')
         .select(
           `
@@ -86,7 +93,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Join through detected_objects to photo_analyses to get the original photo
-    let query = supabase
+    let query = supabaseAdmin
       .from('vocabulary_items')
       .select(
         `
