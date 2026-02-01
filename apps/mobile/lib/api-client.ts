@@ -30,8 +30,9 @@ class ApiClient {
       };
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-        console.log('[API] Added Authorization header');
+        // Use lowercase 'authorization' as some servers/RN versions prefer it
+        headers['authorization'] = `Bearer ${token}`;
+        console.log('[API] Added authorization header (lowercase)');
       } else {
         console.log('[API] No token available');
       }

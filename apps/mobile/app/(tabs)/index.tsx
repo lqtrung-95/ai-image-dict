@@ -36,6 +36,15 @@ export default function HomeScreen() {
       console.log('Session exists:', !!sessionData.session);
       console.log('Token exists:', !!sessionData.session?.access_token);
 
+      // Test auth endpoint first
+      console.log('[DEBUG] Testing /api/test-auth endpoint...');
+      try {
+        const testRes = await apiClient.get<{hasAuthHeader: boolean; authHeaderPrefix: string; allHeaders: string[]}>('/api/test-auth');
+        console.log('[DEBUG] test-auth result:', testRes);
+      } catch (e) {
+        console.error('[DEBUG] test-auth error:', e);
+      }
+
       const [statsRes, wordRes] = await Promise.all([
         apiClient.get<VocabularyStats>('/api/stats'),
         apiClient.get<WordOfDay>('/api/word-of-day'),
