@@ -49,33 +49,49 @@ export async function createClientWithAuth(request?: NextRequest) {
  * Supports both cookie-based (web) and Bearer token (mobile) auth
  */
 export async function getAuthUser(request?: NextRequest) {
-  const supabase = await createClientWithAuth(request);
+  console.log('[getAuthUser] Checking auth...');
 
-  // For mobile requests with Bearer token, we need to verify the token differently
+  // For mobile requests with Bearer token, verify directly with Supabase
   const authHeader = request?.headers.get('authorization');
+  console.log('[getAuthUser] Auth header:', authHeader ? 'present' : 'missing');
+
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.replace('Bearer ', '');
+    console.log('[getAuthUser] Token length:', token.length);
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    console.log('[getAuthUser] Supabase URL exists:', !!supabaseUrl);
+    console.log('[getAuthUser] Anon key exists:', !!anonKey);
 
     // Verify the token by making a request to Supabase auth
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
+      `${supabaseUrl}/auth/v1/user`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          'apikey': anonKey!,
         },
       }
     );
 
+    console.log('[getAuthUser] Supabase auth response status:', response.status);
+
     if (response.ok) {
       const user = await response.json();
+      console.log('[getAuthUser] User authenticated:', user.id);
       return { user, error: null };
     } else {
-      return { user: null, error: new Error('Invalid token') };
+      const errorText = await response.text();
+      console.error('[getAuthUser] Token validation failed:', response.status, errorText);
+      return { user: null, error: new Error(`Invalid token: ${response.status}`) };
     }
   }
 
   // For web requests, use the standard cookie-based auth
+  const supabase = await createClientWithAuth(request);
   const { data: { user }, error } = await supabase.auth.getUser();
+  console.log('[getAuthUser] Cookie auth result:', { user: !!user, error: error?.message });
   return { user, error };
 }
