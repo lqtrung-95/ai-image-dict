@@ -196,7 +196,9 @@ export default function CaptureModal() {
       }
 
       console.log('Sending to API...');
-      const response = await apiClient.post<AnalysisResponse>('/api/analyze-trial', {
+      // Use /api/analyze for authenticated users (saves to history), /api/analyze-trial for guests
+      const endpoint = isAuthenticated ? '/api/analyze' : '/api/analyze-trial';
+      const response = await apiClient.post<AnalysisResponse>(endpoint, {
         image: base64Image,
       });
 
