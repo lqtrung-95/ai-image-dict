@@ -232,39 +232,57 @@ export default function PracticeSessionScreen() {
       <View style={styles.content}>
         {mode === 'flashcard' && (
           <TouchableOpacity activeOpacity={0.9} onPress={flipCard} style={styles.cardContainer}>
-            <Animated.View
-              style={[
-                styles.flashcard,
-                { backgroundColor: cardColor },
-                {
-                  transform: [
-                    {
-                      rotateY: flipAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ['0deg', '180deg'],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              {!showAnswer ? (
-                <View style={styles.cardFront}>
-                  <Text style={styles.chineseText}>{currentWord.wordZh}</Text>
-                  <Text style={styles.pinyinText}>{currentWord.wordPinyin}</Text>
-                  <Text style={[styles.tapHint, { color: subtextColor }]}>Tap to reveal</Text>
-                </View>
-              ) : (
-                <View style={[styles.cardBack, { transform: [{ rotateY: '180deg' }] }]}>
-                  <Text style={[styles.englishText, { color: textColor }]}>{currentWord.wordEn}</Text>
-                  {currentWord.exampleSentence && (
-                    <Text style={[styles.exampleText, { color: subtextColor }]}>
-                      "{currentWord.exampleSentence}"
-                    </Text>
-                  )}
-                </View>
-              )}
-            </Animated.View>
+            <View style={[styles.flashcard, { backgroundColor: cardColor }]}>
+              {/* Front of card */}
+              <Animated.View
+                style={[
+                  styles.cardFace,
+                  {
+                    opacity: flipAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 0],
+                    }),
+                    transform: [
+                      {
+                        rotateY: flipAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '180deg'],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Text style={styles.chineseText}>{currentWord.wordZh}</Text>
+                <Text style={styles.pinyinText}>{currentWord.wordPinyin}</Text>
+                <Text style={[styles.tapHint, { color: subtextColor }]}>Tap to reveal</Text>
+              </Animated.View>
+
+              {/* Back of card */}
+              <Animated.View
+                style={[
+                  styles.cardFace,
+                  {
+                    opacity: flipAnim,
+                    transform: [
+                      {
+                        rotateY: flipAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['180deg', '360deg'],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Text style={[styles.englishText, { color: textColor }]}>{currentWord.wordEn}</Text>
+                {currentWord.exampleSentence && (
+                  <Text style={[styles.exampleText, { color: subtextColor }]}>
+                    "{currentWord.exampleSentence}"
+                  </Text>
+                )}
+              </Animated.View>
+            </View>
           </TouchableOpacity>
         )}
 
@@ -419,6 +437,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     flex: 1,
     justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   flashcard: {
     borderRadius: 24,
@@ -426,13 +445,12 @@ const styles = StyleSheet.create({
     minHeight: 300,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  cardFace: {
+    alignItems: 'center',
+    justifyContent: 'center',
     backfaceVisibility: 'hidden',
-  },
-  cardFront: {
-    alignItems: 'center',
-  },
-  cardBack: {
-    alignItems: 'center',
   },
   chineseText: {
     fontSize: 48,
