@@ -220,12 +220,15 @@ export type WordState = 'new' | 'learning' | 'reviewing' | 'mastered';
 
 export interface VocabularyStats {
   totalWords: number;
-  wordsByState: Record<WordState, number>;
-  hskDistribution: { level: number; count: number }[];
+  learnedWords: number;
   dueToday: number;
-  dueThisWeek: number;
-  streakDays: number;
+  currentStreak: number;
   longestStreak: number;
+  masteredThisWeek: number;
+  averageEaseFactor: number;
+  hskDistribution: Record<string, number>;
+  reviewForecast: Array<{ date: string; count: number }>;
+  wordsPerDay: Array<{ date: string; count: number }>;
 }
 
 export interface ListProgress {

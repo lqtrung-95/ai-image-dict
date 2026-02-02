@@ -54,6 +54,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query for due words
+    // Include words where:
+    // 1. next_review_date is null (new words never reviewed)
+    // 2. next_review_date <= today (due for review)
     let query = supabase
       .from('vocabulary_items')
       .select(
@@ -68,7 +71,7 @@ export async function GET(request: NextRequest) {
       )
       .eq('user_id', user.id)
       .eq('is_learned', false)
-      .lte('next_review_date', todayStr)
+      .or(`next_review_date.is.null,next_review_date.lte.${todayStr}`)
       .order('next_review_date', { ascending: true })
       .limit(limit);
 

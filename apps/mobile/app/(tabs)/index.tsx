@@ -6,14 +6,13 @@ import {
   TouchableOpacity,
   RefreshControl,
   StyleSheet,
-  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
 import { apiClient } from '@/lib/api-client';
-import { supabase } from '@/lib/supabase-client';
 import type { VocabularyStats, WordOfDay } from '@/lib/types';
 
 export default function HomeScreen() {
@@ -21,30 +20,18 @@ export default function HomeScreen() {
   const isDark = colorScheme === 'dark';
   const { isAuthenticated, user } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<VocabularyStats | null>(null);
   const [wordOfDay, setWordOfDay] = useState<WordOfDay | null>(null);
 
   const loadData = async () => {
     if (!isAuthenticated) {
-      console.log('Not authenticated, skipping data load');
+      setIsLoading(false);
       return;
     }
 
+    setIsLoading(true);
     try {
-      // Debug: Check session
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log('Session exists:', !!sessionData.session);
-      console.log('Token exists:', !!sessionData.session?.access_token);
-
-      // Test auth endpoint first
-      console.log('[DEBUG] Testing /api/test-auth endpoint...');
-      try {
-        const testRes = await apiClient.get<{hasAuthHeader: boolean; authHeaderPrefix: string; allHeaders: string[]}>('/api/test-auth');
-        console.log('[DEBUG] test-auth result:', testRes);
-      } catch (e) {
-        console.error('[DEBUG] test-auth error:', e);
-      }
-
       const [statsRes, wordRes] = await Promise.all([
         apiClient.get<VocabularyStats>('/api/stats'),
         apiClient.get<WordOfDay>('/api/word-of-day'),
@@ -54,6 +41,8 @@ export default function HomeScreen() {
       setWordOfDay(wordRes);
     } catch (error) {
       console.error('Failed to load data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -205,30 +194,40 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Stats Cards */}
-      <View style={styles.statsContainer}>
-        <StatCard
-          value={stats?.totalWords || 0}
-          label="Words"
-          icon="book"
-          color="#7c3aed"
-          isDark={isDark}
-        />
-        <StatCard
-          value={stats?.streakDays || 0}
-          label="Day Streak"
-          icon="flame"
-          color="#f59e0b"
-          isDark={isDark}
-        />
-        <StatCard
-          value={stats?.dueToday || 0}
-          label="Due Today"
-          icon="time"
-          color="#10b981"
-          isDark={isDark}
-        />
-      </View>
+      {/* Loading State */}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#7c3aed" />
+          <Text style={[styles.loadingText, { color: subtextColor }]}>
+            Loading your stats...
+          </Text>
+        </View>
+      ) : (
+        <>
+          {/* Stats Cards */}
+          <View style={styles.statsContainer}>
+            <StatCard
+              value={stats?.totalWords ?? 0}
+              label="Words"
+              icon="book"
+              color="#7c3aed"
+              isDark={isDark}
+            />
+            <StatCard
+              value={stats?.currentStreak ?? 0}
+              label="Day Streak"
+              icon="flame"
+              color="#f59e0b"
+              isDark={isDark}
+            />
+            <StatCard
+              value={stats?.dueToday ?? 0}
+              label="Due Today"
+              icon="time"
+              color="#10b981"
+              isDark={isDark}
+            />
+          </View>
 
       {/* Quick Actions */}
       <View style={styles.section}>
@@ -301,6 +300,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+      )}
+
+        </>
       )}
 
       <View style={{ height: 100 }} />
@@ -560,6 +562,15 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     marginTop: 2,
+  },
+  // Loading
+  loadingContainer: {
+    paddingVertical: 48,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
   },
   // Actions
   actionsRow: {

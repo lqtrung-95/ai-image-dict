@@ -36,12 +36,16 @@ export default function PracticeScreen() {
     if (!isAuthenticated) return;
     try {
       const [wordsRes, statsRes] = await Promise.all([
-        apiClient.get<VocabularyItem[]>('/api/practice/due-words'),
-        apiClient.get<{ totalWords: number; dueToday: number; streakDays: number }>('/api/stats'),
+        apiClient.get<{ items: VocabularyItem[]; dueCount: number; newCount: number; total: number }>('/api/practice/due-words'),
+        apiClient.get<{ totalWords: number; dueToday: number; currentStreak: number }>('/api/stats'),
       ]);
 
-      setDueWords(wordsRes);
-      setStats(statsRes);
+      setDueWords(wordsRes.items || []);
+      setStats({
+        totalWords: statsRes.totalWords || 0,
+        dueToday: statsRes.dueToday || 0,
+        streakDays: statsRes.currentStreak || 0,
+      });
     } catch (error) {
       console.error('Failed to load practice data:', error);
     }

@@ -28,14 +28,21 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (todayHistory) {
+      const word = todayHistory.vocabulary_items || {
+        word_zh: todayHistory.word_zh,
+        word_pinyin: todayHistory.word_pinyin,
+        word_en: todayHistory.word_en,
+        example_sentence: todayHistory.example_sentence,
+        hsk_level: todayHistory.hsk_level,
+      };
+      // Return flat structure for mobile compatibility
       return NextResponse.json({
-        word: todayHistory.vocabulary_items || {
-          word_zh: todayHistory.word_zh,
-          word_pinyin: todayHistory.word_pinyin,
-          word_en: todayHistory.word_en,
-          example_sentence: todayHistory.example_sentence,
-          hsk_level: todayHistory.hsk_level,
-        },
+        id: word.id,
+        wordZh: word.word_zh,
+        wordEn: word.word_en,
+        pinyin: word.word_pinyin,
+        exampleSentence: word.example_sentence,
+        hskLevel: word.hsk_level,
         history: todayHistory,
         isNew: false,
       });
@@ -85,8 +92,14 @@ export async function GET(request: NextRequest) {
       .select()
       .single();
 
+    // Return flat structure for mobile compatibility
     return NextResponse.json({
-      word: selectedWord,
+      id: selectedWord.id,
+      wordZh: selectedWord.word_zh,
+      wordEn: selectedWord.word_en,
+      pinyin: selectedWord.word_pinyin,
+      exampleSentence: selectedWord.example_sentence,
+      hskLevel: selectedWord.hsk_level,
       history,
       isNew: true,
     });
