@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
@@ -38,21 +38,35 @@ export default function HistoryScreen() {
   const subtextColor = isDark ? '#9ca3af' : '#6b7280';
 
   const fetchAnalyses = useCallback(async () => {
+    console.log('[History] Fetching analyses...');
     try {
       const data = await apiClient.get<{ analyses: Analysis[] }>('/api/history');
+      console.log('[History] Fetched:', data.analyses?.length || 0, 'analyses');
       setAnalyses(data.analyses || []);
     } catch (error) {
-      console.error('Failed to fetch analyses:', error);
+      console.error('[History] Failed to fetch analyses:', error);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Initial load
   useEffect(() => {
     if (isAuthenticated) {
       fetchAnalyses();
+    } else {
+      setLoading(false);
     }
-  }, [isAuthenticated, fetchAnalyses]);
+  }, [isAuthenticated]);
+
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        fetchAnalyses();
+      }
+    }, [isAuthenticated])
+  );
 
   const handleDelete = async (id: string) => {
     Alert.alert(
