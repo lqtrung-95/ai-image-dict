@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   Alert,
+  Image,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -281,6 +282,9 @@ export default function PracticeSessionScreen() {
                     "{currentWord.exampleSentence}"
                   </Text>
                 )}
+                {currentWord.photoUrl && (
+                  <Image source={{ uri: currentWord.photoUrl }} style={styles.wordImage} resizeMode="cover" />
+                )}
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -476,6 +480,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
     paddingHorizontal: 16,
+  },
+  wordImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
+    marginTop: 16,
   },
   // Rating buttons
   ratingContainer: {

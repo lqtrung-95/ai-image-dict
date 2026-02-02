@@ -63,10 +63,19 @@ export async function GET(request: NextRequest) {
     // Include words where:
     // 1. next_review_date is null (new words never reviewed)
     // 2. next_review_date <= today (due for review)
-    // NOTE: Not joining with detected_objects to avoid filtering out words without photos
+    // Use !left modifier to make it a LEFT JOIN (won't filter words without photos)
     let query = supabaseAdmin
       .from('vocabulary_items')
-      .select('*', { count: 'exact' })
+      .select(
+        `
+        *,
+        detected_object:vocabulary_items_detected_object_id_fkey!left(
+          analysis_id,
+          photo_analysis:photo_analyses!left(id, image_url, created_at)
+        )
+      `,
+        { count: 'exact' }
+      )
       .eq('user_id', user.id)
       .eq('is_learned', false)
       .or(`next_review_date.is.null,next_review_date.lte.${todayStr}`)
@@ -88,26 +97,29 @@ export async function GET(request: NextRequest) {
     }
 
     // Map fields to camelCase for frontend
-    const items = (data || []).map((item: any) => ({
-      id: item.id,
-      userId: item.user_id,
-      wordZh: item.word_zh,
-      wordPinyin: item.word_pinyin,
-      wordEn: item.word_en,
-      exampleSentence: item.example_sentence,
-      isLearned: item.is_learned,
-      createdAt: item.created_at,
-      easinessFactor: item.easiness_factor,
-      intervalDays: item.interval_days,
-      nextReviewDate: item.next_review_date,
-      repetitions: item.repetitions,
-      lastReviewedAt: item.last_reviewed_at,
-      correctStreak: item.correct_streak,
-      hskLevel: item.hsk_level,
-      photoUrl: null,
-      photoDate: null,
-      analysisId: null,
-    }));
+    const items = (data || []).map((item: any) => {
+      const photoAnalysis = item.detected_object?.photo_analysis;
+      return {
+        id: item.id,
+        userId: item.user_id,
+        wordZh: item.word_zh,
+        wordPinyin: item.word_pinyin,
+        wordEn: item.word_en,
+        exampleSentence: item.example_sentence,
+        isLearned: item.is_learned,
+        createdAt: item.created_at,
+        easinessFactor: item.easiness_factor,
+        intervalDays: item.interval_days,
+        nextReviewDate: item.next_review_date,
+        repetitions: item.repetitions,
+        lastReviewedAt: item.last_reviewed_at,
+        correctStreak: item.correct_streak,
+        hskLevel: item.hsk_level,
+        photoUrl: photoAnalysis?.image_url || null,
+        photoDate: photoAnalysis?.created_at || null,
+        analysisId: photoAnalysis?.id || item.detected_object?.analysis_id || null,
+      };
+    });
 
     // Optionally fetch new words (never reviewed) if includeNew is true
     let newWords: any[] = [];
