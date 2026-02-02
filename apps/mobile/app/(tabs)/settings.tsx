@@ -262,13 +262,27 @@ export default function SettingsScreen() {
       ],
     },
     {
-      title: 'Data',
+      title: 'Your Content',
       items: [
         {
-          icon: 'download',
-          label: 'Import Vocabulary',
+          icon: 'time',
+          label: 'History',
           onPress: () => {
-            router.push('/import');
+            router.push('/history');
+          },
+        },
+        {
+          icon: 'book',
+          label: 'Stories',
+          onPress: () => {
+            router.push('/stories');
+          },
+        },
+        {
+          icon: 'school',
+          label: 'Courses',
+          onPress: () => {
+            router.push('/courses');
           },
         },
         {
@@ -279,10 +293,10 @@ export default function SettingsScreen() {
           },
         },
         {
-          icon: 'document-text',
-          label: 'Export Data',
+          icon: 'download',
+          label: 'Import Vocabulary',
           onPress: () => {
-            Alert.alert('Coming Soon', 'Data export will be available soon');
+            router.push('/import');
           },
         },
       ],
