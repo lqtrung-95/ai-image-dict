@@ -79,6 +79,7 @@ function AuthNavigator() {
       <Stack.Screen name="progress" options={{ headerShown: false }} />
       <Stack.Screen name="practice-session" options={{ headerShown: false }} />
       <Stack.Screen name="list/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="analysis/[id]" options={{ headerShown: false }} />
       <Stack.Screen
         name="capture-modal"
         options={{

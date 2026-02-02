@@ -189,13 +189,23 @@ export async function POST(request: NextRequest) {
       .eq('id', photoAnalysis.id)
       .single();
 
+    // Transform detected_objects to match mobile app expected format
+    const detectedObjects = (completeAnalysis?.detected_objects || []).map((obj: any) => ({
+      id: obj.id,
+      zh: obj.label_zh,
+      en: obj.label_en,
+      pinyin: obj.pinyin,
+      confidence: obj.confidence,
+      category: obj.category,
+    }));
+
     return NextResponse.json({
       id: photoAnalysis.id,
       imageUrl: imageUrl,
       sceneDescription: analysis.sceneDescription,
       sceneDescriptionZh: analysis.sceneDescriptionZh,
       sceneDescriptionPinyin: analysis.sceneDescriptionPinyin,
-      objects: completeAnalysis?.detected_objects || [],
+      objects: detectedObjects,
       colors: analysis.colors || [],
       actions: analysis.actions || [],
       exampleSentences,

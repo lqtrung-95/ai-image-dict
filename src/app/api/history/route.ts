@@ -32,8 +32,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch history' }, { status: 500 });
     }
 
-    console.log('[API History] Found', data?.length || 0, 'analyses');
-    return NextResponse.json({ analyses: data || [] });
+    // Transform detected_objects to match mobile app expected format
+    const analyses = (data || []).map((analysis: any) => ({
+      ...analysis,
+      detected_objects: (analysis.detected_objects || []).map((obj: any) => ({
+        id: obj.id,
+        zh: obj.label_zh,
+        en: obj.label_en,
+        pinyin: obj.pinyin,
+        confidence: obj.confidence,
+        category: obj.category,
+      })),
+    }));
+
+    console.log('[API History] Found', analyses.length, 'analyses');
+    return NextResponse.json({ analyses });
   } catch (error) {
     console.error('[API History] Error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

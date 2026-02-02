@@ -8,11 +8,57 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// DELETE /api/history/[id] - Delete a photo analysis
-export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+// GET /api/history/[id] - Get a single analysis detail
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const { user, error: authError } = await getAuthUser(_request);
+    const { user, error: authError } = await getAuthUser(request);
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabase = createServiceClient();
+
+    const { data, error } = await supabase
+      .from('photo_analyses')
+      .select(`
+        *,
+        detected_objects(*)
+      `)
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error || !data) {
+      return NextResponse.json({ error: 'Analysis not found' }, { status: 404 });
+    }
+
+    // Transform detected_objects to match mobile app expected format
+    const analysis = {
+      ...data,
+      detected_objects: (data.detected_objects || []).map((obj: any) => ({
+        id: obj.id,
+        zh: obj.label_zh,
+        en: obj.label_en,
+        pinyin: obj.pinyin,
+        confidence: obj.confidence,
+        category: obj.category,
+      })),
+    };
+
+    return NextResponse.json({ analysis });
+  } catch (error) {
+    console.error('Analysis detail error:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+// DELETE /api/history/[id] - Delete a photo analysis
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
