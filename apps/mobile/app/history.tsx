@@ -80,7 +80,7 @@ export default function HistoryScreen() {
           onPress: async () => {
             setAnalyses((prev) => prev.filter((a) => a.id !== id));
             try {
-              await apiClient.del(`/api/history/${id}`);
+              await apiClient.delete(`/api/history/${id}`);
             } catch (error) {
               Alert.alert('Error', 'Failed to delete');
               fetchAnalyses();

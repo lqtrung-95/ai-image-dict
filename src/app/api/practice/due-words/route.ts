@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { createClientWithAuth, getAuthUser } from '@/lib/supabase/api-auth';
 
 export const dynamic = 'force-dynamic';
@@ -9,13 +10,18 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClientWithAuth(request);
-
     const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Use admin client to bypass RLS
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
 
     const searchParams = request.nextUrl.searchParams;
     const listId = searchParams.get('list');
@@ -30,7 +36,7 @@ export async function GET(request: NextRequest) {
     // If filtering by list, query via junction table first
     let vocabularyIds: string[] = [];
     if (listId && listId !== 'all') {
-      const { data: listItems, error: listError } = await supabase
+      const { data: listItems, error: listError } = await supabaseAdmin
         .from('list_vocabulary_items')
         .select('vocabulary_item_id')
         .eq('list_id', listId);
@@ -57,18 +63,10 @@ export async function GET(request: NextRequest) {
     // Include words where:
     // 1. next_review_date is null (new words never reviewed)
     // 2. next_review_date <= today (due for review)
-    let query = supabase
+    // NOTE: Not joining with detected_objects to avoid filtering out words without photos
+    let query = supabaseAdmin
       .from('vocabulary_items')
-      .select(
-        `
-        *,
-        detected_objects(
-          analysis_id,
-          photo_analyses(id, image_url, created_at)
-        )
-      `,
-        { count: 'exact' }
-      )
+      .select('*', { count: 'exact' })
       .eq('user_id', user.id)
       .eq('is_learned', false)
       .or(`next_review_date.is.null,next_review_date.lte.${todayStr}`)
@@ -82,80 +80,43 @@ export async function GET(request: NextRequest) {
 
     const { data, error, count } = await query;
 
+    console.log('[DueWords] Query result:', { dataLength: data?.length, count, error: error?.message, userId: user.id, todayStr, limit });
+
     if (error) {
       console.error('Due words fetch error:', error);
       return NextResponse.json({ error: 'Failed to fetch due words' }, { status: 500 });
     }
 
-    // Flatten photo context and map fields to camelCase for frontend
-    interface DetectedObject {
-      analysis_id: string;
-      photo_analyses: {
-        id: string;
-        image_url: string;
-        created_at: string;
-      } | null;
-    }
-
-    interface VocabularyItemRaw {
-      id: string;
-      user_id: string;
-      word_zh: string;
-      word_pinyin: string;
-      word_en: string;
-      example_sentence?: string;
-      is_learned: boolean;
-      created_at: string;
-      easiness_factor?: number;
-      interval_days?: number;
-      next_review_date?: string;
-      repetitions?: number;
-      last_reviewed_at?: string;
-      correct_streak?: number;
-      hsk_level?: number;
-      detected_objects: DetectedObject | null;
-    }
-
-    const items = (data || []).map((item) => {
-      const photoAnalysis = item.detected_objects?.photo_analyses;
-      return {
-        id: item.id,
-        userId: item.user_id,
-        wordZh: item.word_zh,
-        wordPinyin: item.word_pinyin,
-        wordEn: item.word_en,
-        exampleSentence: item.example_sentence,
-        isLearned: item.is_learned,
-        createdAt: item.created_at,
-        easinessFactor: item.easiness_factor,
-        intervalDays: item.interval_days,
-        nextReviewDate: item.next_review_date,
-        repetitions: item.repetitions,
-        lastReviewedAt: item.last_reviewed_at,
-        correctStreak: item.correct_streak,
-        hskLevel: item.hsk_level,
-        photoUrl: photoAnalysis?.image_url || null,
-        photoDate: photoAnalysis?.created_at || null,
-        analysisId: photoAnalysis?.id || null,
-      };
-    });
+    // Map fields to camelCase for frontend
+    const items = (data || []).map((item: any) => ({
+      id: item.id,
+      userId: item.user_id,
+      wordZh: item.word_zh,
+      wordPinyin: item.word_pinyin,
+      wordEn: item.word_en,
+      exampleSentence: item.example_sentence,
+      isLearned: item.is_learned,
+      createdAt: item.created_at,
+      easinessFactor: item.easiness_factor,
+      intervalDays: item.interval_days,
+      nextReviewDate: item.next_review_date,
+      repetitions: item.repetitions,
+      lastReviewedAt: item.last_reviewed_at,
+      correctStreak: item.correct_streak,
+      hskLevel: item.hsk_level,
+      photoUrl: null,
+      photoDate: null,
+      analysisId: null,
+    }));
 
     // Optionally fetch new words (never reviewed) if includeNew is true
     let newWords: any[] = [];
     if (includeNew && items.length < limit) {
       const remainingLimit = limit - items.length;
 
-      let newQuery = supabase
+      let newQuery = supabaseAdmin
         .from('vocabulary_items')
-        .select(
-          `
-          *,
-          detected_objects(
-            analysis_id,
-            photo_analyses(id, image_url, created_at)
-          )
-        `
-        )
+        .select('*')
         .eq('user_id', user.id)
         .eq('is_learned', false)
         .is('last_reviewed_at', null)
@@ -171,29 +132,26 @@ export async function GET(request: NextRequest) {
       const { data: newData } = await newQuery;
 
       if (newData) {
-        newWords = newData.map((item) => {
-          const photoAnalysis = item.detected_objects?.photo_analyses;
-          return {
-            id: item.id,
-            userId: item.user_id,
-            wordZh: item.word_zh,
-            wordPinyin: item.word_pinyin,
-            wordEn: item.word_en,
-            exampleSentence: item.example_sentence,
-            isLearned: item.is_learned,
-            createdAt: item.created_at,
-            easinessFactor: item.easiness_factor,
-            intervalDays: item.interval_days,
-            nextReviewDate: item.next_review_date,
-            repetitions: item.repetitions,
-            lastReviewedAt: item.last_reviewed_at,
-            correctStreak: item.correct_streak,
-            hskLevel: item.hsk_level,
-            photoUrl: photoAnalysis?.image_url || null,
-            photoDate: photoAnalysis?.created_at || null,
-            analysisId: photoAnalysis?.id || null,
-          };
-        });
+        newWords = (newData as any[]).map((item: any) => ({
+          id: item.id,
+          userId: item.user_id,
+          wordZh: item.word_zh,
+          wordPinyin: item.word_pinyin,
+          wordEn: item.word_en,
+          exampleSentence: item.example_sentence,
+          isLearned: item.is_learned,
+          createdAt: item.created_at,
+          easinessFactor: item.easiness_factor,
+          intervalDays: item.interval_days,
+          nextReviewDate: item.next_review_date,
+          repetitions: item.repetitions,
+          lastReviewedAt: item.last_reviewed_at,
+          correctStreak: item.correct_streak,
+          hskLevel: item.hsk_level,
+          photoUrl: null,
+          photoDate: null,
+          analysisId: null,
+        }));
       }
     }
 

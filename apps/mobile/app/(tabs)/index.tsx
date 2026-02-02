@@ -259,10 +259,10 @@ export default function HomeScreen() {
             isDark={isDark}
           />
           <ActionButton
-            icon="list"
-            label="Words"
+            icon="bookmark"
+            label="Lists"
             color="#f59e0b"
-            onPress={() => router.push('/(tabs)/vocabulary')}
+            onPress={() => router.push('/(tabs)/lists')}
             isDark={isDark}
           />
         </View>

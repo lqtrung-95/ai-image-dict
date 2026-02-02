@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { apiClient } from '@/lib/api-client';
 import type { VocabularyItem } from '@/lib/types';
 
-type QuizMode = 'flashcard' | 'multiple-choice' | 'listening';
+type QuizMode = 'flashcard' | 'multiple-choice' | 'listening' | 'matching' | 'quiz-game';
 
 export default function PracticeScreen() {
   const colorScheme = useColorScheme();
@@ -35,10 +35,21 @@ export default function PracticeScreen() {
   const loadData = async () => {
     if (!isAuthenticated) return;
     try {
-      const [wordsRes, statsRes] = await Promise.all([
-        apiClient.get<{ items: VocabularyItem[]; dueCount: number; newCount: number; total: number }>('/api/practice/due-words'),
-        apiClient.get<{ totalWords: number; dueToday: number; currentStreak: number }>('/api/stats'),
-      ]);
+      console.log('[Practice] Loading data...');
+
+      // Fetch due words
+      const wordsRes = await apiClient.get<{ items: VocabularyItem[]; dueCount: number; newCount: number; total: number }>('/api/practice/due-words');
+      console.log('[Practice] Due words response:', JSON.stringify(wordsRes, null, 2));
+
+      // Fetch stats separately for better debugging
+      const statsRes = await apiClient.get<{ totalWords: number; dueToday: number; currentStreak: number }>('/api/stats');
+      console.log('[Practice] Stats response:', JSON.stringify(statsRes, null, 2));
+
+      console.log('[Practice] Setting state:', {
+        itemsLength: wordsRes.items?.length,
+        dueCount: wordsRes.dueCount,
+        dueToday: statsRes.dueToday
+      });
 
       setDueWords(wordsRes.items || []);
       setStats({
@@ -47,7 +58,7 @@ export default function PracticeScreen() {
         streakDays: statsRes.currentStreak || 0,
       });
     } catch (error) {
-      console.error('Failed to load practice data:', error);
+      console.error('[Practice] Failed to load practice data:', error);
     }
   };
 
@@ -56,6 +67,15 @@ export default function PracticeScreen() {
   }, [isAuthenticated]);
 
   const startPractice = (mode: QuizMode) => {
+    // Game modes don't require due words
+    if (mode === 'matching' || mode === 'quiz-game') {
+      router.push({
+        pathname: '/games',
+        params: { gameMode: mode === 'matching' ? 'matching' : 'quiz' },
+      });
+      return;
+    }
+
     if (dueWords.length === 0) {
       Alert.alert(
         'No Words Due',
@@ -77,6 +97,7 @@ export default function PracticeScreen() {
       description: 'Review words with spaced repetition',
       icon: 'albums',
       color: '#7c3aed',
+      category: 'standard',
     },
     {
       id: 'multiple-choice' as QuizMode,
@@ -84,6 +105,7 @@ export default function PracticeScreen() {
       description: 'Test your knowledge',
       icon: 'list',
       color: '#10b981',
+      category: 'standard',
     },
     {
       id: 'listening' as QuizMode,
@@ -91,6 +113,24 @@ export default function PracticeScreen() {
       description: 'Practice pronunciation',
       icon: 'ear',
       color: '#f59e0b',
+      category: 'standard',
+    },
+  ];
+
+  const funModes = [
+    {
+      id: 'matching' as QuizMode,
+      title: 'Matching Game',
+      description: 'Match Chinese with English meanings',
+      icon: 'git-compare',
+      color: '#3b82f6',
+    },
+    {
+      id: 'quiz-game' as QuizMode,
+      title: 'Quiz Challenge',
+      description: 'Test yourself with multiple choice questions',
+      icon: 'help-circle',
+      color: '#ec4899',
     },
   ];
 
@@ -195,6 +235,45 @@ export default function PracticeScreen() {
         </Text>
 
         {practiceModes.map((mode) => (
+          <TouchableOpacity
+            key={mode.id}
+            onPress={() => startPractice(mode.id)}
+            style={[styles.modeCard, { backgroundColor: cardColor }]}
+          >
+            <View style={styles.modeContent}>
+              <View
+                style={[
+                  styles.modeIcon,
+                  { backgroundColor: `${mode.color}20` },
+                ]}
+              >
+                <Ionicons name={mode.icon as any} size={24} color={mode.color} />
+              </View>
+              <View style={styles.modeText}>
+                <Text style={[styles.modeTitle, { color: textColor }]}>
+                  {mode.title}
+                </Text>
+                <Text style={[styles.modeDesc, { color: subtextColor }]}>
+                  {mode.description}
+                </Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={subtextColor}
+              />
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Fun Practice (Games) */}
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: textColor }]}>
+          Fun Practice
+        </Text>
+
+        {funModes.map((mode) => (
           <TouchableOpacity
             key={mode.id}
             onPress={() => startPractice(mode.id)}

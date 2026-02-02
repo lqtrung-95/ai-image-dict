@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
@@ -40,10 +40,13 @@ interface Question {
 }
 
 export default function GamesScreen() {
+  const { gameMode: initialGameMode } = useLocalSearchParams<{ gameMode?: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { isAuthenticated } = useAuthStore();
-  const [gameMode, setGameMode] = useState<GameMode>('menu');
+  const [gameMode, setGameMode] = useState<GameMode>(
+    initialGameMode === 'matching' ? 'matching' : initialGameMode === 'quiz' ? 'quiz' : 'menu'
+  );
 
   const bgColor = isDark ? '#0f0f0f' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#000000';
@@ -62,17 +65,20 @@ export default function GamesScreen() {
   }
 
   if (gameMode === 'matching') {
-    return <MatchingGame onBack={() => setGameMode('menu')} isDark={isDark} />;
+    return <MatchingGame onBack={() => router.back()} isDark={isDark} />;
   }
 
   if (gameMode === 'quiz') {
-    return <QuizGame onBack={() => setGameMode('menu')} isDark={isDark} />;
+    return <QuizGame onBack={() => router.back()} isDark={isDark} />;
   }
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: bgColor }]}>
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Vocabulary Games</Text>
         <Text style={styles.headerSubtitle}>Make learning fun with interactive games</Text>
       </View>
@@ -605,6 +611,10 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#7c3aed',
   },
+  backButton: {
+    marginBottom: 8,
+    marginLeft: -4,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -624,6 +634,7 @@ const styles = StyleSheet.create({
     padding: 20,
     flexDirection: 'row',
     gap: 16,
+    marginBottom: 16,
   },
   gameIcon: {
     width: 56,
@@ -664,10 +675,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 16,
     gap: 12,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
   },
   gameHeaderTitle: {
     fontSize: 20,

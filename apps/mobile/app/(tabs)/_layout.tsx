@@ -21,9 +21,9 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
 
   const tabs = [
     { key: 'index', icon: 'home', label: 'Home' },
-    { key: 'vocabulary', icon: 'book', label: 'Words' },
+    { key: 'practice', icon: 'school', label: 'Practice' },
     null, // Center placeholder
-    { key: 'games', icon: 'game-controller', label: 'Games' },
+    { key: 'lists', icon: 'list', label: 'Lists' },
     { key: 'settings', icon: 'person', label: 'Profile' },
   ];
 
@@ -90,8 +90,8 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="vocabulary" />
-      <Tabs.Screen name="games" />
+      <Tabs.Screen name="practice" />
+      <Tabs.Screen name="lists" />
       <Tabs.Screen name="settings" />
     </Tabs>
   );

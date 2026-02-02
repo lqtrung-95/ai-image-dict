@@ -81,6 +81,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate due today count
     const dueToday = dueWordsResult.data?.length || 0;
+    console.log('[Stats] Due words query result:', { dueToday, dataLength: dueWordsResult.data?.length, userId: user.id, todayStr });
 
     // Calculate average easiness factor
     const efData = efDataResult.data || [];

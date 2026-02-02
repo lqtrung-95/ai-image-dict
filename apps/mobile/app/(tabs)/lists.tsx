@@ -106,7 +106,7 @@ export default function ListsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await apiClient.del(`/api/lists/${id}`);
+              await apiClient.delete(`/api/lists/${id}`);
               fetchLists();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete list');
@@ -133,9 +133,6 @@ export default function ListsScreen() {
     <View style={[styles.container, { backgroundColor: bgColor }]}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>My Lists</Text>
         <Text style={styles.headerSubtitle}>
           {lists.length} vocabulary {lists.length === 1 ? 'list' : 'lists'}
@@ -327,10 +324,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 16,
     backgroundColor: '#7c3aed',
-  },
-  backButton: {
-    marginBottom: 8,
-    marginLeft: -4,
   },
   headerTitle: {
     fontSize: 28,

@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
@@ -47,11 +47,21 @@ export default function StoriesScreen() {
     }
   }, []);
 
+  // Initial load
   useEffect(() => {
     if (isAuthenticated) {
       fetchStories();
     }
-  }, [isAuthenticated, fetchStories]);
+  }, [isAuthenticated]);
+
+  // Refresh when screen comes into focus (e.g., after creating a new story)
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        fetchStories();
+      }
+    }, [isAuthenticated])
+  );
 
   const handleDelete = async (id: string) => {
     Alert.alert(
@@ -64,7 +74,7 @@ export default function StoriesScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await apiClient.del(`/api/stories/${id}`);
+              await apiClient.delete(`/api/stories/${id}`);
               setStories((prev) => prev.filter((s) => s.id !== id));
             } catch (error) {
               Alert.alert('Error', 'Failed to delete story');
