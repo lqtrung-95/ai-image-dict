@@ -26,6 +26,7 @@ export default function PracticeScreen() {
     dueToday: 0,
     streakDays: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   const bgColor = isDark ? '#0f0f0f' : '#ffffff';
   const cardColor = isDark ? '#1a1a1a' : '#f8fafc';
@@ -34,22 +35,12 @@ export default function PracticeScreen() {
 
   const loadData = async () => {
     if (!isAuthenticated) return;
+    setIsLoading(true);
     try {
-      console.log('[Practice] Loading data...');
-
-      // Fetch due words
-      const wordsRes = await apiClient.get<{ items: VocabularyItem[]; dueCount: number; newCount: number; total: number }>('/api/practice/due-words');
-      console.log('[Practice] Due words response:', JSON.stringify(wordsRes, null, 2));
-
-      // Fetch stats separately for better debugging
-      const statsRes = await apiClient.get<{ totalWords: number; dueToday: number; currentStreak: number }>('/api/stats');
-      console.log('[Practice] Stats response:', JSON.stringify(statsRes, null, 2));
-
-      console.log('[Practice] Setting state:', {
-        itemsLength: wordsRes.items?.length,
-        dueCount: wordsRes.dueCount,
-        dueToday: statsRes.dueToday
-      });
+      const [wordsRes, statsRes] = await Promise.all([
+        apiClient.get<{ items: VocabularyItem[]; dueCount: number; newCount: number; total: number }>('/api/practice/due-words'),
+        apiClient.get<{ totalWords: number; dueToday: number; currentStreak: number }>('/api/stats'),
+      ]);
 
       setDueWords(wordsRes.items || []);
       setStats({
@@ -59,6 +50,8 @@ export default function PracticeScreen() {
       });
     } catch (error) {
       console.error('[Practice] Failed to load practice data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -204,7 +197,7 @@ export default function PracticeScreen() {
       <View style={styles.statsContainer}>
         <View style={[styles.statCard, { backgroundColor: cardColor }]}>
           <Text style={[styles.statValue, { color: '#7c3aed' }]}>
-            {stats.dueToday}
+            {isLoading ? '—' : stats.dueToday}
           </Text>
           <Text style={[styles.statLabel, { color: subtextColor }]}>
             Due Today
@@ -212,7 +205,7 @@ export default function PracticeScreen() {
         </View>
         <View style={[styles.statCard, { backgroundColor: cardColor }]}>
           <Text style={[styles.statValue, { color: '#f59e0b' }]}>
-            {stats.streakDays}
+            {isLoading ? '—' : stats.streakDays}
           </Text>
           <Text style={[styles.statLabel, { color: subtextColor }]}>
             Day Streak
@@ -220,7 +213,7 @@ export default function PracticeScreen() {
         </View>
         <View style={[styles.statCard, { backgroundColor: cardColor }]}>
           <Text style={[styles.statValue, { color: '#10b981' }]}>
-            {stats.totalWords}
+            {isLoading ? '—' : stats.totalWords}
           </Text>
           <Text style={[styles.statLabel, { color: subtextColor }]}>
             Total Words

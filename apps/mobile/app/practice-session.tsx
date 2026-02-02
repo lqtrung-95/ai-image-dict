@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Speech from 'expo-speech';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { apiClient } from '@/lib/api-client';
 import type { VocabularyItem } from '@/lib/types';
@@ -316,8 +317,11 @@ export default function PracticeSessionScreen() {
             <TouchableOpacity
               style={[styles.speakButton, { backgroundColor: cardColor }]}
               onPress={() => {
-                // TODO: Implement TTS
-                Alert.alert('TTS', 'Text-to-speech not implemented yet');
+                Speech.speak(currentWord.wordZh, {
+                  language: 'zh-CN',
+                  pitch: 1.0,
+                  rate: 0.8,
+                });
               }}
             >
               <Ionicons name="volume-high" size={48} color="#7c3aed" />
