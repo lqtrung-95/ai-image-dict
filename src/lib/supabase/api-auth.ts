@@ -88,6 +88,7 @@ export async function getAuthUser(request?: NextRequest) {
     } else {
       const errorText = await response.text();
       console.error('[getAuthUser] Token validation failed:', response.status, errorText);
+      console.error('[getAuthUser] Token first 20 chars:', token.substring(0, 20));
       return { user: null, error: new Error(`Invalid token: ${response.status}`) };
     }
   }
