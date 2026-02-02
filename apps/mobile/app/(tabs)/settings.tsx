@@ -266,16 +266,23 @@ export default function SettingsScreen() {
       items: [
         {
           icon: 'download',
-          label: 'Export Data',
+          label: 'Import Vocabulary',
           onPress: () => {
-            Alert.alert('Coming Soon', 'Data export will be available soon');
+            router.push('/import');
           },
         },
         {
-          icon: 'trash',
-          label: 'Clear Cache',
+          icon: 'list',
+          label: 'My Lists',
           onPress: () => {
-            Alert.alert('Coming Soon', 'Cache clearing will be available soon');
+            router.push('/lists');
+          },
+        },
+        {
+          icon: 'document-text',
+          label: 'Export Data',
+          onPress: () => {
+            Alert.alert('Coming Soon', 'Data export will be available soon');
           },
         },
       ],
