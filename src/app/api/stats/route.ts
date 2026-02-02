@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { createClientWithAuth, getAuthUser } from '@/lib/supabase/api-auth';
 
 export const dynamic = 'force-dynamic';
@@ -16,8 +17,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Use admin client to bypass RLS
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
     // Get user stats
-    let { data: stats } = await supabase
+    let { data: stats } = await supabaseAdmin
       .from('user_stats')
       .select('*')
       .eq('id', user.id)
@@ -25,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     // If no stats exist, create them
     if (!stats) {
-      const { data: newStats } = await supabase
+      const { data: newStats } = await supabaseAdmin
         .from('user_stats')
         .insert({ id: user.id })
         .select()
@@ -34,12 +42,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Get vocabulary counts
-    const { count: totalWords } = await supabase
+    const { count: totalWords } = await supabaseAdmin
       .from('vocabulary_items')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    const { count: learnedWords } = await supabase
+    const { count: learnedWords } = await supabaseAdmin
       .from('vocabulary_items')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
@@ -51,7 +59,7 @@ export async function GET(request: NextRequest) {
     const todayStr = today.toISOString().split('T')[0];
 
     // Get words due today (SRS)
-    const { count: dueToday } = await supabase
+    const { count: dueToday } = await supabaseAdmin
       .from('vocabulary_items')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
@@ -62,7 +70,7 @@ export async function GET(request: NextRequest) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { count: masteredThisWeek } = await supabase
+    const { count: masteredThisWeek } = await supabaseAdmin
       .from('vocabulary_items')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
@@ -70,7 +78,7 @@ export async function GET(request: NextRequest) {
       .gte('last_reviewed_at', sevenDaysAgo.toISOString());
 
     // Get average easiness factor
-    const { data: efData } = await supabase
+    const { data: efData } = await supabaseAdmin
       .from('vocabulary_items')
       .select('easiness_factor')
       .eq('user_id', user.id)
@@ -81,7 +89,7 @@ export async function GET(request: NextRequest) {
       : 2.5;
 
     // Get HSK distribution
-    const { data: hskData } = await supabase
+    const { data: hskData } = await supabaseAdmin
       .from('vocabulary_items')
       .select('hsk_level')
       .eq('user_id', user.id);
@@ -111,7 +119,7 @@ export async function GET(request: NextRequest) {
       date.setDate(date.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
 
-      const { count } = await supabase
+      const { count } = await supabaseAdmin
         .from('vocabulary_items')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
@@ -188,10 +196,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Use admin client to bypass RLS
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
     const { wordsPracticed, wordsKnown, durationSeconds } = await request.json();
 
     // Record the practice session
-    await supabase.from('practice_sessions').insert({
+    await supabaseAdmin.from('practice_sessions').insert({
       user_id: user.id,
       words_practiced: wordsPracticed || 0,
       words_known: wordsKnown || 0,
@@ -199,10 +214,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Update user streak
-    await supabase.rpc('update_user_streak', { p_user_id: user.id });
+    await supabaseAdmin.rpc('update_user_streak', { p_user_id: user.id });
 
     // Get updated stats
-    const { data: stats } = await supabase
+    const { data: stats } = await supabaseAdmin
       .from('user_stats')
       .select('current_streak, longest_streak')
       .eq('id', user.id)
