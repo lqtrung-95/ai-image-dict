@@ -13,7 +13,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
-import { supabase } from '@/lib/supabase-client';
+import { apiClient } from '@/lib/api-client';
 
 interface Analysis {
   id: string;
@@ -39,16 +39,10 @@ export default function HistoryScreen() {
 
   const fetchAnalyses = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('photo_analyses')
-        .select('*, detected_objects(id)')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Failed to fetch analyses:', error);
-      } else {
-        setAnalyses(data || []);
-      }
+      const data = await apiClient.get<{ analyses: Analysis[] }>('/api/history');
+      setAnalyses(data.analyses || []);
+    } catch (error) {
+      console.error('Failed to fetch analyses:', error);
     } finally {
       setLoading(false);
     }
@@ -71,8 +65,9 @@ export default function HistoryScreen() {
           style: 'destructive',
           onPress: async () => {
             setAnalyses((prev) => prev.filter((a) => a.id !== id));
-            const { error } = await supabase.from('photo_analyses').delete().eq('id', id);
-            if (error) {
+            try {
+              await apiClient.del(`/api/history/${id}`);
+            } catch (error) {
               Alert.alert('Error', 'Failed to delete');
               fetchAnalyses();
             }
