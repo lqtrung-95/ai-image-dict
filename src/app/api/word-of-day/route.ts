@@ -37,12 +37,12 @@ export async function GET(request: NextRequest) {
       };
       // Return flat structure for mobile compatibility
       return NextResponse.json({
-        id: word.id,
+        id: word.id || todayHistory.id,
         wordZh: word.word_zh,
         wordEn: word.word_en,
         pinyin: word.word_pinyin,
         exampleSentence: word.example_sentence,
-        hskLevel: word.hsk_level,
+        date: today,
         history: todayHistory,
         isNew: false,
       });
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       wordEn: selectedWord.word_en,
       pinyin: selectedWord.word_pinyin,
       exampleSentence: selectedWord.example_sentence,
-      hskLevel: selectedWord.hsk_level,
+      date: today,
       history,
       isNew: true,
     });
