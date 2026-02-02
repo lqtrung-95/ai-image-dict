@@ -9,7 +9,10 @@ export async function createClientWithAuth(request?: NextRequest) {
   const cookieStore = await cookies();
 
   // Try to get token from Authorization header (mobile app)
-  const authToken = request?.headers.get('authorization')?.replace('Bearer ', '');
+  const authHeader = request?.headers.get('authorization');
+  const authToken = authHeader?.replace('Bearer ', '');
+  console.log('[createClientWithAuth] Auth header:', authHeader ? 'present' : 'missing');
+  console.log('[createClientWithAuth] Token:', authToken ? `present (${authToken.length} chars)` : 'missing');
 
   // Create client with custom auth header if token exists
   const client = createServerClient(

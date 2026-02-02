@@ -6,7 +6,9 @@ export const dynamic = 'force-dynamic';
 // GET /api/lists - Get user's vocabulary lists with word counts
 export async function GET(request: NextRequest) {
   try {
-    console.log('[lists] Request headers:', Object.fromEntries(request.headers.entries()));
+    const authHeader = request.headers.get('authorization');
+    console.log('[lists] Auth header:', authHeader);
+
     const supabase = await createClientWithAuth(request);
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
