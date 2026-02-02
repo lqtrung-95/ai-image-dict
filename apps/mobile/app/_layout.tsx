@@ -70,6 +70,14 @@ function AuthNavigator() {
     <Stack>
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="lists" options={{ headerShown: false }} />
+      <Stack.Screen name="history" options={{ headerShown: false }} />
+      <Stack.Screen name="courses" options={{ headerShown: false }} />
+      <Stack.Screen name="stories" options={{ headerShown: false }} />
+      <Stack.Screen name="import" options={{ headerShown: false }} />
+      <Stack.Screen name="progress" options={{ headerShown: false }} />
+      <Stack.Screen name="practice-session" options={{ headerShown: false }} />
+      <Stack.Screen name="list/[id]" options={{ headerShown: false }} />
       <Stack.Screen
         name="capture-modal"
         options={{
