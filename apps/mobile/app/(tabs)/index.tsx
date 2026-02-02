@@ -34,11 +34,20 @@ export default function HomeScreen() {
     try {
       const [statsRes, wordRes] = await Promise.all([
         apiClient.get<VocabularyStats>('/api/stats'),
-        apiClient.get<WordOfDay>('/api/word-of-day'),
+        apiClient.get<{ word: { id: string; word_zh: string; word_pinyin: string; word_en: string; example_sentence?: string } }>('/api/word-of-day'),
       ]);
 
       setStats(statsRes);
-      setWordOfDay(wordRes);
+      // Map snake_case API response to WordOfDay type
+      if (wordRes.word) {
+        setWordOfDay({
+          id: wordRes.word.id,
+          wordZh: wordRes.word.word_zh,
+          pinyin: wordRes.word.word_pinyin,
+          wordEn: wordRes.word.word_en,
+          exampleSentence: wordRes.word.example_sentence,
+        });
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -134,10 +143,10 @@ export default function HomeScreen() {
               Word of the Day
             </Text>
             <View style={[styles.wordCard, { backgroundColor: cardColor }]}>
-              <Text style={styles.chineseText}>{wordOfDay.wordZh}</Text>
-              <Text style={styles.pinyinText}>{wordOfDay.pinyin}</Text>
+              <Text style={styles.chineseText}>{wordOfDay.word_zh}</Text>
+              <Text style={styles.pinyinText}>{wordOfDay.word_pinyin}</Text>
               <Text style={[styles.englishText, { color: subtextColor }]}>
-                {wordOfDay.wordEn}
+                {wordOfDay.word_en}
               </Text>
             </View>
           </View>
@@ -266,14 +275,14 @@ export default function HomeScreen() {
             Word of the Day
           </Text>
           <View style={[styles.wordCardLarge, { backgroundColor: cardColor }]}>
-            <Text style={styles.chineseTextLarge}>{wordOfDay.wordZh}</Text>
-            <Text style={styles.pinyinTextLarge}>{wordOfDay.pinyin}</Text>
+            <Text style={styles.chineseTextLarge}>{wordOfDay.word_zh}</Text>
+            <Text style={styles.pinyinTextLarge}>{wordOfDay.word_pinyin}</Text>
             <Text style={[styles.englishTextLarge, { color: subtextColor }]}>
-              {wordOfDay.wordEn}
+              {wordOfDay.word_en}
             </Text>
-            {wordOfDay.exampleSentence && (
+            {wordOfDay.example_sentence && (
               <Text style={[styles.exampleText, { color: subtextColor }]}>
-                "{wordOfDay.exampleSentence}"
+                "{wordOfDay.example_sentence}"
               </Text>
             )}
           </View>

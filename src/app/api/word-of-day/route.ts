@@ -29,20 +29,15 @@ export async function GET(request: NextRequest) {
 
     if (todayHistory) {
       const word = todayHistory.vocabulary_items || {
+        id: todayHistory.id,
         word_zh: todayHistory.word_zh,
         word_pinyin: todayHistory.word_pinyin,
         word_en: todayHistory.word_en,
         example_sentence: todayHistory.example_sentence,
         hsk_level: todayHistory.hsk_level,
       };
-      // Return flat structure for mobile compatibility
       return NextResponse.json({
-        id: word.id || todayHistory.id,
-        wordZh: word.word_zh,
-        wordEn: word.word_en,
-        pinyin: word.word_pinyin,
-        exampleSentence: word.example_sentence,
-        date: today,
+        word,
         history: todayHistory,
         isNew: false,
       });
@@ -92,14 +87,8 @@ export async function GET(request: NextRequest) {
       .select()
       .single();
 
-    // Return flat structure for mobile compatibility
     return NextResponse.json({
-      id: selectedWord.id,
-      wordZh: selectedWord.word_zh,
-      wordEn: selectedWord.word_en,
-      pinyin: selectedWord.word_pinyin,
-      exampleSentence: selectedWord.example_sentence,
-      date: today,
+      word: selectedWord,
       history,
       isNew: true,
     });

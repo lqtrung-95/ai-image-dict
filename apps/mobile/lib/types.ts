@@ -49,6 +49,7 @@ export interface VocabularyWord {
   hskLevel?: number | null;
 }
 
+// Vocabulary Item - matches web API format (camelCase)
 export interface VocabularyItem {
   id: string;
   userId: string;
@@ -58,15 +59,17 @@ export interface VocabularyItem {
   wordEn: string;
   exampleSentence?: string;
   isLearned: boolean;
-  createdAt: Date;
+  createdAt: string;
   // SRS (Spaced Repetition System) fields
   easinessFactor?: number;
   intervalDays?: number;
-  nextReviewDate?: Date | string;
+  nextReviewDate?: string;
   repetitions?: number;
-  lastReviewedAt?: Date | string;
+  lastReviewedAt?: string;
   correctStreak?: number;
   hskLevel?: number;
+  // Photo context
+  photoUrl?: string | null;
 }
 
 // SRS types
@@ -255,12 +258,11 @@ export interface WeeklyActivity {
   minutesPracticed?: number;
 }
 
-// Word of the Day
+// Word of the Day - matches web API format (nested snake_case)
 export interface WordOfDay {
   id: string;
   wordEn: string;
   wordZh: string;
   pinyin: string;
   exampleSentence?: string;
-  date: string;
 }
