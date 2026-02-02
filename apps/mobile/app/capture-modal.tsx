@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
 import { apiClient } from '@/lib/api-client';
 import { compressImage, imageToBase64 } from '@/lib/image-utils';
-import type { AnalysisResponse } from '@/lib/types';
+import type { AnalysisResponse, VocabularyList } from '@/lib/types';
 
 const { width, height } = Dimensions.get('window');
 
@@ -34,8 +34,28 @@ export default function CaptureModal() {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [lists, setLists] = useState<VocabularyList[]>([]);
+  const [showListModal, setShowListModal] = useState(false);
+  const [wordToSave, setWordToSave] = useState<{ en: string; zh: string; pinyin: string; category: string } | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(height)).current;
+
+  // Fetch lists when component mounts
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchLists();
+    }
+  }, [isAuthenticated]);
+
+  const fetchLists = async () => {
+    try {
+      const data = await apiClient.get<VocabularyList[]>('/api/lists');
+      setLists(data || []);
+    } catch (error) {
+      console.error('Failed to fetch lists:', error);
+    }
+  };
 
   // Helper function to get category color
   const getCategoryColor = (category: string) => {
@@ -66,25 +86,40 @@ export default function CaptureModal() {
     }
   };
 
-  // Save word function
-  const saveWord = async (obj: { en: string; zh: string; pinyin: string; category: string }) => {
-    console.log('[saveWord] Saving word:', obj);
+  // Save word function - shows list selection modal
+  const saveWord = (obj: { en: string; zh: string; pinyin: string; category: string }) => {
+    setWordToSave(obj);
+    setShowListModal(true);
+  };
+
+  // Actually save the word
+  const doSaveWord = async (listId?: string) => {
+    if (!wordToSave) return;
+
+    setSaving(true);
     try {
-      const payload = {
-        wordZh: obj.zh,
-        wordPinyin: obj.pinyin,
-        wordEn: obj.en,
+      const payload: any = {
+        wordZh: wordToSave.zh,
+        wordPinyin: wordToSave.pinyin,
+        wordEn: wordToSave.en,
       };
-      console.log('[saveWord] Payload:', payload);
+      if (listId) {
+        payload.listId = listId;
+      }
+
       await apiClient.post('/api/vocabulary', payload);
-      Alert.alert('Success', 'Word saved to your vocabulary!');
+      Alert.alert('Success', listId ? 'Word saved to list!' : 'Word saved to your vocabulary!');
+      setShowListModal(false);
+      setWordToSave(null);
     } catch (error: any) {
-      console.error('[saveWord] Failed:', error);
+      console.error('[doSaveWord] Failed:', error);
       if (error.message?.includes('already in vocabulary')) {
         Alert.alert('Info', 'This word is already in your vocabulary.');
       } else {
         Alert.alert('Error', error?.message || 'Failed to save word. Please try again.');
       }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -282,14 +317,26 @@ export default function CaptureModal() {
                 </View>
 
                 {/* Scene Description */}
-                {result.sceneDescription && (
+                {(result.sceneDescription || result.sceneDescriptionZh) && (
                   <View style={[styles.sceneCard, { backgroundColor: cardColor }]}>
                     <Text style={[styles.sceneLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
                       Scene
                     </Text>
-                    <Text style={[styles.sceneText, { color: isDark ? '#fff' : '#000' }]}>
-                      {result.sceneDescription}
-                    </Text>
+                    {result.sceneDescriptionZh && (
+                      <Text style={styles.sceneChineseText}>
+                        {result.sceneDescriptionZh}
+                      </Text>
+                    )}
+                    {result.sceneDescriptionPinyin && (
+                      <Text style={styles.scenePinyinText}>
+                        {result.sceneDescriptionPinyin}
+                      </Text>
+                    )}
+                    {result.sceneDescription && (
+                      <Text style={[styles.sceneText, { color: isDark ? '#fff' : '#000' }]}>
+                        {result.sceneDescription}
+                      </Text>
+                    )}
                   </View>
                 )}
 
@@ -423,6 +470,73 @@ export default function CaptureModal() {
               <Text style={[styles.modalSecondaryButtonText, { color: isDark ? '#fff' : '#374151' }]}>
                 Maybe Later
               </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* List Selection Modal */}
+      <Modal
+        visible={showListModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowListModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.listModalContent, { backgroundColor: isDark ? '#1a1a1a' : '#fff' }]}>
+            <View style={styles.listModalHeader}>
+              <Text style={[styles.listModalTitle, { color: isDark ? '#fff' : '#000' }]}>
+                Save to List
+              </Text>
+              <TouchableOpacity onPress={() => setShowListModal(false)}>
+                <Ionicons name="close" size={24} color={isDark ? '#9ca3af' : '#6b7280'} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.listModalSubtitle, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+              {wordToSave?.zh} - {wordToSave?.en}
+            </Text>
+
+            <ScrollView style={styles.listsContainer} showsVerticalScrollIndicator={false}>
+              {/* Save without list option */}
+              <TouchableOpacity
+                style={[styles.listOption, { borderBottomColor: isDark ? '#374151' : '#e5e7eb' }]}
+                onPress={() => doSaveWord()}
+                disabled={saving}>
+                <View style={styles.listOptionInfo}>
+                  <Ionicons name="bookmark-outline" size={24} color="#7c3aed" />
+                  <Text style={[styles.listOptionText, { color: isDark ? '#fff' : '#000' }]}>
+                    Just save to vocabulary
+                  </Text>
+                </View>
+                {saving && !wordToSave && <ActivityIndicator size="small" color="#7c3aed" />}
+              </TouchableOpacity>
+
+              {/* List options */}
+              {lists.map((list) => (
+                <TouchableOpacity
+                  key={list.id}
+                  style={[styles.listOption, { borderBottomColor: isDark ? '#374151' : '#e5e7eb' }]}
+                  onPress={() => doSaveWord(list.id)}
+                  disabled={saving}>
+                  <View style={styles.listOptionInfo}>
+                    <View style={[styles.listColorDot, { backgroundColor: list.color }]} />
+                    <Text style={[styles.listOptionText, { color: isDark ? '#fff' : '#000' }]}>
+                      {list.name}
+                    </Text>
+                  </View>
+                  {saving && wordToSave && <ActivityIndicator size="small" color="#7c3aed" />}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={styles.createListButton}
+              onPress={() => {
+                setShowListModal(false);
+                router.push('/lists');
+              }}>
+              <Ionicons name="add-circle-outline" size={20} color="#7c3aed" />
+              <Text style={styles.createListText}>Create New List</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -577,6 +691,17 @@ const styles = StyleSheet.create({
   sceneText: {
     fontSize: 16,
     lineHeight: 22,
+  },
+  sceneChineseText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#7c3aed',
+    marginBottom: 4,
+  },
+  scenePinyinText: {
+    fontSize: 14,
+    color: '#a78bfa',
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 16,
@@ -773,5 +898,63 @@ const styles = StyleSheet.create({
   modalSecondaryButtonText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  // List Selection Modal
+  listModalContent: {
+    width: '90%',
+    maxHeight: '70%',
+    borderRadius: 24,
+    padding: 20,
+  },
+  listModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  listModalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  listModalSubtitle: {
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  listsContainer: {
+    maxHeight: 300,
+  },
+  listOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  listOptionInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  listColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  listOptionText: {
+    fontSize: 16,
+  },
+  createListButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    marginTop: 8,
+  },
+  createListText: {
+    fontSize: 16,
+    color: '#7c3aed',
+    fontWeight: '600',
   },
 });

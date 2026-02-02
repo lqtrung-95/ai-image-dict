@@ -106,6 +106,8 @@ export interface AnalysisResponse {
   id: string;
   imageUrl: string;
   sceneDescription: string;
+  sceneDescriptionZh?: string;
+  sceneDescriptionPinyin?: string;
   objects: Array<{
     id: string;
     en: string;
