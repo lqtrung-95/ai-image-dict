@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClientWithAuth } from '@/lib/supabase/api-auth';
+import { getAuthUser } from '@/lib/supabase/api-auth';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/stats/activity - Activity data for heatmap
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClientWithAuth(request);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     const searchParams = request.nextUrl.searchParams;
     const days = parseInt(searchParams.get('days') || '84'); // 12 weeks default

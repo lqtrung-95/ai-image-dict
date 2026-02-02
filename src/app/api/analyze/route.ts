@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/api-auth';
+import { createServiceClient } from '@/lib/supabase/server';
 import { analyzeImage } from '@/lib/groq';
 import { extractBase64 } from '@/lib/utils';
 
@@ -10,17 +11,13 @@ const FREE_DAILY_LIMIT = 6;
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    // Check auth
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     // Ensure user profile exists (handles users created before triggers were fixed)
     const { data: existingProfile } = await supabase

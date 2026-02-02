@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClientWithAuth } from '@/lib/supabase/api-auth';
+import { getAuthUser } from '@/lib/supabase/api-auth';
+import { createServiceClient } from '@/lib/supabase/server';
 import { sanitizeString } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -7,16 +8,13 @@ export const dynamic = 'force-dynamic';
 // GET /api/user/profile - Get current user profile
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClientWithAuth(request);
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     const { data: profile, error } = await supabase
       .from('profiles')
@@ -39,16 +37,13 @@ export async function GET(request: NextRequest) {
 // PATCH /api/user/profile - Update profile
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClientWithAuth(request);
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     const body = await request.json();
     const displayName = body.displayName ? sanitizeString(body.displayName, 50) : null;

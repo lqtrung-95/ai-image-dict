@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/api-auth';
+import { createServiceClient } from '@/lib/supabase/server';
 import { sanitizeString, validateUUID, ValidationError } from '@/lib/validation';
 import { generateStoryFromWords } from '@/lib/groq';
 
@@ -13,16 +14,13 @@ export async function GET(
   try {
     const { id } = await params;
     const storyId = validateUUID(id);
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     const { data: story, error } = await supabase
       .from('photo_stories')
@@ -144,16 +142,13 @@ export async function PATCH(
   try {
     const { id } = await params;
     const storyId = validateUUID(id);
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     const body = await request.json();
     const updates: Record<string, unknown> = {};
@@ -195,16 +190,13 @@ export async function DELETE(
   try {
     const { id } = await params;
     const storyId = validateUUID(id);
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     const { error } = await supabase
       .from('photo_stories')
@@ -234,16 +226,13 @@ export async function POST(
   try {
     const { id } = await params;
     const storyId = validateUUID(id);
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     // Get story with vocabulary
     const { data: story, error } = await supabase

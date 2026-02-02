@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClientWithAuth } from '@/lib/supabase/api-auth';
+import { getAuthUser } from '@/lib/supabase/api-auth';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/lists - Get user's vocabulary lists with word counts
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization');
-    console.log('[lists] Auth header:', authHeader);
-
-    const supabase = await createClientWithAuth(request);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    console.log('[lists] Auth result:', { user: !!user, error: authError?.message });
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     const { data, error } = await supabase
       .from('vocabulary_lists')
@@ -59,12 +56,13 @@ export async function GET(request: NextRequest) {
 // POST /api/lists - Create new vocabulary list
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClientWithAuth(request);
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     const body = await request.json();
     const { name, description, color, isPublic } = body;

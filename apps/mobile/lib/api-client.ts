@@ -94,6 +94,19 @@ class ApiClient {
     });
     return response.data;
   }
+
+  // Debug method to check auth state
+  async debugAuth(): Promise<{ hasToken: boolean; tokenPrefix?: string; user?: string }> {
+    const { data, error } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    const user = data.session?.user;
+
+    return {
+      hasToken: !!token,
+      tokenPrefix: token ? `${token.substring(0, 20)}...` : undefined,
+      user: user?.email,
+    };
+  }
 }
 
 export const apiClient = new ApiClient();

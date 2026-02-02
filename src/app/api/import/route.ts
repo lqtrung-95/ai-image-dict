@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/supabase/api-auth';
+import { createServiceClient } from '@/lib/supabase/server';
 import { extractWebArticle } from '@/lib/import/web-article-extractor';
 import { extractVocabulary } from '@/lib/import/vocabulary-extractor';
 import { ExtractedWord, ImportSourceType } from '@/types';
@@ -42,12 +43,13 @@ function checkRateLimit(userId: string): boolean {
 // POST /api/import - Start import process, extract and preview vocabulary
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = createServiceClient();
 
     // Check rate limit
     if (!checkRateLimit(user.id)) {
