@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
 import { apiClient } from '@/lib/api-client';
@@ -41,12 +41,21 @@ export default function CaptureModal() {
 
   const slideAnim = useRef(new Animated.Value(height)).current;
 
-  // Fetch lists when component mounts
+  // Fetch lists when component mounts or when screen is focused
   useEffect(() => {
     if (isAuthenticated) {
       fetchLists();
     }
   }, [isAuthenticated]);
+
+  // Refresh lists when screen comes back into focus (e.g., after creating a new list)
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        fetchLists();
+      }
+    }, [isAuthenticated])
+  );
 
   const fetchLists = async () => {
     try {

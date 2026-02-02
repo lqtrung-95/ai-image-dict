@@ -74,6 +74,7 @@ function AuthNavigator() {
       <Stack.Screen name="history" options={{ headerShown: false }} />
       <Stack.Screen name="courses" options={{ headerShown: false }} />
       <Stack.Screen name="stories" options={{ headerShown: false }} />
+      <Stack.Screen name="stories/new" options={{ headerShown: false }} />
       <Stack.Screen name="import" options={{ headerShown: false }} />
       <Stack.Screen name="progress" options={{ headerShown: false }} />
       <Stack.Screen name="practice-session" options={{ headerShown: false }} />
