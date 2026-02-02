@@ -23,7 +23,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
     { key: 'index', icon: 'home', label: 'Home' },
     { key: 'vocabulary', icon: 'book', label: 'Words' },
     null, // Center placeholder
-    { key: 'progress', icon: 'trending-up', label: 'Progress' },
+    { key: 'games', icon: 'game-controller', label: 'Games' },
     { key: 'settings', icon: 'person', label: 'Profile' },
   ];
 
@@ -91,7 +91,7 @@ export default function TabLayout() {
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="vocabulary" />
-      <Tabs.Screen name="progress" />
+      <Tabs.Screen name="games" />
       <Tabs.Screen name="settings" />
     </Tabs>
   );

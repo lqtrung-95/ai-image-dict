@@ -213,6 +213,18 @@ export default function SettingsScreen() {
 
   const settingsSections: { title: string; items: SettingsItem[] }[] = [
     {
+      title: 'Your Progress',
+      items: [
+        {
+          icon: 'trending-up',
+          label: 'View Statistics',
+          onPress: () => {
+            router.push('/progress');
+          },
+        },
+      ],
+    },
+    {
       title: 'Account',
       items: [
         {
