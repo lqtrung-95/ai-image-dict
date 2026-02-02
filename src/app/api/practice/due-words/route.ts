@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
       detected_objects: DetectedObject | null;
     }
 
-    const items = (data || []).map((item: VocabularyItemRaw) => {
+    const items = (data || []).map((item) => {
       const photoAnalysis = item.detected_objects?.photo_analyses;
       return {
         id: item.id,
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Optionally fetch new words (never reviewed) if includeNew is true
-    let newWords: VocabularyItemRaw[] = [];
+    let newWords: any[] = [];
     if (includeNew && items.length < limit) {
       const remainingLimit = limit - items.length;
 
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
       const { data: newData } = await newQuery;
 
       if (newData) {
-        newWords = newData.map((item: VocabularyItemRaw) => {
+        newWords = newData.map((item) => {
           const photoAnalysis = item.detected_objects?.photo_analyses;
           return {
             id: item.id,
