@@ -99,7 +99,8 @@ export async function GET(request: NextRequest) {
     // Map fields to camelCase for frontend
     const items = (data || []).map((item: any) => {
       const photoAnalysis = item.detected_object?.photo_analysis;
-      return {
+      console.log('[DueWords] Raw item:', { id: item.id, word: item.word_zh, detectedObject: item.detected_object, photoAnalysis: item.detected_object?.photo_analysis });
+      const mapped = {
         id: item.id,
         userId: item.user_id,
         wordZh: item.word_zh,
@@ -119,6 +120,8 @@ export async function GET(request: NextRequest) {
         photoDate: photoAnalysis?.created_at || null,
         analysisId: photoAnalysis?.id || item.detected_object?.analysis_id || null,
       };
+      console.log('[DueWords] Mapped item:', { id: mapped.id, word: mapped.wordZh, photoUrl: mapped.photoUrl });
+      return mapped;
     });
 
     // Optionally fetch new words (never reviewed) if includeNew is true

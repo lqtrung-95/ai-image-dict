@@ -52,6 +52,9 @@ export default function PracticeSessionScreen() {
         total: number;
       }>('/api/practice/due-words?limit=20');
 
+      console.log('[Practice] Loaded words:', response.items?.length);
+      console.log('[Practice] First word sample:', response.items?.[0]);
+
       let practiceWords: PracticeWord[] = response.items || [];
 
       // Generate options for multiple choice
@@ -94,15 +97,17 @@ export default function PracticeSessionScreen() {
 
   const flipCard = () => {
     if (showAnswer) {
-      Animated.timing(flipAnim, {
+      Animated.spring(flipAnim, {
         toValue: 0,
-        duration: 300,
+        friction: 8,
+        tension: 40,
         useNativeDriver: true,
       }).start();
     } else {
-      Animated.timing(flipAnim, {
+      Animated.spring(flipAnim, {
         toValue: 1,
-        duration: 300,
+        friction: 8,
+        tension: 40,
         useNativeDriver: true,
       }).start();
     }
@@ -112,6 +117,21 @@ export default function PracticeSessionScreen() {
   const handleRate = async (rating: Rating) => {
     const currentWord = words[currentIndex];
 
+    console.log('[handleRate] Current word:', JSON.stringify(currentWord, null, 2));
+    console.log('[handleRate] Current index:', currentIndex, 'Total words:', words.length);
+
+    if (!currentWord?.id) {
+      console.error('[handleRate] No vocabulary item ID:', currentWord);
+      Alert.alert('Error', 'Word ID not found');
+      return;
+    }
+
+    console.log('[handleRate] Recording attempt:', {
+      vocabularyItemId: currentWord.id,
+      word: currentWord.wordZh,
+      rating,
+    });
+
     try {
       await apiClient.post('/api/word-attempts', {
         vocabularyItemId: currentWord.id,
@@ -119,8 +139,10 @@ export default function PracticeSessionScreen() {
         rating,
         isCorrect: rating >= 3,
       });
-    } catch (error) {
-      console.error('Failed to record attempt:', error);
+      console.log('[handleRate] Attempt recorded successfully');
+    } catch (error: any) {
+      console.error('[handleRate] Failed to record attempt:', error);
+      // Continue with the flow even if recording fails
     }
 
     if (rating >= 3) {
@@ -232,59 +254,82 @@ export default function PracticeSessionScreen() {
       {/* Content */}
       <View style={styles.content}>
         {mode === 'flashcard' && (
-          <TouchableOpacity activeOpacity={0.9} onPress={flipCard} style={styles.cardContainer}>
+          <TouchableOpacity activeOpacity={1} onPress={flipCard} style={styles.cardContainer}>
             <View style={[styles.flashcard, { backgroundColor: cardColor }]}>
-              {/* Front of card */}
+              {/* Front of card - Chinese */}
               <Animated.View
                 style={[
                   styles.cardFace,
+                  styles.cardFaceFront,
                   {
                     opacity: flipAnim.interpolate({
-                      inputRange: [0, 1],
+                      inputRange: [0, 0.5],
                       outputRange: [1, 0],
                     }),
-                    transform: [
-                      {
-                        rotateY: flipAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '180deg'],
-                        }),
-                      },
-                    ],
                   },
                 ]}
               >
-                <Text style={styles.chineseText}>{currentWord.wordZh}</Text>
-                <Text style={styles.pinyinText}>{currentWord.wordPinyin}</Text>
-                <Text style={[styles.tapHint, { color: subtextColor }]}>Tap to reveal</Text>
+                <View style={styles.cardContent}>
+                  <Text style={styles.chineseText}>{currentWord.wordZh}</Text>
+                  <Text style={styles.pinyinText}>{currentWord.wordPinyin}</Text>
+                  <View style={styles.tapHintContainer}>
+                    <Ionicons name="sync" size={16} color={subtextColor} />
+                    <Text style={[styles.tapHint, { color: subtextColor }]}>Tap to flip</Text>
+                  </View>
+                </View>
               </Animated.View>
 
-              {/* Back of card */}
+              {/* Back of card - English + Image */}
               <Animated.View
                 style={[
                   styles.cardFace,
+                  styles.cardFaceBack,
                   {
-                    opacity: flipAnim,
-                    transform: [
-                      {
-                        rotateY: flipAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['180deg', '360deg'],
-                        }),
-                      },
-                    ],
+                    opacity: flipAnim.interpolate({
+                      inputRange: [0.5, 1],
+                      outputRange: [0, 1],
+                    }),
                   },
                 ]}
               >
-                <Text style={[styles.englishText, { color: textColor }]}>{currentWord.wordEn}</Text>
-                {currentWord.exampleSentence && (
-                  <Text style={[styles.exampleText, { color: subtextColor }]}>
-                    "{currentWord.exampleSentence}"
-                  </Text>
-                )}
-                {currentWord.photoUrl && (
-                  <Image source={{ uri: currentWord.photoUrl }} style={styles.wordImage} resizeMode="cover" />
-                )}
+                <View style={styles.cardContent}>
+                  <Text style={[styles.backLabel, { color: subtextColor }]}>Meaning</Text>
+                  <Text style={[styles.englishText, { color: textColor }]}>{currentWord.wordEn}</Text>
+
+                  {currentWord.exampleSentence && (
+                    <>
+                      <Text style={[styles.backLabel, { color: subtextColor, marginTop: 20 }]}>Example</Text>
+                      <Text style={[styles.exampleText, { color: textColor }]}>
+                        "{currentWord.exampleSentence}"
+                      </Text>
+                    </>
+                  )}
+
+                  {currentWord.photoUrl ? (
+                    <View style={styles.imageContainer}>
+                      <Image
+                        source={{ uri: currentWord.photoUrl }}
+                        style={styles.wordImage}
+                        resizeMode="cover"
+                        onError={(e) => console.log('[Image] Load error:', e.nativeEvent.error)}
+                        onLoad={() => console.log('[Image] Loaded:', currentWord.photoUrl?.substring(0, 50))}
+                      />
+                    </View>
+                  ) : (
+                    <View style={styles.imagePlaceholder}>
+                      <Ionicons name="image-outline" size={40} color={isDark ? '#333' : '#ddd'} />
+                      <Text style={[styles.placeholderText, { color: subtextColor }]}>No image</Text>
+                      <Text style={[styles.debugText, { color: subtextColor }]}>
+                        ID: {currentWord.id?.substring(0, 8)}...
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.tapHintContainer}>
+                    <Ionicons name="sync" size={16} color={subtextColor} />
+                    <Text style={[styles.tapHint, { color: subtextColor }]}>Tap to flip back</Text>
+                  </View>
+                </View>
               </Animated.View>
             </View>
           </TouchableOpacity>
@@ -445,8 +490,7 @@ const styles = StyleSheet.create({
   },
   flashcard: {
     borderRadius: 24,
-    padding: 32,
-    minHeight: 300,
+    minHeight: 420,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -454,38 +498,91 @@ const styles = StyleSheet.create({
   cardFace: {
     alignItems: 'center',
     justifyContent: 'center',
-    backfaceVisibility: 'hidden',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: 24,
+  },
+  cardFaceFront: {
+    zIndex: 2,
+  },
+  cardFaceBack: {
+    zIndex: 1,
+  },
+  cardContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   chineseText: {
-    fontSize: 48,
+    fontSize: 56,
     fontWeight: 'bold',
     color: '#7c3aed',
   },
   pinyinText: {
     fontSize: 24,
     color: '#a78bfa',
-    marginTop: 8,
+    marginTop: 12,
+  },
+  backLabel: {
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 8,
   },
   englishText: {
-    fontSize: 20,
-    marginTop: 16,
+    fontSize: 28,
+    fontWeight: '600',
+  },
+  tapHintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 24,
   },
   tapHint: {
     fontSize: 14,
-    marginTop: 32,
   },
   exampleText: {
     fontSize: 16,
     fontStyle: 'italic',
     textAlign: 'center',
-    marginTop: 16,
     paddingHorizontal: 16,
+    lineHeight: 22,
+  },
+  imageContainer: {
+    marginTop: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   wordImage: {
-    width: 200,
-    height: 150,
-    borderRadius: 12,
+    width: 240,
+    height: 160,
+    borderRadius: 16,
+  },
+  imagePlaceholder: {
+    width: 240,
+    height: 120,
+    borderRadius: 16,
+    backgroundColor: 'rgba(124, 58, 237, 0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 16,
+    gap: 8,
+  },
+  placeholderText: {
+    fontSize: 14,
+  },
+  debugText: {
+    fontSize: 10,
+    marginTop: 4,
   },
   // Rating buttons
   ratingContainer: {
