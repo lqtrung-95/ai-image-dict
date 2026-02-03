@@ -309,15 +309,7 @@ export default function PracticeSessionScreen() {
                         onLoad={() => console.log('[Image] Loaded successfully')}
                       />
                     </View>
-                  ) : (
-                    <View style={styles.imagePlaceholder}>
-                      <Ionicons name="image-outline" size={40} color={isDark ? '#333' : '#ddd'} />
-                      <Text style={[styles.placeholderText, { color: subtextColor }]}>No image</Text>
-                      <Text style={[styles.debugText, { color: subtextColor }]}>
-                        ID: {currentWord.id?.substring(0, 8)}...
-                      </Text>
-                    </View>
-                  )}
+                  ) : null}
 
                   <View style={styles.tapHintContainer}>
                     <Ionicons name="sync" size={16} color={subtextColor} />
@@ -573,23 +565,6 @@ const styles = StyleSheet.create({
     height: 160,
     borderRadius: 16,
   },
-  imagePlaceholder: {
-    width: 240,
-    height: 120,
-    borderRadius: 16,
-    backgroundColor: 'rgba(124, 58, 237, 0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    gap: 8,
-  },
-  placeholderText: {
-    fontSize: 14,
-  },
-  debugText: {
-    fontSize: 10,
-    marginTop: 4,
-  },
   // Rating buttons
   ratingContainer: {
     flexDirection: 'row',
@@ -610,31 +585,25 @@ const styles = StyleSheet.create({
   },
   feedbackOverlay: {
     position: 'absolute',
-    top: 0,
+    top: 80,
     left: 0,
     right: 0,
-    bottom: 100,
-    justifyContent: 'center',
     alignItems: 'center',
     pointerEvents: 'none',
   },
   feedbackBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    opacity: 0.95,
   },
   feedbackText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '500',
   },
   // Multiple choice styles
   mcContainer: {
