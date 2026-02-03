@@ -114,23 +114,19 @@ export default function PracticeSessionScreen() {
     setShowAnswer(!showAnswer);
   };
 
+  const [showFeedback, setShowFeedback] = useState<{rating: Rating, visible: boolean} | null>(null);
+
   const handleRate = async (rating: Rating) => {
     const currentWord = words[currentIndex];
 
-    console.log('[handleRate] Current word:', JSON.stringify(currentWord, null, 2));
-    console.log('[handleRate] Current index:', currentIndex, 'Total words:', words.length);
-
     if (!currentWord?.id) {
-      console.error('[handleRate] No vocabulary item ID:', currentWord);
       Alert.alert('Error', 'Word ID not found');
       return;
     }
 
-    console.log('[handleRate] Recording attempt:', {
-      vocabularyItemId: currentWord.id,
-      word: currentWord.wordZh,
-      rating,
-    });
+    // Show feedback
+    setShowFeedback({ rating, visible: true });
+    setTimeout(() => setShowFeedback(null), 600);
 
     try {
       await apiClient.post('/api/word-attempts', {
@@ -139,10 +135,8 @@ export default function PracticeSessionScreen() {
         rating,
         isCorrect: rating >= 3,
       });
-      console.log('[handleRate] Attempt recorded successfully');
     } catch (error: any) {
-      console.error('[handleRate] Failed to record attempt:', error);
-      // Continue with the flow even if recording fails
+      console.error('[handleRate] Failed:', error);
     }
 
     if (rating >= 3) {
@@ -308,11 +302,11 @@ export default function PracticeSessionScreen() {
                   {currentWord.photoUrl ? (
                     <View style={styles.imageContainer}>
                       <Image
-                        source={{ uri: currentWord.photoUrl }}
+                        source={{ uri: currentWord.photoUrl, cache: 'force-cache' }}
                         style={styles.wordImage}
                         resizeMode="cover"
                         onError={(e) => console.log('[Image] Load error:', e.nativeEvent.error)}
-                        onLoad={() => console.log('[Image] Loaded:', currentWord.photoUrl?.substring(0, 50))}
+                        onLoad={() => console.log('[Image] Loaded successfully')}
                       />
                     </View>
                   ) : (
@@ -439,6 +433,18 @@ export default function PracticeSessionScreen() {
           >
             <Text style={styles.ratingText}>Easy</Text>
           </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Rating Feedback Overlay */}
+      {showFeedback?.visible && (
+        <View style={styles.feedbackOverlay}>
+          <View style={[styles.feedbackBadge, { backgroundColor: showFeedback.rating >= 3 ? '#10b981' : '#ef4444' }]}>
+            <Ionicons name={showFeedback.rating >= 3 ? 'checkmark-circle' : 'close-circle'} size={32} color="#fff" />
+            <Text style={styles.feedbackText}>
+              {showFeedback.rating >= 3 ? 'Correct!' : 'Keep practicing!'}
+            </Text>
+          </View>
         </View>
       )}
     </View>
@@ -601,6 +607,34 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 14,
+  },
+  feedbackOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',
+  },
+  feedbackBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  feedbackText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   // Multiple choice styles
   mcContainer: {
