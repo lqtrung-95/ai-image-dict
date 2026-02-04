@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { apiClient } from '@/lib/api-client';
+import { useVocabularyStore } from '@/stores/vocabulary-store';
 import type { VocabularyItem } from '@/lib/types';
 
 type QuizMode = 'flashcard' | 'multiple-choice' | 'listening';
@@ -176,6 +177,13 @@ export default function PracticeSessionScreen() {
       </View>
     );
   }
+
+  // Clear cache when session completes - must be before any early returns
+  useEffect(() => {
+    if (sessionComplete) {
+      useVocabularyStore.getState().clearCache();
+    }
+  }, [sessionComplete]);
 
   if (words.length === 0) {
     return (
