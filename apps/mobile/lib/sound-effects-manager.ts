@@ -116,18 +116,27 @@ class SoundEffectsManager {
     // Try each extension in order
     for (const ext of config.extensions) {
       const key = `${config.file}${ext}`;
-      if (SoundEffectsManager.requires[key]) {
-        return SoundEffectsManager.requires[key];
+      console.log(`[SoundEffects] Looking for: ${key}`);
+      const soundModule = SoundEffectsManager.requires[key];
+      if (soundModule) {
+        console.log(`[SoundEffects] Found: ${key}`);
+        return soundModule;
       }
     }
 
     // If no file found, return null (graceful fallback)
+    console.warn(`[SoundEffects] No file found for ${effect}`);
     return null;
   }
 
   // Play a sound effect
   async play(effect: SoundEffect): Promise<void> {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      console.log(`[SoundEffects] Play called but disabled: ${effect}`);
+      return;
+    }
+
+    console.log(`[SoundEffects] Playing: ${effect}`);
 
     try {
       // Check if sound is preloaded
@@ -135,12 +144,19 @@ class SoundEffectsManager {
 
       if (sound) {
         // Replay preloaded sound
+        console.log(`[SoundEffects] Using preloaded: ${effect}`);
         await sound.setPositionAsync(0);
         await sound.playAsync();
       } else {
         // Load and play on-demand
+        const source = this.getSoundSource(effect);
+        if (!source) {
+          console.warn(`[SoundEffects] No source for: ${effect}`);
+          return;
+        }
+        console.log(`[SoundEffects] Loading on-demand: ${effect}`);
         const { sound: newSound } = await Audio.Sound.createAsync(
-          this.getSoundSource(effect),
+          source,
           { volume: SOUND_VOLUMES[effect], shouldPlay: true }
         );
 

@@ -30,6 +30,7 @@ interface VocabularyItem {
 interface GameCard {
   id: string;
   content: string;
+  pinyin?: string;
   type: 'chinese' | 'english';
   originalId: string;
   isFlipped: boolean;
@@ -177,6 +178,7 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
       gameCards.push({
         id: `zh-${item.id}`,
         content: item.wordZh,
+        pinyin: item.wordPinyin,
         type: 'chinese',
         originalId: item.id,
         isFlipped: false,
@@ -402,6 +404,11 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
                   >
                     {card.content}
                   </Text>
+                  {card.type === 'chinese' && card.pinyin && (
+                    <Text style={[styles.cardPinyin, { color: 'rgba(255,255,255,0.8)' }]}>
+                      {card.pinyin}
+                    </Text>
+                  )}
                   {card.isMatched && (
                     <Ionicons name="checkmark-circle" size={20} color="#10b981" style={styles.checkIcon} />
                   )}
@@ -867,6 +874,11 @@ const styles = StyleSheet.create({
   cardText: {
     textAlign: 'center',
     fontWeight: '600',
+  },
+  cardPinyin: {
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
   },
   cardQuestion: {
     fontSize: 32,
