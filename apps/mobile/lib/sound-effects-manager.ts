@@ -100,22 +100,28 @@ class SoundEffectsManager {
     }
   }
 
-  // Get sound source - tries to load from assets with multiple extensions
+  // Static require map for Metro bundler compatibility
+  private static requires: Record<string, any> = {
+    'correctAnswer.wav': require('../assets/sounds/correctAnswer.wav'),
+    'wrongAnswer.wav': require('../assets/sounds/wrongAnswer.wav'),
+    'match.wav': require('../assets/sounds/match.wav'),
+    'success.wav': require('../assets/sounds/success.wav'),
+    'complete.wav': require('../assets/sounds/complete.wav'),
+  };
+
+  // Get sound source - uses static requires for Metro compatibility
   private getSoundSource(effect: SoundEffect): any {
     const config = SOUND_URIS[effect];
 
     // Try each extension in order
     for (const ext of config.extensions) {
-      try {
-        return require(`../assets/sounds/${config.file}${ext}`);
-      } catch {
-        // Try next extension
-        continue;
+      const key = `${config.file}${ext}`;
+      if (SoundEffectsManager.requires[key]) {
+        return SoundEffectsManager.requires[key];
       }
     }
 
-    // If no file found, return null
-    console.warn(`[SoundEffects] No sound file found for ${effect} (tried: ${config.extensions.join(', ')})`);
+    // If no file found, return null (graceful fallback)
     return null;
   }
 
