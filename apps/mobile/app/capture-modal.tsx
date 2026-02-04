@@ -410,13 +410,7 @@ export default function CaptureModal() {
                   Detected Objects
                 </Text>
 
-                {(() => {
-              // Debug logging
-              console.log('[Mobile] Objects:', result.objects.map(o => ({ zh: o.zh, hskLevel: o.hskLevel })));
-              return null;
-            })()}
-            {result.objects.map((obj, index) => (
-              console.log('[Mobile] Rendering:', obj.zh, obj.hskLevel) || (
+                {result.objects.map((obj, index) => (
                   <View
                     key={obj.id || index}
                     style={[styles.wordCard, { backgroundColor: cardColor }]}>
