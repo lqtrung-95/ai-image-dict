@@ -25,6 +25,8 @@ import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFocusEffect } from '@react-navigation/native';
 import { soundEffects } from '@/lib/sound-effects-manager';
+import { notificationManager } from '@/lib/notification-manager';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface DailyGoal {
   id: string;
@@ -83,8 +85,9 @@ export default function SettingsScreen() {
   const { user: authUser, setProfile } = useAuthStore();
   const [user, setUser] = useState<{ email: string; displayName?: string; avatarUrl?: string } | null>(null);
   const [notifications, setNotifications] = useState(true);
-  const [dailyReminder, setDailyReminder] = useState(true);
+  const [dailyReminder, setDailyReminder] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
 
   // Profile editing state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -109,6 +112,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     fetchGoals();
+    loadNotificationState();
   }, []);
 
   useFocusEffect(
@@ -116,6 +120,54 @@ export default function SettingsScreen() {
       loadUser();
     }, [])
   );
+
+  // Load notification state from notification manager
+  const loadNotificationState = async () => {
+    try {
+      const enabled = notificationManager.isEnabled();
+      setDailyReminder(enabled);
+    } catch (error) {
+      console.error('Failed to load notification state:', error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  };
+
+  // Handle daily reminder toggle
+  const handleToggleDailyReminder = async (enabled: boolean) => {
+    setIsLoadingNotifications(true);
+    try {
+      const success = await notificationManager.toggleDailyReminder(enabled);
+      if (success) {
+        setDailyReminder(enabled);
+        // Also update the general notifications toggle to match
+        setNotifications(enabled);
+      } else {
+        // Revert if failed (likely no permission)
+        Alert.alert(
+          'Permission Required',
+          'Please enable notifications in your device settings to receive daily reminders.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Failed to toggle daily reminder:', error);
+      Alert.alert('Error', 'Failed to update daily reminder settings');
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  };
+
+  // Handle test notification
+  const handleTestNotification = async () => {
+    try {
+      await notificationManager.sendTestNotification();
+      Alert.alert('Test Sent', 'Check your notifications!');
+    } catch (error) {
+      console.error('Failed to send test notification:', error);
+      Alert.alert('Error', 'Failed to send test notification');
+    }
+  };
 
   // Sync local user state when authUser changes (for updates from other screens)
   useEffect(() => {
@@ -336,6 +388,23 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleReplayOnboarding = async () => {
+    Alert.alert(
+      'Replay Onboarding',
+      'Would you like to see the onboarding tutorial again?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Replay',
+          onPress: async () => {
+            await AsyncStorage.removeItem('hasCompletedOnboarding');
+            router.replace('/onboarding');
+          },
+        },
+      ]
+    );
+  };
+
   type SettingsItem = {
     icon: string;
     label: string;
@@ -375,25 +444,6 @@ export default function SettingsScreen() {
           onPress: () => {
             Alert.alert('Coming Soon', 'Password change will be available soon');
           },
-        },
-      ],
-    },
-    {
-      title: 'Preferences',
-      items: [
-        {
-          icon: 'notifications',
-          label: 'Push Notifications',
-          toggle: true,
-          toggleValue: notifications,
-          onToggle: setNotifications,
-        },
-        {
-          icon: 'time',
-          label: 'Daily Reminder',
-          toggle: true,
-          toggleValue: dailyReminder,
-          onToggle: setDailyReminder,
         },
       ],
     },
@@ -459,6 +509,11 @@ export default function SettingsScreen() {
           onPress: () => {
             Alert.alert('Coming Soon', 'Support will be available soon');
           },
+        },
+        {
+          icon: 'play-circle',
+          label: 'Replay Onboarding',
+          onPress: handleReplayOnboarding,
         },
       ],
     },
@@ -532,7 +587,7 @@ export default function SettingsScreen() {
           </Text>
           <View style={[styles.sectionCard, { backgroundColor: cardColor }]}>
             {/* Sound Effects Toggle */}
-            <View style={styles.preferenceItem}>
+            <View style={[styles.preferenceItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#2a2a2a' : '#f0f0f0' }]}>
               <View style={styles.preferenceInfo}>
                 <Ionicons name="volume-high" size={22} color="#7c3aed" />
                 <View style={styles.preferenceText}>
@@ -554,6 +609,47 @@ export default function SettingsScreen() {
                 thumbColor={soundEnabled ? '#7c3aed' : isDark ? '#666' : '#fff'}
               />
             </View>
+
+            {/* Daily Reminder Toggle */}
+            <View style={[styles.preferenceItem, { borderBottomWidth: 1, borderBottomColor: isDark ? '#2a2a2a' : '#f0f0f0' }]}>
+              <View style={styles.preferenceInfo}>
+                <Ionicons name="time" size={22} color="#10b981" />
+                <View style={styles.preferenceText}>
+                  <Text style={[styles.preferenceLabel, { color: textColor }]}>
+                    Daily Reminder
+                  </Text>
+                  <Text style={[styles.preferenceDescription, { color: subtextColor }]}>
+                    Get a daily nudge to practice at 9:00 AM
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={dailyReminder}
+                onValueChange={handleToggleDailyReminder}
+                disabled={isLoadingNotifications}
+                trackColor={{ false: isDark ? '#3a3a3a' : '#e5e7eb', true: 'rgba(16, 185, 129, 0.5)' }}
+                thumbColor={dailyReminder ? '#10b981' : isDark ? '#666' : '#fff'}
+              />
+            </View>
+
+            {/* Test Notification Button */}
+            <TouchableOpacity
+              style={styles.preferenceItem}
+              onPress={handleTestNotification}
+            >
+              <View style={styles.preferenceInfo}>
+                <Ionicons name="notifications" size={22} color="#f59e0b" />
+                <View style={styles.preferenceText}>
+                  <Text style={[styles.preferenceLabel, { color: textColor }]}>
+                    Test Notification
+                  </Text>
+                  <Text style={[styles.preferenceDescription, { color: subtextColor }]}>
+                    Send a test notification to verify setup
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={subtextColor} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -713,6 +809,7 @@ export default function SettingsScreen() {
                     <Switch
                       value={item.toggleValue}
                       onValueChange={item.onToggle}
+                      disabled={item.disabled}
                       trackColor={{ false: '#767577', true: '#7c3aed' }}
                     />
                   ) : (

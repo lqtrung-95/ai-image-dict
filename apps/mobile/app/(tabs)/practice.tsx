@@ -82,14 +82,7 @@ export default function PracticeScreen() {
       return;
     }
 
-    if (localDueWords.length === 0) {
-      Alert.alert(
-        'No Words Due',
-        'You have no words to review right now. Great job!'
-      );
-      return;
-    }
-    // Navigate to practice session
+    // Navigate to practice session - empty state is handled in the session screen
     router.push({
       pathname: '/practice-session',
       params: { mode },

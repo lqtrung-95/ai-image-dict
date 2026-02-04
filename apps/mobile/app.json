@@ -47,6 +47,14 @@
           "photosPermission": "Allow AI Image Dictionary to access your photos for vocabulary learning."
         }
       ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#7c3aed",
+          "sounds": ["./assets/sounds/notification.wav"]
+        }
+      ],
       "expo-secure-store",
       "expo-sqlite",
       "expo-audio"

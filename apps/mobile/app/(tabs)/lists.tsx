@@ -146,10 +146,12 @@ export default function ListsScreen() {
           </View>
         ) : lists.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="list" size={64} color={subtextColor} />
-            <Text style={[styles.emptyTitle, { color: textColor }]}>No lists yet</Text>
+            <View style={[styles.emptyIconCircle, { backgroundColor: isDark ? '#262626' : '#f3f4f6' }]}>
+              <Ionicons name="list" size={48} color="#7c3aed" />
+            </View>
+            <Text style={[styles.emptyTitle, { color: textColor }]}>No Lists Yet</Text>
             <Text style={[styles.emptySubtitle, { color: subtextColor }]}>
-              Create lists to organize your vocabulary
+              Create lists to organize your vocabulary by topics, lessons, or difficulty
             </Text>
             <TouchableOpacity
               style={styles.createFirstButton}
@@ -345,16 +347,28 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     paddingVertical: 64,
+    paddingHorizontal: 24,
+  },
+  emptyIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
-    marginTop: 16,
+    marginTop: 8,
   },
   emptySubtitle: {
     fontSize: 14,
     marginTop: 8,
     marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 280,
   },
   createFirstButton: {
     flexDirection: 'row',

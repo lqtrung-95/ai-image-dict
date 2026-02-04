@@ -115,10 +115,12 @@ export default function StoriesScreen() {
           </View>
         ) : stories.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="book" size={64} color={subtextColor} />
-            <Text style={[styles.emptyTitle, { color: textColor }]}>No stories yet</Text>
+            <View style={[styles.emptyIconCircle, { backgroundColor: isDark ? '#262626' : '#f3f4f6' }]}>
+              <Ionicons name="book" size={48} color="#7c3aed" />
+            </View>
+            <Text style={[styles.emptyTitle, { color: textColor }]}>No Stories Yet</Text>
             <Text style={[styles.emptySubtitle, { color: subtextColor }]}>
-              Create photo stories to organize your vocabulary by context
+              Create photo stories to organize your vocabulary by context and events
             </Text>
             <TouchableOpacity style={styles.createFirstButton} onPress={() => router.push('/stories/new')}>
               <Ionicons name="add" size={20} color="#fff" />
@@ -217,18 +219,28 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     paddingVertical: 64,
+    paddingHorizontal: 24,
+  },
+  emptyIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
-    marginTop: 16,
+    marginTop: 8,
   },
   emptySubtitle: {
     fontSize: 14,
     marginTop: 8,
     marginBottom: 24,
     textAlign: 'center',
-    paddingHorizontal: 32,
+    lineHeight: 20,
+    maxWidth: 280,
   },
   createFirstButton: {
     flexDirection: 'row',

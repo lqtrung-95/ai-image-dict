@@ -202,11 +202,29 @@ export default function PracticeSessionScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.emptyContainer}>
-          <Ionicons name="checkmark-circle" size={64} color="#10b981" />
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="checkmark-circle" size={64} color="#10b981" />
+          </View>
           <Text style={[styles.emptyTitle, { color: textColor }]}>All Caught Up!</Text>
           <Text style={[styles.emptySubtitle, { color: subtextColor }]}>
-            You have no words to review right now.
+            You have no words to review right now. Great job staying on top of your practice!
           </Text>
+          <View style={styles.emptyActions}>
+            <TouchableOpacity
+              style={styles.emptyPrimaryButton}
+              onPress={() => router.push('/games')}
+            >
+              <Ionicons name="game-controller" size={20} color="#fff" />
+              <Text style={styles.emptyPrimaryButtonText}>Play Games</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.emptySecondaryButton, { borderColor: isDark ? '#374151' : '#e5e7eb' }]}
+              onPress={() => router.push('/capture-modal')}
+            >
+              <Ionicons name="camera" size={20} color="#7c3aed" />
+              <Text style={styles.emptySecondaryButtonText}>Add New Words</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
@@ -688,15 +706,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 32,
   },
+  emptyIconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
   emptyTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginTop: 16,
+    marginTop: 8,
   },
   emptySubtitle: {
     fontSize: 16,
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 12,
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  emptyActions: {
+    marginTop: 32,
+    gap: 12,
+    width: '100%',
+    maxWidth: 280,
+  },
+  emptyPrimaryButton: {
+    backgroundColor: '#10b981',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    gap: 8,
+  },
+  emptyPrimaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptySecondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    gap: 8,
+  },
+  emptySecondaryButtonText: {
+    color: '#7c3aed',
+    fontSize: 16,
+    fontWeight: '600',
   },
   // Complete state
   completeContainer: {

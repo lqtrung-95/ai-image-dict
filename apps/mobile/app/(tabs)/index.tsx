@@ -337,6 +337,28 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* Empty State - No Vocabulary */}
+      {!isLoading && stats && stats.totalWords === 0 && (
+        <View style={[styles.emptyStateCard, { backgroundColor: cardColor }]}>
+          <View style={styles.emptyStateIcon}>
+            <Ionicons name="camera-outline" size={48} color="#7c3aed" />
+          </View>
+          <Text style={[styles.emptyStateTitle, { color: textColor }]}>
+            Start Your Journey
+          </Text>
+          <Text style={[styles.emptyStateDesc, { color: subtextColor }]}>
+            Take your first photo to discover Chinese vocabulary. Our AI will identify objects and teach you their names.
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push('/capture-modal')}
+            style={styles.emptyStateButton}
+          >
+            <Ionicons name="camera" size={20} color="#fff" />
+            <Text style={styles.emptyStateButtonText}>Take First Photo</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Review Prompt */}
       {stats && stats.dueToday > 0 && (
         <View style={[styles.reviewCard, { backgroundColor: cardColor }]}>
@@ -356,6 +378,28 @@ export default function HomeScreen() {
               <Text style={styles.reviewButtonText}>Review Now</Text>
             </TouchableOpacity>
           </View>
+        </View>
+      )}
+
+      {/* All Caught Up - No Due Words */}
+      {!isLoading && stats && stats.totalWords > 0 && stats.dueToday === 0 && (
+        <View style={[styles.caughtUpCard, { backgroundColor: cardColor }]}>
+          <View style={styles.caughtUpIcon}>
+            <Ionicons name="checkmark-circle" size={48} color="#10b981" />
+          </View>
+          <Text style={[styles.caughtUpTitle, { color: textColor }]}>
+            All Caught Up!
+          </Text>
+          <Text style={[styles.caughtUpDesc, { color: subtextColor }]}>
+            You have no words to review right now. Great job staying on top of your practice!
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push('/games')}
+            style={styles.caughtUpButton}
+          >
+            <Ionicons name="game-controller" size={20} color="#fff" />
+            <Text style={styles.caughtUpButtonText}>Play Games</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -708,6 +752,90 @@ const styles = StyleSheet.create({
   },
   reviewButtonText: {
     color: '#fff',
+    fontWeight: '600',
+  },
+  // Empty State - No Vocabulary
+  emptyStateCard: {
+    margin: 20,
+    marginTop: 8,
+    padding: 28,
+    borderRadius: 24,
+    alignItems: 'center',
+  },
+  emptyStateIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptyStateDesc: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  emptyStateButton: {
+    backgroundColor: '#7c3aed',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 24,
+    gap: 8,
+  },
+  emptyStateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Caught Up State
+  caughtUpCard: {
+    margin: 20,
+    marginTop: 8,
+    padding: 28,
+    borderRadius: 24,
+    alignItems: 'center',
+  },
+  caughtUpIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  caughtUpTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  caughtUpDesc: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  caughtUpButton: {
+    backgroundColor: '#10b981',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 24,
+    gap: 8,
+  },
+  caughtUpButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
   },
 });
