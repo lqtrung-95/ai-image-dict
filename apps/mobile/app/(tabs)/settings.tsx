@@ -24,6 +24,7 @@ import { supabase } from '@/lib/supabase-client';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
 import { useFocusEffect } from '@react-navigation/native';
+import { soundEffects } from '@/lib/sound-effects-manager';
 
 interface DailyGoal {
   id: string;
@@ -83,6 +84,7 @@ export default function SettingsScreen() {
   const [user, setUser] = useState<{ email: string; displayName?: string; avatarUrl?: string } | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [dailyReminder, setDailyReminder] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Profile editing state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -523,6 +525,38 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* App Preferences Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: sectionHeaderColor }]}>
+            App Preferences
+          </Text>
+          <View style={[styles.sectionCard, { backgroundColor: cardColor }]}>
+            {/* Sound Effects Toggle */}
+            <View style={styles.preferenceItem}>
+              <View style={styles.preferenceInfo}>
+                <Ionicons name="volume-high" size={22} color="#7c3aed" />
+                <View style={styles.preferenceText}>
+                  <Text style={[styles.preferenceLabel, { color: textColor }]}>
+                    Sound Effects
+                  </Text>
+                  <Text style={[styles.preferenceDescription, { color: subtextColor }]}>
+                    Play sounds for actions and achievements
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={soundEnabled}
+                onValueChange={(value) => {
+                  setSoundEnabled(value);
+                  soundEffects.setEnabled(value);
+                }}
+                trackColor={{ false: isDark ? '#3a3a3a' : '#e5e7eb', true: 'rgba(124, 58, 237, 0.5)' }}
+                thumbColor={soundEnabled ? '#7c3aed' : isDark ? '#666' : '#fff'}
+              />
+            </View>
+          </View>
+        </View>
+
         {/* Daily Goals Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: sectionHeaderColor }]}>
@@ -841,6 +875,31 @@ const styles = StyleSheet.create({
   sectionCard: {
     borderRadius: 16,
     overflow: 'hidden',
+  },
+  preferenceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  preferenceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  preferenceText: {
+    flex: 1,
+  },
+  preferenceLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  preferenceDescription: {
+    fontSize: 13,
+    marginTop: 2,
   },
   goalCard: {
     borderRadius: 16,

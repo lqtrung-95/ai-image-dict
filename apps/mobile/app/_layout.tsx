@@ -7,6 +7,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
 import { supabase } from '@/lib/supabase-client';
+import { soundEffects } from '@/lib/sound-effects-manager';
 import '../global.css';
 
 const queryClient = new QueryClient();
@@ -22,6 +23,9 @@ function AuthNavigator() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    // Initialize sound effects
+    soundEffects.init();
+
     // Check for existing session on app start
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
