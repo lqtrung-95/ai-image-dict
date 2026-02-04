@@ -14,6 +14,7 @@ import * as Speech from 'expo-speech';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { apiClient } from '@/lib/api-client';
 import { useVocabularyStore } from '@/stores/vocabulary-store';
+import { playSuccessFeedback, playErrorFeedback, playCompleteFeedback } from '@/lib/haptic-feedback-utils';
 import type { VocabularyItem } from '@/lib/types';
 
 type QuizMode = 'flashcard' | 'multiple-choice' | 'listening';
@@ -142,8 +143,10 @@ export default function PracticeSessionScreen() {
 
     if (rating >= 3) {
       setStats((s) => ({ ...s, correct: s.correct + 1 }));
+      playSuccessFeedback();
     } else {
       setStats((s) => ({ ...s, incorrect: s.incorrect + 1 }));
+      playErrorFeedback();
     }
 
     if (currentIndex < words.length - 1) {
@@ -154,6 +157,7 @@ export default function PracticeSessionScreen() {
       flipAnim.setValue(0);
     } else {
       setSessionComplete(true);
+      playCompleteFeedback();
     }
   };
 

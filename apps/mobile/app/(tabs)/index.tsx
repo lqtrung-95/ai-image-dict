@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,24 +7,48 @@ import {
   RefreshControl,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
+import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { apiClient } from '@/lib/api-client';
-import type { VocabularyStats, WordOfDay } from '@/lib/types';
+import type { WordOfDay } from '@/lib/types';
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user: authUser, setProfile } = useAuthStore();
+  const { stats, fetchStats } = useVocabularyStore();
+  const [user, setUser] = useState<{ email: string; displayName?: string; avatarUrl?: string } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<VocabularyStats | null>(null);
   const [wordOfDay, setWordOfDay] = useState<WordOfDay | null>(null);
 
-  const loadData = async () => {
+  const loadProfile = async () => {
+    if (!isAuthenticated || !authUser) return;
+
+    try {
+      const profileData = await apiClient.get<{ profile: { display_name: string; avatar_url: string } }>('/api/user/profile');
+      const profile = {
+        displayName: profileData.profile?.display_name || '',
+        avatarUrl: profileData.profile?.avatar_url || '',
+      };
+      setUser({
+        email: authUser.email,
+        ...profile,
+      });
+      // Update auth store as well so other components get the update
+      setProfile(profile);
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+      setUser({ email: authUser.email });
+    }
+  };
+
+  const loadData = async (forceRefresh = false) => {
     if (!isAuthenticated) {
       setIsLoading(false);
       return;
@@ -32,12 +56,11 @@ export default function HomeScreen() {
 
     setIsLoading(true);
     try {
-      const [statsRes, wordRes] = await Promise.all([
-        apiClient.get<VocabularyStats>('/api/stats'),
+      const [_, wordRes] = await Promise.all([
+        fetchStats(forceRefresh), // Use shared store
         apiClient.get<{ word: { id: string; word_zh: string; word_pinyin: string; word_en: string; example_sentence?: string } }>('/api/word-of-day'),
       ]);
 
-      setStats(statsRes);
       // Map snake_case API response to WordOfDay type
       if (wordRes.word) {
         setWordOfDay({
@@ -57,13 +80,31 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await Promise.all([loadProfile(), loadData(true)]);
     setRefreshing(false);
   };
 
   useEffect(() => {
-    loadData();
+    if (isAuthenticated) {
+      loadProfile();
+      loadData(false); // Use cache if available
+    }
   }, [isAuthenticated]);
+
+  // Refresh data when screen comes into focus (e.g., after saving a word)
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        loadProfile();
+        // Only fetch if cache is stale (older than 5 minutes)
+        const lastFetched = useVocabularyStore.getState().lastFetched.stats;
+        const shouldFetch = !lastFetched || Date.now() - lastFetched > 5 * 60 * 1000;
+        if (shouldFetch) {
+          loadData(false);
+        }
+      }
+    }, [isAuthenticated])
+  );
 
   const bgColor = isDark ? '#0f0f0f' : '#ffffff';
   const cardColor = isDark ? '#1a1a1a' : '#f8fafc';
@@ -143,10 +184,10 @@ export default function HomeScreen() {
               Word of the Day
             </Text>
             <View style={[styles.wordCard, { backgroundColor: cardColor }]}>
-              <Text style={styles.chineseText}>{wordOfDay.word_zh}</Text>
-              <Text style={styles.pinyinText}>{wordOfDay.word_pinyin}</Text>
+              <Text style={styles.chineseText}>{wordOfDay.wordZh}</Text>
+              <Text style={styles.pinyinText}>{wordOfDay.pinyin}</Text>
               <Text style={[styles.englishText, { color: subtextColor }]}>
-                {wordOfDay.word_en}
+                {wordOfDay.wordEn}
               </Text>
             </View>
           </View>
@@ -195,11 +236,18 @@ export default function HomeScreen() {
         <View>
           <Text style={styles.greeting}>Hello!</Text>
           <Text style={[styles.userEmail, { color: subtextColor }]}>
-            {user?.email?.split('@')[0]}
+            {user?.displayName || user?.email?.split('@')[0] || 'Guest'}
           </Text>
         </View>
-        <TouchableOpacity style={styles.profileButton}>
-          <Ionicons name="person-circle" size={44} color="#7c3aed" />
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={() => router.push('/settings')}
+        >
+          {user?.avatarUrl ? (
+            <Image source={{ uri: user.avatarUrl }} style={styles.headerAvatar} />
+          ) : (
+            <Ionicons name="person-circle" size={44} color="#7c3aed" />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -275,14 +323,14 @@ export default function HomeScreen() {
             Word of the Day
           </Text>
           <View style={[styles.wordCardLarge, { backgroundColor: cardColor }]}>
-            <Text style={styles.chineseTextLarge}>{wordOfDay.word_zh}</Text>
-            <Text style={styles.pinyinTextLarge}>{wordOfDay.word_pinyin}</Text>
+            <Text style={styles.chineseTextLarge}>{wordOfDay.wordZh}</Text>
+            <Text style={styles.pinyinTextLarge}>{wordOfDay.pinyin}</Text>
             <Text style={[styles.englishTextLarge, { color: subtextColor }]}>
-              {wordOfDay.word_en}
+              {wordOfDay.wordEn}
             </Text>
-            {wordOfDay.example_sentence && (
+            {wordOfDay.exampleSentence && (
               <Text style={[styles.exampleText, { color: subtextColor }]}>
-                "{wordOfDay.example_sentence}"
+                "{wordOfDay.exampleSentence}"
               </Text>
             )}
           </View>
@@ -542,6 +590,11 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   // Stats
   statsContainer: {

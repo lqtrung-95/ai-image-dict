@@ -6,8 +6,9 @@ interface AuthState {
   isAuthenticated: boolean;
   hasUsedTrial: boolean;
   trialAnalysisCount: number;
-  user: { id: string; email: string } | null;
-  setAuthenticated: (user: { id: string; email: string } | null) => void;
+  user: { id: string; email: string; displayName?: string; avatarUrl?: string } | null;
+  setAuthenticated: (user: { id: string; email: string; displayName?: string; avatarUrl?: string } | null) => void;
+  setProfile: (profile: { displayName?: string; avatarUrl?: string }) => void;
   useTrial: () => boolean;
   resetTrial: () => void;
   logout: () => void;
@@ -28,6 +29,19 @@ export const useAuthStore = create<AuthState>()(
           // Reset trial when user logs in
           trialAnalysisCount: user ? 0 : get().trialAnalysisCount
         });
+      },
+
+      setProfile: (profile) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({
+            user: {
+              ...currentUser,
+              displayName: profile.displayName ?? currentUser.displayName,
+              avatarUrl: profile.avatarUrl ?? currentUser.avatarUrl,
+            }
+          });
+        }
       },
 
       useTrial: () => {

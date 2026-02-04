@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
+import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { apiClient } from '@/lib/api-client';
+import { playSuccessFeedback, playErrorFeedback, playCompleteFeedback, playMatchFeedback } from '@/lib/haptic-feedback-utils';
 
 const { width } = Dimensions.get('window');
 
@@ -138,6 +141,10 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
   const [gameComplete, setGameComplete] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const toastAnim = useRef(new Animated.Value(0)).current;
+
   const bgColor = isDark ? '#0f0f0f' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#000000';
   const subtextColor = isDark ? '#9ca3af' : '#6b7280';
@@ -212,6 +219,7 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
       const secondCard = newCards[second];
 
       if (firstCard.originalId === secondCard.originalId) {
+        playMatchFeedback();
         setTimeout(() => {
           newCards[first].isMatched = true;
           newCards[second].isMatched = true;
@@ -222,6 +230,7 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
 
           if (matchedPairs + 1 === 6) {
             setGameComplete(true);
+            playCompleteFeedback();
           }
         }, 500);
       } else {
@@ -239,6 +248,30 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
   const resetGame = () => {
     initializeGame(vocabulary);
   };
+
+  // Show toast and clear cache when game is complete
+  useEffect(() => {
+    if (gameComplete) {
+      // Show toast animation
+      setShowToast(true);
+      Animated.sequence([
+        Animated.timing(toastAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000),
+        Animated.timing(toastAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setShowToast(false));
+
+      // Clear vocabulary cache so stats update on other screens
+      useVocabularyStore.getState().clearCache();
+    }
+  }, [gameComplete]);
 
   if (loading) {
     return (
@@ -277,6 +310,31 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
         </TouchableOpacity>
         <Text style={[styles.gameHeaderTitle, { color: textColor }]}>Matching Game</Text>
       </View>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <Animated.View
+          style={[
+            styles.toastContainer,
+            {
+              opacity: toastAnim,
+              transform: [
+                {
+                  translateY: toastAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-100, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.toastContent}>
+            <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+            <Text style={styles.toastText}>Game Complete! Great job!</Text>
+          </View>
+        </Animated.View>
+      )}
 
       <ScrollView style={styles.gameContent} showsVerticalScrollIndicator={false}>
         {/* Stats */}
@@ -378,6 +436,10 @@ function QuizGame({ onBack, isDark }: { onBack: () => void; isDark: boolean }) {
   const [gameComplete, setGameComplete] = useState(false);
   const [answered, setAnswered] = useState(false);
 
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false);
+  const toastAnim = useRef(new Animated.Value(0)).current;
+
   const bgColor = isDark ? '#0f0f0f' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#000000';
   const subtextColor = isDark ? '#9ca3af' : '#6b7280';
@@ -437,6 +499,9 @@ function QuizGame({ onBack, isDark }: { onBack: () => void; isDark: boolean }) {
 
     if (index === questions[currentQuestion].correctIndex) {
       setScore((s) => s + 1);
+      playSuccessFeedback();
+    } else {
+      playErrorFeedback();
     }
   };
 
@@ -447,12 +512,37 @@ function QuizGame({ onBack, isDark }: { onBack: () => void; isDark: boolean }) {
       setAnswered(false);
     } else {
       setGameComplete(true);
+      playCompleteFeedback();
     }
   };
 
   const resetGame = () => {
     generateQuestions(vocabulary);
   };
+
+  // Show toast and clear cache when game is complete
+  useEffect(() => {
+    if (gameComplete) {
+      // Show toast animation
+      setShowToast(true);
+      Animated.sequence([
+        Animated.timing(toastAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000),
+        Animated.timing(toastAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setShowToast(false));
+
+      // Clear vocabulary cache so stats update on other screens
+      useVocabularyStore.getState().clearCache();
+    }
+  }, [gameComplete]);
 
   if (loading) {
     return (
@@ -486,6 +576,31 @@ function QuizGame({ onBack, isDark }: { onBack: () => void; isDark: boolean }) {
     const percentage = Math.round((score / questions.length) * 100);
     return (
       <View style={[styles.container, { backgroundColor: bgColor }]}>
+        {/* Toast Notification */}
+        {showToast && (
+          <Animated.View
+            style={[
+              styles.toastContainer,
+              {
+                opacity: toastAnim,
+                transform: [
+                  {
+                    translateY: toastAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-100, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.toastContent}>
+              <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+              <Text style={styles.toastText}>Quiz Complete! Great job!</Text>
+            </View>
+          </Animated.View>
+        )}
+
         <View style={styles.gameHeader}>
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={textColor} />
@@ -766,6 +881,33 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     marginTop: 20,
+  },
+  // Toast Styles
+  toastContainer: {
+    position: 'absolute',
+    top: 80,
+    left: 16,
+    right: 16,
+    zIndex: 100,
+    elevation: 100,
+  },
+  toastContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#1a1a1a',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  toastText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   // Quiz Game Styles
   progressContainer: {

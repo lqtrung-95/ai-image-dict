@@ -7,12 +7,13 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
-import { apiClient } from '@/lib/api-client';
+import { useVocabularyStore } from '@/stores/vocabulary-store';
 import type { VocabularyItem } from '@/lib/types';
+import { useCallback } from 'react';
 
 type QuizMode = 'flashcard' | 'multiple-choice' | 'listening' | 'matching' | 'quiz-game';
 
@@ -20,8 +21,9 @@ export default function PracticeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { isAuthenticated } = useAuthStore();
-  const [dueWords, setDueWords] = useState<VocabularyItem[]>([]);
-  const [stats, setStats] = useState({
+  const { dueWords, stats, fetchDueWords, fetchStats } = useVocabularyStore();
+  const [localDueWords, setLocalDueWords] = useState<VocabularyItem[]>([]);
+  const [localStats, setLocalStats] = useState({
     totalWords: 0,
     dueToday: 0,
     streakDays: 0,
@@ -33,20 +35,22 @@ export default function PracticeScreen() {
   const textColor = isDark ? '#ffffff' : '#000000';
   const subtextColor = isDark ? '#9ca3af' : '#6b7280';
 
-  const loadData = async () => {
+  const loadData = async (forceRefresh = false) => {
     if (!isAuthenticated) return;
     setIsLoading(true);
     try {
-      const [wordsRes, statsRes] = await Promise.all([
-        apiClient.get<{ items: VocabularyItem[]; dueCount: number; newCount: number; total: number }>('/api/practice/due-words'),
-        apiClient.get<{ totalWords: number; dueToday: number; currentStreak: number }>('/api/stats'),
+      // Fetch from shared store (with caching)
+      const [fetchedDueWords, fetchedStats] = await Promise.all([
+        fetchDueWords(forceRefresh),
+        fetchStats(forceRefresh),
       ]);
 
-      setDueWords(wordsRes.items || []);
-      setStats({
-        totalWords: statsRes.totalWords || 0,
-        dueToday: statsRes.dueToday || 0,
-        streakDays: statsRes.currentStreak || 0,
+      // Update local state from store
+      setLocalDueWords(fetchedDueWords || []);
+      setLocalStats({
+        totalWords: fetchedStats?.totalWords || 0,
+        dueToday: fetchedStats?.dueToday || 0,
+        streakDays: fetchedStats?.currentStreak || 0,
       });
     } catch (error) {
       console.error('[Practice] Failed to load practice data:', error);
@@ -56,8 +60,17 @@ export default function PracticeScreen() {
   };
 
   useEffect(() => {
-    loadData();
+    loadData(false); // Use cache if available
   }, [isAuthenticated]);
+
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        loadData(false); // Use cache for instant display
+      }
+    }, [isAuthenticated])
+  );
 
   const startPractice = (mode: QuizMode) => {
     // Game modes don't require due words
@@ -69,7 +82,7 @@ export default function PracticeScreen() {
       return;
     }
 
-    if (dueWords.length === 0) {
+    if (localDueWords.length === 0) {
       Alert.alert(
         'No Words Due',
         'You have no words to review right now. Great job!'
@@ -197,7 +210,7 @@ export default function PracticeScreen() {
       <View style={styles.statsContainer}>
         <View style={[styles.statCard, { backgroundColor: cardColor }]}>
           <Text style={[styles.statValue, { color: '#7c3aed' }]}>
-            {isLoading ? '—' : stats.dueToday}
+            {isLoading ? '—' : localStats.dueToday}
           </Text>
           <Text style={[styles.statLabel, { color: subtextColor }]}>
             Due Today
@@ -205,7 +218,7 @@ export default function PracticeScreen() {
         </View>
         <View style={[styles.statCard, { backgroundColor: cardColor }]}>
           <Text style={[styles.statValue, { color: '#f59e0b' }]}>
-            {isLoading ? '—' : stats.streakDays}
+            {isLoading ? '—' : localStats.streakDays}
           </Text>
           <Text style={[styles.statLabel, { color: subtextColor }]}>
             Day Streak
@@ -213,7 +226,7 @@ export default function PracticeScreen() {
         </View>
         <View style={[styles.statCard, { backgroundColor: cardColor }]}>
           <Text style={[styles.statValue, { color: '#10b981' }]}>
-            {isLoading ? '—' : stats.totalWords}
+            {isLoading ? '—' : localStats.totalWords}
           </Text>
           <Text style={[styles.statLabel, { color: subtextColor }]}>
             Total Words
@@ -300,7 +313,7 @@ export default function PracticeScreen() {
       </View>
 
       {/* Quick Start */}
-      {dueWords.length > 0 && (
+      {localDueWords.length > 0 && (
         <View style={styles.ctaContainer}>
           <TouchableOpacity
             onPress={() => startPractice('flashcard')}
@@ -308,7 +321,7 @@ export default function PracticeScreen() {
           >
             <Ionicons name="play" size={20} color="white" />
             <Text style={styles.ctaButtonText}>
-              Start Practice Session ({dueWords.length} words)
+              Start Practice Session ({localDueWords.length} words)
             </Text>
           </TouchableOpacity>
         </View>

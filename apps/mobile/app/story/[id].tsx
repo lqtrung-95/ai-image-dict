@@ -33,11 +33,18 @@ interface Photo {
   vocabulary: VocabularyItem[];
 }
 
+interface GeneratedContent {
+  storyZh: string;
+  storyPinyin: string;
+  storyEn: string;
+  usedWords?: string[];
+}
+
 interface Story {
   id: string;
   title: string;
   description: string | null;
-  generated_content: string | null;
+  generated_content: GeneratedContent | null;
   created_at: string;
   photos: Photo[];
   vocabularyCount: number;
@@ -51,6 +58,7 @@ export default function StoryDetailScreen() {
 
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
 
   const bgColor = isDark ? '#0f0f0f' : '#ffffff';
   const cardColor = isDark ? '#1a1a1a' : '#f8fafc';
@@ -73,15 +81,31 @@ export default function StoryDetailScreen() {
     fetchStory();
   }, [fetchStory]);
 
-  const speakWord = (word: string) => {
+  // Native TTS using device speech engine (not Google TTS)
+  const speakWord = (text: string, id?: string) => {
     try {
-      Speech.speak(word, {
+      // Stop any current speech
+      Speech.stop();
+
+      if (speakingId === id) {
+        // Toggle off if same item
+        setSpeakingId(null);
+        return;
+      }
+
+      setSpeakingId(id || 'story');
+
+      Speech.speak(text, {
         language: 'zh-CN',
         pitch: 1.0,
         rate: 0.8,
+        onDone: () => setSpeakingId(null),
+        onStopped: () => setSpeakingId(null),
+        onError: () => setSpeakingId(null),
       });
     } catch (error) {
       console.error('Speech error:', error);
+      setSpeakingId(null);
     }
   };
 
@@ -89,11 +113,12 @@ export default function StoryDetailScreen() {
     if (!story) return;
     setLoading(true);
     try {
-      const data = await apiClient.post<{ story: Story }>(`/api/stories/${id}/generate`, {});
+      const data = await apiClient.post<{ story: Story }>(`/api/stories/${id}`, {});
       setStory(data.story);
       Alert.alert('Success', 'Story generated!');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to generate story');
+    } catch (error: any) {
+      console.error('Generate story error:', error);
+      Alert.alert('Error', error?.message || 'Failed to generate story');
     } finally {
       setLoading(false);
     }
@@ -153,8 +178,22 @@ export default function StoryDetailScreen() {
         {/* Generated Story */}
         {story.generated_content && (
           <View style={[styles.sectionCard, { backgroundColor: cardColor }]}>
-            <Text style={[styles.sectionLabel, { color: subtextColor }]}>AI Generated Story</Text>
-            <Text style={[styles.storyText, { color: textColor }]}>{story.generated_content}</Text>
+            <View style={styles.storyHeader}>
+              <Text style={[styles.sectionLabel, { color: subtextColor }]}>AI Generated Story</Text>
+              <TouchableOpacity
+                style={[styles.listenButton, speakingId === 'story' && styles.listenButtonActive]}
+                onPress={() => speakWord(story.generated_content?.storyZh || '', 'story')}
+              >
+                {speakingId === 'story' ? (
+                  <ActivityIndicator size="small" color="#7c3aed" />
+                ) : (
+                  <Ionicons name="volume-high" size={20} color="#7c3aed" />
+                )}
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.storyChinese, { color: textColor }]}>{story.generated_content.storyZh}</Text>
+            <Text style={[styles.storyPinyin, { color: subtextColor }]}>{story.generated_content.storyPinyin}</Text>
+            <Text style={[styles.storyEnglish, { color: textColor }]}>{story.generated_content.storyEn}</Text>
           </View>
         )}
 
@@ -194,8 +233,15 @@ export default function StoryDetailScreen() {
                   <Text style={styles.pinyinText}>{item.pinyin}</Text>
                   <Text style={[styles.englishText, { color: subtextColor }]}>{item.label_en}</Text>
                 </View>
-                <TouchableOpacity style={styles.speakButton} onPress={() => speakWord(item.label_zh)}>
-                  <Ionicons name="volume-high" size={20} color="#7c3aed" />
+                <TouchableOpacity
+                  style={[styles.speakButton, speakingId === item.id && styles.speakButtonActive]}
+                  onPress={() => speakWord(item.label_zh, item.id)}
+                >
+                  {speakingId === item.id ? (
+                    <ActivityIndicator size="small" color="#7c3aed" />
+                  ) : (
+                    <Ionicons name="volume-high" size={20} color="#7c3aed" />
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -245,15 +291,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
-    marginBottom: 8,
+  },
+  storyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  listenButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listenButtonActive: {
+    backgroundColor: 'rgba(124, 58, 237, 0.2)',
   },
   descriptionText: {
     fontSize: 15,
     lineHeight: 22,
   },
-  storyText: {
+  storyChinese: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    lineHeight: 32,
+    marginBottom: 8,
+  },
+  storyPinyin: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  storyEnglish: {
     fontSize: 15,
     lineHeight: 24,
+    fontStyle: 'italic',
   },
   generateButton: {
     flexDirection: 'row',
@@ -338,6 +412,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(124, 58, 237, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  speakButtonActive: {
+    backgroundColor: 'rgba(124, 58, 237, 0.2)',
   },
   emptyTitle: {
     fontSize: 20,
