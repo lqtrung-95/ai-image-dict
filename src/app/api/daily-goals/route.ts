@@ -79,16 +79,20 @@ export async function GET(request: NextRequest) {
  * Create or update a daily goal
  */
 export async function POST(request: NextRequest) {
+  console.log('[POST /api/daily-goals] Received request');
   try {
     const { user, error: authError } = await getAuthUser(request);
+    console.log('[POST /api/daily-goals] Auth result:', { user: !!user, error: authError?.message });
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const supabase = createServiceClient();
+    console.log('[POST /api/daily-goals] Service client created');
 
     const body = await request.json();
+    console.log('[POST /api/daily-goals] Request body:', body);
     const { goalType, targetValue, isActive = true } = body;
 
     // Validate goal type
@@ -102,30 +106,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Target value must be between 1 and 100' }, { status: 400 });
     }
 
-    // Upsert goal (insert or update on conflict)
-    const { data, error } = await supabase
+    console.log('[POST /api/daily-goals] Checking for existing goal:', { userId: user.id, goalType });
+    // First try to update existing goal
+    const { data: existingGoal, error: findError } = await supabase
       .from('daily_goals')
-      .upsert(
-        {
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('goal_type', goalType)
+      .maybeSingle();
+
+    console.log('[POST /api/daily-goals] Existing goal check:', { existingGoal: !!existingGoal, findError: findError?.message });
+
+    if (findError) {
+      console.error('[POST /api/daily-goals] Find error:', findError);
+      return NextResponse.json({ error: 'Database error', details: findError.message }, { status: 500 });
+    }
+
+    let data;
+    let error;
+    if (existingGoal) {
+      console.log('[POST /api/daily-goals] Updating existing goal:', existingGoal.id);
+      const updateResult = await supabase
+        .from('daily_goals')
+        .update({
+          target_value: targetValue,
+          is_active: isActive,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingGoal.id)
+        .select();
+      data = updateResult.data?.[0];
+      error = updateResult.error;
+    } else {
+      console.log('[POST /api/daily-goals] Inserting new goal');
+      const insertResult = await supabase
+        .from('daily_goals')
+        .insert({
           user_id: user.id,
           goal_type: goalType,
           target_value: targetValue,
           is_active: isActive,
-        },
-        { onConflict: 'user_id,goal_type' }
-      )
-      .select()
-      .single();
+        })
+        .select();
+      data = insertResult.data?.[0];
+      error = insertResult.error;
+    }
+    console.log('[POST /api/daily-goals] Save result:', { success: !!data, error: error?.message, errorDetails: error });
 
     if (error) {
-      console.error('Goal upsert error:', error);
-      return NextResponse.json({ error: 'Failed to save goal' }, { status: 500 });
+      console.error('[POST /api/daily-goals] Goal save error:', error);
+      return NextResponse.json({ error: 'Failed to save goal', details: error.message, code: error.code }, { status: 500 });
     }
 
     return NextResponse.json({ goal: data });
-  } catch (error) {
-    console.error('Daily goals POST error:', error);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[POST /api/daily-goals] Caught error:', error);
+    return NextResponse.json({ error: 'Server error', details: error?.message || String(error) }, { status: 500 });
   }
 }
 

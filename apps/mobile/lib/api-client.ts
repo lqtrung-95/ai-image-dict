@@ -51,10 +51,12 @@ class ApiClient {
         return response;
       },
       (error: AxiosError) => {
-        console.log('[API] Response error:', error.response?.status, error.response?.data);
+        const responseData = error.response?.data as any;
+        console.log('[API] Response error:', error.response?.status, responseData);
         const apiError: ApiError = {
-          message: (error.response?.data as any)?.error || error.message || 'An error occurred',
+          message: responseData?.details || responseData?.error || error.message || 'An error occurred',
           status: error.response?.status,
+          code: responseData?.code,
         };
         throw new Error(apiError.message);
       }
@@ -68,6 +70,11 @@ class ApiClient {
 
   async post<T>(endpoint: string, body: unknown): Promise<T> {
     const response = await this.client.post<T>(endpoint, body);
+    return response.data;
+  }
+
+  async patch<T>(endpoint: string, body: unknown): Promise<T> {
+    const response = await this.client.patch<T>(endpoint, body);
     return response.data;
   }
 

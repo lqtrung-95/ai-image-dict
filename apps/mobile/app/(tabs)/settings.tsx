@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,22 @@ import {
   Switch,
   StyleSheet,
   TextInput,
+  Image,
+  Modal,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { supabase } from '@/lib/supabase-client';
 import { apiClient } from '@/lib/api-client';
+import { useAuthStore } from '@/stores/auth-store';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface DailyGoal {
   id: string;
@@ -69,9 +79,16 @@ const GOAL_CONFIGS: GoalConfig[] = [
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const { user: authUser, setProfile } = useAuthStore();
+  const [user, setUser] = useState<{ email: string; displayName?: string; avatarUrl?: string } | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [dailyReminder, setDailyReminder] = useState(true);
+
+  // Profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Daily Goals state
   const [goals, setGoals] = useState<DailyGoal[]>([]);
@@ -89,13 +106,120 @@ export default function SettingsScreen() {
   const disabledTextColor = isDark ? '#4b5563' : '#9ca3af';
 
   useEffect(() => {
-    loadUser();
     fetchGoals();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      loadUser();
+    }, [])
+  );
+
+  // Sync local user state when authUser changes (for updates from other screens)
+  useEffect(() => {
+    if (authUser?.displayName || authUser?.avatarUrl) {
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              displayName: authUser.displayName ?? prev.displayName,
+              avatarUrl: authUser.avatarUrl ?? prev.avatarUrl,
+            }
+          : prev
+      );
+    }
+  }, [authUser?.displayName, authUser?.avatarUrl]);
+
   const loadUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    setUser(user ? { email: user.email || '' } : null);
+    if (user) {
+      // Fetch profile data from API
+      try {
+        const profileData = await apiClient.get<{ profile: { display_name: string; avatar_url: string } }>('/api/user/profile');
+        setUser({
+          email: user.email || '',
+          displayName: profileData.profile?.display_name || '',
+          avatarUrl: profileData.profile?.avatar_url || '',
+        });
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+        setUser({ email: user.email || '' });
+      }
+    } else {
+      setUser(null);
+    }
+  };
+
+  const handleUpdateDisplayName = async () => {
+    if (!editDisplayName.trim()) {
+      Alert.alert('Error', 'Display name cannot be empty');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      await apiClient.patch('/api/user/profile', { displayName: editDisplayName.trim() });
+      setUser((prev) => prev ? { ...prev, displayName: editDisplayName.trim() } : null);
+      setProfile({ displayName: editDisplayName.trim() });
+      setIsEditingProfile(false);
+      Alert.alert('Success', 'Display name updated successfully');
+    } catch (error: any) {
+      console.error('Failed to update display name:', error);
+      Alert.alert('Error', error.message || 'Failed to update display name');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handlePickAvatar = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadAvatar(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Failed to pick image:', error);
+      Alert.alert('Error', 'Failed to select image');
+    }
+  };
+
+  const uploadAvatar = async (imageUri: string) => {
+    setIsUploadingAvatar(true);
+    try {
+      // Convert image to blob
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('avatar', {
+        uri: imageUri,
+        name: 'avatar.jpg',
+        type: 'image/jpeg',
+      } as any);
+
+      const data = await apiClient.upload<{ avatarUrl: string }>('/api/user/avatar', formData);
+
+      setUser((prev) => prev ? { ...prev, avatarUrl: data.avatarUrl } : null);
+      setProfile({ avatarUrl: data.avatarUrl });
+      Alert.alert('Success', 'Profile picture updated successfully');
+    } catch (error: any) {
+      console.error('Failed to upload avatar:', error);
+      Alert.alert('Error', error.message || 'Failed to upload profile picture');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const openEditProfile = () => {
+    setEditDisplayName(user?.displayName || '');
+    setIsEditingProfile(true);
   };
 
   const fetchGoals = async () => {
@@ -140,20 +264,30 @@ export default function SettingsScreen() {
   };
 
   const toggleGoal = async (goalType: string, isActive: boolean) => {
+    // Get config for this goal type to ensure we have valid defaults
+    const config = GOAL_CONFIGS.find((c) => c.type === goalType);
+    const currentValue = localValues[goalType];
+    // Ensure we have a valid target value (fallback to config default if undefined/invalid)
+    const targetValue = currentValue && currentValue >= 1 && currentValue <= 100
+      ? currentValue
+      : (config?.defaultValue ?? 5);
+
     setActiveStates((prev) => ({ ...prev, [goalType]: isActive }));
+    // Also ensure localValues has the valid target value
+    setLocalValues((prev) => ({ ...prev, [goalType]: targetValue }));
 
     setSavingGoal(goalType);
     try {
       await apiClient.post('/api/daily-goals', {
         goalType,
-        targetValue: localValues[goalType],
+        targetValue,
         isActive,
       });
       await fetchGoals();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to toggle goal:', error);
       setActiveStates((prev) => ({ ...prev, [goalType]: !isActive }));
-      Alert.alert('Error', 'Failed to update goal');
+      Alert.alert('Error', error?.message || 'Failed to update goal');
     } finally {
       setSavingGoal(null);
     }
@@ -338,8 +472,58 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
-      {/* Daily Goals Section */}
+      {/* Profile Section */}
       <View style={styles.content}>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: sectionHeaderColor }]}>
+            Profile
+          </Text>
+          <View style={[styles.sectionCard, { backgroundColor: cardColor }]}>
+            {/* Profile Picture and Name */}
+            <View style={styles.profileHeader}>
+              <TouchableOpacity
+                onPress={handlePickAvatar}
+                disabled={isUploadingAvatar}
+                style={styles.avatarContainer}
+              >
+                {isUploadingAvatar ? (
+                  <View style={[styles.avatar, { backgroundColor: isDark ? '#2a2a2a' : '#e5e7eb' }]}>
+                    <ActivityIndicator color="#7c3aed" />
+                  </View>
+                ) : user?.avatarUrl ? (
+                  <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+                ) : (
+                  <View style={[styles.avatar, { backgroundColor: '#7c3aed' }]}>
+                    <Text style={styles.avatarInitial}>
+                      {(user?.displayName || user?.email || '?').charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.avatarOverlay}>
+                  <Ionicons name="camera" size={16} color="#fff" />
+                </View>
+              </TouchableOpacity>
+
+              <View style={styles.profileInfo}>
+                <Text style={[styles.displayName, { color: textColor }]}>
+                  {user?.displayName || 'Set Display Name'}
+                </Text>
+                <Text style={[styles.emailText, { color: subtextColor }]}>
+                  {user?.email}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={openEditProfile}
+                style={styles.editButton}
+              >
+                <Ionicons name="pencil" size={20} color="#7c3aed" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Daily Goals Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: sectionHeaderColor }]}>
             Daily Goals
@@ -535,6 +719,80 @@ export default function SettingsScreen() {
           <Text style={styles.deleteButtonText}>Delete Account</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Edit Profile Modal */}
+      <Modal
+        visible={isEditingProfile}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsEditingProfile(false)}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.keyboardAvoidingContainer}
+            >
+              <View style={[styles.modalContent, { backgroundColor: cardColor }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={[styles.modalTitle, { color: textColor }]}>
+                    Edit Profile
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setIsEditingProfile(false)}
+                    style={styles.modalCloseButton}
+                  >
+                    <Ionicons name="close" size={24} color={subtextColor} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.modalBody}>
+                  <Text style={[styles.inputLabel, { color: subtextColor }]}>
+                    Display Name
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.textInput,
+                      { color: textColor, borderColor, backgroundColor: isDark ? '#0f0f0f' : '#f9fafb' }
+                    ]}
+                    value={editDisplayName}
+                    onChangeText={setEditDisplayName}
+                    placeholder="Enter your display name"
+                    placeholderTextColor={subtextColor}
+                    maxLength={50}
+                    autoFocus
+                  />
+                  <Text style={[styles.charCount, { color: subtextColor }]}>
+                    {editDisplayName.length}/50
+                  </Text>
+                </View>
+
+                <View style={styles.modalFooter}>
+                  <TouchableOpacity
+                    onPress={() => setIsEditingProfile(false)}
+                    style={[styles.modalButton, styles.modalButtonSecondary, { borderColor }]}
+                  >
+                    <Text style={[styles.modalButtonTextSecondary, { color: textColor }]}>
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleUpdateDisplayName}
+                    disabled={isSavingProfile}
+                    style={[styles.modalButton, styles.modalButtonPrimary]}
+                  >
+                    {isSavingProfile ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Text style={styles.modalButtonTextPrimary}>Save</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </ScrollView>
   );
 }
@@ -713,6 +971,131 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     color: '#ef4444',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Profile styles
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitial: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  avatarOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: 'rgba(124, 58, 237, 0.8)',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  profileInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  displayName: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  emailText: {
+    fontSize: 14,
+  },
+  editButton: {
+    padding: 8,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  keyboardAvoidingContainer: {
+    width: '100%',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  textInput: {
+    height: 48,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+  },
+  charCount: {
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'right',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonPrimary: {
+    backgroundColor: '#7c3aed',
+  },
+  modalButtonSecondary: {
+    borderWidth: 1,
+  },
+  modalButtonTextPrimary: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalButtonTextSecondary: {
     fontSize: 16,
     fontWeight: '600',
   },
