@@ -163,11 +163,14 @@ export async function POST(request: NextRequest) {
         if (obj.example) {
           exampleSentences[obj.zh] = obj.example;
         }
-        if (obj.hskLevel !== undefined) {
+        if (obj.hskLevel !== undefined && obj.hskLevel !== null) {
           hskLevels[obj.zh] = obj.hskLevel;
         }
       }
     );
+
+    console.log('[analyze] HSK levels from AI:', hskLevels);
+    console.log('[analyze] Sample object from AI:', analysis.objects?.[0]);
 
     if (allObjects.length > 0) {
       const { error: objectsError } = await supabase.from('detected_objects').insert(allObjects);
@@ -200,6 +203,8 @@ export async function POST(request: NextRequest) {
       hskLevel: hskLevels[obj.label_zh] ?? null,
       example: exampleSentences[obj.label_zh] ?? null,
     }));
+
+    console.log('[analyze] Transformed objects:', detectedObjects.slice(0, 2));
 
     return NextResponse.json({
       id: photoAnalysis.id,
