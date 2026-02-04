@@ -80,6 +80,13 @@ export default function PracticeSessionScreen() {
     loadWords();
   }, [loadWords]);
 
+  // Clear cache when session completes - must be before any early returns
+  useEffect(() => {
+    if (sessionComplete) {
+      useVocabularyStore.getState().clearCache();
+    }
+  }, [sessionComplete]);
+
   const generateOptions = (correct: VocabularyItem, allWords: VocabularyItem[]): string[] => {
     const options = [correct.wordEn];
     const otherWords = allWords.filter((w) => w.id !== correct.id);
@@ -181,13 +188,6 @@ export default function PracticeSessionScreen() {
       </View>
     );
   }
-
-  // Clear cache when session completes - must be before any early returns
-  useEffect(() => {
-    if (sessionComplete) {
-      useVocabularyStore.getState().clearCache();
-    }
-  }, [sessionComplete]);
 
   if (words.length === 0) {
     return (
