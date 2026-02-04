@@ -15,6 +15,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { apiClient } from '@/lib/api-client';
 import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { playSuccessFeedback, playErrorFeedback, playCompleteFeedback } from '@/lib/haptic-feedback-utils';
+import { soundEffects } from '@/lib/sound-effects-manager';
 import type { VocabularyItem } from '@/lib/types';
 
 type QuizMode = 'flashcard' | 'multiple-choice' | 'listening';
@@ -151,9 +152,11 @@ export default function PracticeSessionScreen() {
     if (rating >= 3) {
       setStats((s) => ({ ...s, correct: s.correct + 1 }));
       playSuccessFeedback();
+      soundEffects.play('correctAnswer');
     } else {
       setStats((s) => ({ ...s, incorrect: s.incorrect + 1 }));
       playErrorFeedback();
+      soundEffects.play('wrongAnswer');
     }
 
     if (currentIndex < words.length - 1) {
@@ -165,6 +168,7 @@ export default function PracticeSessionScreen() {
     } else {
       setSessionComplete(true);
       playCompleteFeedback();
+      soundEffects.play('complete');
     }
   };
 

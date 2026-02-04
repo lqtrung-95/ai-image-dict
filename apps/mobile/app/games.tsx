@@ -15,6 +15,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { apiClient } from '@/lib/api-client';
 import { playSuccessFeedback, playErrorFeedback, playCompleteFeedback, playMatchFeedback } from '@/lib/haptic-feedback-utils';
+import { soundEffects } from '@/lib/sound-effects-manager';
 
 const { width } = Dimensions.get('window');
 
@@ -222,6 +223,7 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
 
       if (firstCard.originalId === secondCard.originalId) {
         playMatchFeedback();
+        soundEffects.play('match');
         setTimeout(() => {
           newCards[first].isMatched = true;
           newCards[second].isMatched = true;
@@ -233,6 +235,7 @@ function MatchingGame({ onBack, isDark }: { onBack: () => void; isDark: boolean 
           if (matchedPairs + 1 === 6) {
             setGameComplete(true);
             playCompleteFeedback();
+            soundEffects.play('complete');
           }
         }, 500);
       } else {
@@ -507,8 +510,10 @@ function QuizGame({ onBack, isDark }: { onBack: () => void; isDark: boolean }) {
     if (index === questions[currentQuestion].correctIndex) {
       setScore((s) => s + 1);
       playSuccessFeedback();
+      soundEffects.play('correctAnswer');
     } else {
       playErrorFeedback();
+      soundEffects.play('wrongAnswer');
     }
   };
 
@@ -520,6 +525,7 @@ function QuizGame({ onBack, isDark }: { onBack: () => void; isDark: boolean }) {
     } else {
       setGameComplete(true);
       playCompleteFeedback();
+      soundEffects.play('complete');
     }
   };
 
