@@ -39,7 +39,7 @@ export default function CaptureModal() {
   const [signInAction, setSignInAction] = useState<'listen' | 'save' | null>(null);
   const [lists, setLists] = useState<VocabularyList[]>([]);
   const [showListModal, setShowListModal] = useState(false);
-  const [wordToSave, setWordToSave] = useState<{ id: string; en: string; zh: string; pinyin: string; category: string } | null>(null);
+  const [wordToSave, setWordToSave] = useState<{ id: string; en: string; zh: string; pinyin: string; category: string; hskLevel?: number | null } | null>(null);
   const [saving, setSaving] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(height)).current;
@@ -129,7 +129,7 @@ export default function CaptureModal() {
   };
 
   // Handle save action - show sign-in modal for guests
-  const handleSave = (obj: { id: string; en: string; zh: string; pinyin: string; category: string }) => {
+  const handleSave = (obj: { id: string; en: string; zh: string; pinyin: string; category: string; hskLevel?: number | null }) => {
     if (!isAuthenticated) {
       setSignInAction('save');
       setShowSignInModal(true);
@@ -159,6 +159,7 @@ export default function CaptureModal() {
         wordPinyin: wordToSave.pinyin,
         wordEn: wordToSave.en,
         detectedObjectId: wordToSave.id,
+        hskLevel: wordToSave.hskLevel ?? null,
       };
       if (listId) {
         payload.listId = listId;
@@ -454,7 +455,7 @@ export default function CaptureModal() {
                           {/* Save Button */}
                           <TouchableOpacity
                             style={styles.iconButton}
-                            onPress={() => handleSave(obj)}>
+                            onPress={() => handleSave({ ...obj, hskLevel: obj.hskLevel })}>
                             <Ionicons name="bookmark-outline" size={20} color="#7c3aed" />
                           </TouchableOpacity>
                         </View>
