@@ -197,6 +197,8 @@ export async function POST(request: NextRequest) {
       pinyin: obj.pinyin,
       confidence: obj.confidence,
       category: obj.category,
+      hskLevel: hskLevels[obj.label_zh] ?? null,
+      example: exampleSentences[obj.label_zh] ?? null,
     }));
 
     return NextResponse.json({

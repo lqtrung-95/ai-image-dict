@@ -115,9 +115,13 @@ export interface AnalysisResponse {
     pinyin: string;
     confidence: number;
     category: string;
+    hskLevel?: number | null;
+    example?: { zh: string; pinyin: string; en: string } | null;
   }>;
   colors: VocabularyWord[];
   actions: VocabularyWord[];
+  hskLevels?: Record<string, number | null>;
+  exampleSentences?: Record<string, { zh: string; pinyin: string; en: string }>;
 }
 
 export interface ApiError {

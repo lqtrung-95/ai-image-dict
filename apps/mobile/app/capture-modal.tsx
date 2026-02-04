@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
+import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { apiClient } from '@/lib/api-client';
 import { compressImage, imageToBase64 } from '@/lib/image-utils';
 import type { AnalysisResponse, VocabularyList } from '@/lib/types';
@@ -34,9 +35,11 @@ export default function CaptureModal() {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [signInAction, setSignInAction] = useState<'listen' | 'save' | null>(null);
   const [lists, setLists] = useState<VocabularyList[]>([]);
   const [showListModal, setShowListModal] = useState(false);
-  const [wordToSave, setWordToSave] = useState<{ en: string; zh: string; pinyin: string; category: string } | null>(null);
+  const [wordToSave, setWordToSave] = useState<{ id: string; en: string; zh: string; pinyin: string; category: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(height)).current;
@@ -80,6 +83,26 @@ export default function CaptureModal() {
     }
   };
 
+  // Helper function to get HSK level color
+  const getHskColor = (level: number) => {
+    switch (level) {
+      case 1:
+        return 'rgba(34, 197, 94, 0.2)'; // Green
+      case 2:
+        return 'rgba(59, 130, 246, 0.2)'; // Blue
+      case 3:
+        return 'rgba(234, 179, 8, 0.2)'; // Yellow
+      case 4:
+        return 'rgba(249, 115, 22, 0.2)'; // Orange
+      case 5:
+        return 'rgba(239, 68, 68, 0.2)'; // Red
+      case 6:
+        return 'rgba(147, 51, 234, 0.2)'; // Purple
+      default:
+        return 'rgba(107, 114, 128, 0.2)'; // Gray
+    }
+  };
+
   // TTS function using expo-speech
   const speakWord = (word: string) => {
     console.log('Speaking:', word);
@@ -95,11 +118,35 @@ export default function CaptureModal() {
     }
   };
 
-  // Save word function - shows list selection modal
-  const saveWord = (obj: { en: string; zh: string; pinyin: string; category: string }) => {
+  // Handle listen action - show sign-in modal for guests
+  const handleListen = (word: string) => {
+    if (!isAuthenticated) {
+      setSignInAction('listen');
+      setShowSignInModal(true);
+      return;
+    }
+    speakWord(word);
+  };
+
+  // Handle save action - show sign-in modal for guests
+  const handleSave = (obj: { id: string; en: string; zh: string; pinyin: string; category: string }) => {
+    if (!isAuthenticated) {
+      setSignInAction('save');
+      setShowSignInModal(true);
+      return;
+    }
     setWordToSave(obj);
     setShowListModal(true);
   };
+
+  // Save word function - shows list selection modal
+  const saveWord = (obj: { id: string; en: string; zh: string; pinyin: string; category: string }) => {
+    setWordToSave(obj);
+    setShowListModal(true);
+  };
+
+  // Get vocabulary store for cache invalidation
+  const { clearCache } = useVocabularyStore();
 
   // Actually save the word
   const doSaveWord = async (listId?: string) => {
@@ -111,12 +158,18 @@ export default function CaptureModal() {
         wordZh: wordToSave.zh,
         wordPinyin: wordToSave.pinyin,
         wordEn: wordToSave.en,
+        detectedObjectId: wordToSave.id,
       };
       if (listId) {
         payload.listId = listId;
       }
 
-      await apiClient.post('/api/vocabulary', payload);
+      const response = await apiClient.post<{ id: string; wordZh: string; wordPinyin: string; wordEn: string; isLearned: boolean; createdAt: string }>('/api/vocabulary', payload);
+
+      // Invalidate vocabulary cache to trigger refetch on next navigation
+      // We clear the cache so that home/practice pages will fetch fresh data
+      clearCache();
+
       Alert.alert('Success', listId ? 'Word saved to list!' : 'Word saved to your vocabulary!');
       setShowListModal(false);
       setWordToSave(null);
@@ -250,8 +303,8 @@ export default function CaptureModal() {
               onPress={takePhoto}
               style={[styles.selectionButton, { backgroundColor: '#7c3aed' }]}
             >
-              <View style={styles.iconCircle}>
-                <Ionicons name="camera" size={32} color="#7c3aed" />
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Ionicons name="camera" size={32} color="#fff" />
               </View>
               <Text style={styles.selectionButtonText}>Take Photo</Text>
               <Text style={styles.selectionSubtext}>Capture something new</Text>
@@ -351,7 +404,7 @@ export default function CaptureModal() {
                   </View>
                 )}
 
-                {/* Detected Objects - Blurred for trial */}
+                {/* Detected Objects - Show full content for all, intercept actions for guests */}
                 <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : '#000' }]}>
                   Detected Objects
                 </Text>
@@ -360,74 +413,60 @@ export default function CaptureModal() {
                   <View
                     key={obj.id || index}
                     style={[styles.wordCard, { backgroundColor: cardColor }]}>
-                    {/* Blurred content for trial users */}
-                    {!isAuthenticated ? (
-                      <View style={styles.blurredContent}>
-                        <View style={styles.blurOverlay}>
-                          <Ionicons name="lock-closed" size={32} color="#7c3aed" />
-                          <Text style={styles.blurText}>Sign up to unlock</Text>
-                          <Text style={styles.blurSubtext}>See translations, pinyin, and save words</Text>
-                          <TouchableOpacity
-                            onPress={() => router.push('/(auth)/signup')}
-                            style={styles.unlockButton}>
-                            <Text style={styles.unlockButtonText}>Create Free Account</Text>
-                          </TouchableOpacity>
-                        </View>
-                        {/* Show blurred Chinese characters as teaser */}
-                        <Text style={[styles.teaserText, { color: isDark ? '#4b5563' : '#9ca3af' }]}>
-                          {obj.zh}
-                        </Text>
-                      </View>
-                    ) : (
-                      // Full content for authenticated users
-                      <View style={styles.wordContent}>
-                        <View style={styles.wordHeader}>
-                          <View style={styles.wordInfo}>
-                            {/* Category Badge */}
+                    <View style={styles.wordContent}>
+                      <View style={styles.wordHeader}>
+                        <View style={styles.wordInfo}>
+                          {/* Category and HSK Badges */}
+                          <View style={styles.badgesRow}>
                             <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(obj.category) }]}>
                               <Text style={styles.categoryText}>{obj.category}</Text>
                             </View>
-
-                            {/* Chinese Character */}
-                            <Text style={[styles.chineseText, { color: isDark ? '#fff' : '#000' }]}>
-                              {obj.zh}
-                            </Text>
-
-                            {/* Pinyin */}
-                            <Text style={styles.pinyinText}>{obj.pinyin}</Text>
-
-                            {/* English Meaning */}
-                            <Text style={[styles.englishText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
-                              {obj.en}
-                            </Text>
+                            {obj.hskLevel && (
+                              <View style={[styles.hskBadge, { backgroundColor: getHskColor(obj.hskLevel) }]}>
+                                <Text style={styles.hskText}>HSK {obj.hskLevel}</Text>
+                              </View>
+                            )}
                           </View>
 
-                          {/* Action Buttons */}
-                          <View style={styles.actionButtons}>
-                            {/* Speaker Button for TTS */}
-                            <TouchableOpacity
-                              style={styles.iconButton}
-                              onPress={() => speakWord(obj.zh)}>
-                              <Ionicons name="volume-high" size={20} color="#7c3aed" />
-                            </TouchableOpacity>
+                          {/* Chinese Character */}
+                          <Text style={[styles.chineseText, { color: isDark ? '#fff' : '#000' }]}>
+                            {obj.zh}
+                          </Text>
 
-                            {/* Save Button */}
-                            <TouchableOpacity
-                              style={styles.iconButton}
-                              onPress={() => saveWord(obj)}>
-                              <Ionicons name="bookmark-outline" size={20} color="#7c3aed" />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
+                          {/* Pinyin */}
+                          <Text style={styles.pinyinText}>{obj.pinyin}</Text>
 
-                        {/* Confidence Badge */}
-                        <View style={styles.confidenceBadge}>
-                          <Text style={styles.confidenceText}>
-                            {Math.round(obj.confidence * 100)}% confidence
+                          {/* English Meaning */}
+                          <Text style={[styles.englishText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+                            {obj.en}
                           </Text>
                         </View>
+
+                        {/* Action Buttons */}
+                        <View style={styles.actionButtons}>
+                          {/* Speaker Button for TTS */}
+                          <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={() => handleListen(obj.zh)}>
+                            <Ionicons name="volume-high" size={20} color="#7c3aed" />
+                          </TouchableOpacity>
+
+                          {/* Save Button */}
+                          <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={() => handleSave(obj)}>
+                            <Ionicons name="bookmark-outline" size={20} color="#7c3aed" />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                    )}
+
+                      {/* Confidence Badge */}
+                      <View style={styles.confidenceBadge}>
+                        <Text style={styles.confidenceText}>
+                          {Math.round(obj.confidence * 100)}% confidence
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                 ))}
 
@@ -548,6 +587,54 @@ export default function CaptureModal() {
               }}>
               <Ionicons name="add-circle-outline" size={20} color="#7c3aed" />
               <Text style={styles.createListText}>Create New List</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Sign In Modal for Guests */}
+      <Modal
+        visible={showSignInModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSignInModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: isDark ? '#1a1a1a' : '#fff' }]}>
+            <View style={styles.modalIcon}>
+              <Ionicons name={signInAction === 'listen' ? 'volume-high' : 'bookmark'} size={48} color="#7c3aed" />
+            </View>
+            <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#000' }]}>
+              {signInAction === 'listen' ? 'Hear Pronunciation' : 'Save Word'}
+            </Text>
+            <Text style={[styles.modalText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+              {signInAction === 'listen'
+                ? 'Sign in to listen to Chinese pronunciation with text-to-speech.'
+                : 'Sign in to save words to your vocabulary and track your progress.'}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowSignInModal(false);
+                router.push('/(auth)/signup');
+              }}
+              style={styles.modalPrimaryButton}>
+              <Text style={styles.modalPrimaryButtonText}>Create Account</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setShowSignInModal(false);
+                router.push('/(auth)/login');
+              }}
+              style={styles.modalSecondaryButton}>
+              <Text style={[styles.modalSecondaryButtonText, { color: isDark ? '#fff' : '#374151' }]}>
+                Sign In
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowSignInModal(false)}
+              style={[styles.modalSecondaryButton, { marginTop: 8 }]}>
+              <Text style={[styles.modalSecondaryButtonText, { color: isDark ? '#9ca3af' : '#9ca3af' }]}>
+                Maybe Later
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -780,18 +867,32 @@ const styles = StyleSheet.create({
   wordInfo: {
     flex: 1,
   },
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   categoryBadge: {
-    alignSelf: 'flex-start',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    marginBottom: 8,
   },
   categoryText: {
     fontSize: 12,
     fontWeight: '600',
     color: '#7c3aed',
     textTransform: 'capitalize',
+  },
+  hskBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  hskText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#7c3aed',
   },
   chineseText: {
     fontSize: 28,
