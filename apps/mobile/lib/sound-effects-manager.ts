@@ -39,21 +39,21 @@ const SOUND_VOLUMES: Record<SoundEffect, number> = {
   whoosh: 0.3,
 };
 
-// Sound file mappings - using system sounds or placeholder URIs
-// In production, add actual MP3 files to assets/sounds/
-const SOUND_URIS: Record<SoundEffect, string> = {
-  buttonClick: 'button_click.mp3',
-  cardFlip: 'card_flip.mp3',
-  correctAnswer: 'correct.mp3',
-  wrongAnswer: 'wrong.mp3',
-  success: 'success.mp3',
-  complete: 'complete.mp3',
-  match: 'match.mp3',
-  streak: 'streak.mp3',
-  levelUp: 'level_up.mp3',
-  coin: 'coin.mp3',
-  pop: 'pop.mp3',
-  whoosh: 'whoosh.mp3',
+// Sound file mappings - supports both .wav and .mp3
+// Files are loaded from assets/sounds/
+const SOUND_URIS: Record<SoundEffect, { file: string; extensions: string[] }> = {
+  buttonClick: { file: 'button_click', extensions: ['.wav', '.mp3'] },
+  cardFlip: { file: 'card_flip', extensions: ['.wav', '.mp3'] },
+  correctAnswer: { file: 'correctAnswer', extensions: ['.wav', '.mp3'] },
+  wrongAnswer: { file: 'wrongAnswer', extensions: ['.wav', '.mp3'] },
+  success: { file: 'success', extensions: ['.wav', '.mp3'] },
+  complete: { file: 'complete', extensions: ['.wav', '.mp3'] },
+  match: { file: 'match', extensions: ['.wav', '.mp3'] },
+  streak: { file: 'streak', extensions: ['.wav', '.mp3'] },
+  levelUp: { file: 'level_up', extensions: ['.wav', '.mp3'] },
+  coin: { file: 'coin', extensions: ['.wav', '.mp3'] },
+  pop: { file: 'pop', extensions: ['.wav', '.mp3'] },
+  whoosh: { file: 'whoosh', extensions: ['.wav', '.mp3'] },
 };
 
 class SoundEffectsManager {
@@ -100,16 +100,23 @@ class SoundEffectsManager {
     }
   }
 
-  // Get sound source - tries to load from assets or falls back
+  // Get sound source - tries to load from assets with multiple extensions
   private getSoundSource(effect: SoundEffect): any {
-    try {
-      // Try to require the sound file from assets
-      return require(`../assets/sounds/${SOUND_URIS[effect]}`);
-    } catch {
-      // If file doesn't exist, return a placeholder
-      // The play method will handle this gracefully
-      return null;
+    const config = SOUND_URIS[effect];
+
+    // Try each extension in order
+    for (const ext of config.extensions) {
+      try {
+        return require(`../assets/sounds/${config.file}${ext}`);
+      } catch {
+        // Try next extension
+        continue;
+      }
     }
+
+    // If no file found, return null
+    console.warn(`[SoundEffects] No sound file found for ${effect} (tried: ${config.extensions.join(', ')})`);
+    return null;
   }
 
   // Play a sound effect
