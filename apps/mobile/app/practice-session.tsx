@@ -16,6 +16,7 @@ import { apiClient } from '@/lib/api-client';
 import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { playSuccessFeedback, playErrorFeedback, playCompleteFeedback } from '@/lib/haptic-feedback-utils';
 import { soundEffects } from '@/lib/sound-effects-manager';
+import { CelebrationOverlay } from '@/components/celebration-overlay';
 import type { VocabularyItem } from '@/lib/types';
 
 type QuizMode = 'flashcard' | 'multiple-choice' | 'listening';
@@ -37,6 +38,7 @@ export default function PracticeSessionScreen() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const [stats, setStats] = useState({ correct: 0, incorrect: 0 });
 
   const flipAnim = useState(new Animated.Value(0))[0];
@@ -167,6 +169,7 @@ export default function PracticeSessionScreen() {
       flipAnim.setValue(0);
     } else {
       setSessionComplete(true);
+      setShowCelebration(true);
       playCompleteFeedback();
       soundEffects.play('complete');
     }
@@ -233,6 +236,12 @@ export default function PracticeSessionScreen() {
   if (sessionComplete) {
     return (
       <View style={[styles.container, { backgroundColor: bgColor }]}>
+        <CelebrationOverlay
+          visible={showCelebration}
+          type="success"
+          message="Great job!"
+          onComplete={() => setShowCelebration(false)}
+        />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="close" size={24} color={textColor} />

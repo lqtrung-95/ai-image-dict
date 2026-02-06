@@ -1,8 +1,10 @@
 import { Tabs, useRouter } from 'expo-router';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated from 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
+import { AnimatedPressable } from '@/components/animated-pressable';
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
   const colorScheme = useColorScheme();
@@ -34,13 +36,13 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           // Center Plus Button
           return (
             <View key="center" style={styles.centerContainer}>
-              <TouchableOpacity
+              <AnimatedPressable
                 onPress={handleCenterPress}
                 style={[styles.centerButton, { backgroundColor: primaryColor }]}
-                activeOpacity={0.8}
+                scale={0.9}
               >
                 <Ionicons name="add" size={32} color="white" />
-              </TouchableOpacity>
+              </AnimatedPressable>
             </View>
           );
         }
@@ -61,11 +63,11 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
         };
 
         return (
-          <TouchableOpacity
+          <AnimatedPressable
             key={tab.key}
             onPress={onPress}
             style={styles.tabButton}
-            activeOpacity={0.7}
+            scale={0.85}
           >
             <View style={[styles.iconContainer, isFocused && styles.activeIconContainer]}>
               <Ionicons
@@ -74,7 +76,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
                 color={isFocused ? primaryColor : inactiveColor}
               />
             </View>
-          </TouchableOpacity>
+          </AnimatedPressable>
         );
       })}
     </View>

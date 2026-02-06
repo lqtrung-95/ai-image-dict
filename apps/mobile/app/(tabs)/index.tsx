@@ -11,10 +11,13 @@ import {
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Animated from 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
 import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { apiClient } from '@/lib/api-client';
+import { AnimatedPressable } from '@/components/animated-pressable';
+import { useFadeSlideAnimation, useStaggeredListAnimation } from '@/lib/animation-utils';
 import type { WordOfDay } from '@/lib/types';
 
 export default function HomeScreen() {
@@ -132,13 +135,14 @@ export default function HomeScreen() {
                 Snap a photo, discover vocabulary, master Chinese naturally
               </Text>
 
-              <TouchableOpacity
+              <AnimatedPressable
                 onPress={() => router.push('/capture-modal')}
                 style={styles.heroButton}
+                scale={0.96}
               >
                 <Ionicons name="sparkles" size={20} color="#7c3aed" />
                 <Text style={styles.heroButtonText}>Try Free Analysis</Text>
-              </TouchableOpacity>
+              </AnimatedPressable>
             </View>
           </View>
         </View>
@@ -155,24 +159,28 @@ export default function HomeScreen() {
               title="Take a Photo"
               description="Capture anything around you"
               isDark={isDark}
+              index={0}
             />
             <FeatureCard
               icon="scan"
               title="AI Analysis"
               description="Our AI detects objects instantly"
               isDark={isDark}
+              index={1}
             />
             <FeatureCard
               icon="book"
               title="Learn Words"
               description="Get Chinese, Pinyin & English"
               isDark={isDark}
+              index={2}
             />
             <FeatureCard
               icon="trophy"
               title="Track Progress"
               description="Build your vocabulary library"
               isDark={isDark}
+              index={3}
             />
           </View>
         </View>
@@ -269,6 +277,7 @@ export default function HomeScreen() {
               icon="book"
               color="#7c3aed"
               isDark={isDark}
+              index={0}
             />
             <StatCard
               value={stats?.currentStreak ?? 0}
@@ -276,6 +285,7 @@ export default function HomeScreen() {
               icon="flame"
               color="#f59e0b"
               isDark={isDark}
+              index={1}
             />
             <StatCard
               value={stats?.dueToday ?? 0}
@@ -283,6 +293,7 @@ export default function HomeScreen() {
               icon="time"
               color="#10b981"
               isDark={isDark}
+              index={2}
             />
           </View>
 
@@ -298,6 +309,7 @@ export default function HomeScreen() {
             color="#7c3aed"
             onPress={() => router.push('/capture-modal')}
             isDark={isDark}
+            index={0}
           />
           <ActionButton
             icon="school"
@@ -305,6 +317,7 @@ export default function HomeScreen() {
             color="#10b981"
             onPress={() => router.push('/(tabs)/practice')}
             isDark={isDark}
+            index={1}
           />
           <ActionButton
             icon="bookmark"
@@ -312,6 +325,7 @@ export default function HomeScreen() {
             color="#f59e0b"
             onPress={() => router.push('/(tabs)/lists')}
             isDark={isDark}
+            index={2}
           />
         </View>
       </View>
@@ -411,10 +425,12 @@ export default function HomeScreen() {
   );
 }
 
-// Feature Card Component
-function FeatureCard({ icon, title, description, isDark }: any) {
+// Feature Card Component with animation
+function FeatureCard({ icon, title, description, isDark, index = 0 }: any) {
+  const animatedStyle = useFadeSlideAnimation(600 + index * 150, 500, 30);
+
   return (
-    <View style={[styles.featureCard, { backgroundColor: isDark ? '#1a1a1a' : '#f8fafc' }]}>
+    <Animated.View style={[animatedStyle, styles.featureCard, { backgroundColor: isDark ? '#1a1a1a' : '#f8fafc' }]}>
       <View style={styles.featureIcon}>
         <Ionicons name={icon} size={24} color="#7c3aed" />
       </View>
@@ -424,14 +440,16 @@ function FeatureCard({ icon, title, description, isDark }: any) {
       <Text style={[styles.featureDesc, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
         {description}
       </Text>
-    </View>
+    </Animated.View>
   );
 }
 
-// Stat Card Component
-function StatCard({ value, label, icon, color, isDark }: any) {
+// Stat Card Component with animation
+function StatCard({ value, label, icon, color, isDark, index = 0 }: any) {
+  const animatedStyle = useFadeSlideAnimation(index * 100, 400, 20);
+
   return (
-    <View style={[styles.statCard, { backgroundColor: isDark ? '#1a1a1a' : '#f8fafc' }]}>
+    <Animated.View style={[animatedStyle, styles.statCard, { backgroundColor: isDark ? '#1a1a1a' : '#f8fafc' }]}>
       <View style={[styles.statIcon, { backgroundColor: `${color}20` }]}>
         <Ionicons name={icon} size={20} color={color} />
       </View>
@@ -439,21 +457,25 @@ function StatCard({ value, label, icon, color, isDark }: any) {
       <Text style={[styles.statLabel, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
         {label}
       </Text>
-    </View>
+    </Animated.View>
   );
 }
 
-// Action Button Component
-function ActionButton({ icon, label, color, onPress, isDark }: any) {
+// Action Button Component with animation
+function ActionButton({ icon, label, color, onPress, isDark, index = 0 }: any) {
+  const animatedStyle = useFadeSlideAnimation(300 + index * 100, 400, 20);
+
   return (
-    <TouchableOpacity onPress={onPress} style={styles.actionButton}>
-      <View style={[styles.actionIcon, { backgroundColor: color }]}>
-        <Ionicons name={icon} size={24} color="#fff" />
-      </View>
-      <Text style={[styles.actionLabel, { color: isDark ? '#fff' : '#000' }]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
+    <Animated.View style={animatedStyle}>
+      <AnimatedPressable onPress={onPress} style={styles.actionButton} scale={0.92}>
+        <View style={[styles.actionIcon, { backgroundColor: color }]}>
+          <Ionicons name={icon} size={24} color="#fff" />
+        </View>
+        <Text style={[styles.actionLabel, { color: isDark ? '#fff' : '#000' }]}>
+          {label}
+        </Text>
+      </AnimatedPressable>
+    </Animated.View>
   );
 }
 
