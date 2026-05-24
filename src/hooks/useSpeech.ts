@@ -39,8 +39,13 @@ export function useSpeech() {
       });
 
       if (!response.ok) return false;
+      if (!response.headers.get('Content-Type')?.startsWith('audio/')) {
+        return false;
+      }
 
       const audioBlob = await response.blob();
+      if (audioBlob.size === 0) return false;
+
       const audioUrl = URL.createObjectURL(audioBlob);
       audioUrlRef.current = audioUrl;
 
@@ -113,4 +118,3 @@ export function useSpeech() {
 
   return { speak, stop };
 }
-

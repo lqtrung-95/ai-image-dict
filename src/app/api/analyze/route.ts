@@ -193,11 +193,14 @@ export async function POST(request: NextRequest) {
     // Transform detected_objects to match mobile app expected format
     const detectedObjects = (completeAnalysis?.detected_objects || []).map((obj: any) => ({
       id: obj.id,
+      label_zh: obj.label_zh,
+      label_en: obj.label_en,
       zh: obj.label_zh,
       en: obj.label_en,
       pinyin: obj.pinyin,
       confidence: obj.confidence,
       category: obj.category,
+      hsk_level: hskLevels[obj.label_zh] ?? null,
       hskLevel: hskLevels[obj.label_zh] ?? null,
       example: exampleSentences[obj.label_zh] ?? null,
     }));
@@ -230,4 +233,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

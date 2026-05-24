@@ -181,55 +181,54 @@ export function TrialResult({
 
       {/* Locked Words */}
       {hasLockedWords && (
-        <section>
+        <section className="space-y-3">
           <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
             <Lock className="w-4 h-4 text-slate-400" />
             {lockedWords.length} More Words
           </h3>
-          
-          {/* Locked content with overlay */}
-          <div className="relative rounded-xl overflow-hidden">
-            {/* Blurred cards */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 blur-[6px] opacity-60 pointer-events-none select-none p-1">
-              {lockedWords.slice(0, 6).map((obj) => (
-                <Card
-                  key={obj.id}
-                  className="p-4 bg-slate-800/50 border-slate-700"
-                >
-                  <div className="flex-1">
-                    <span className="inline-block px-2 py-0.5 rounded text-xs font-medium mb-2 bg-slate-600 text-slate-300">
-                      {obj.category}
-                    </span>
-                    <h3 className="text-2xl font-bold text-white mb-1">{obj.label_zh}</h3>
-                    <p className="text-lg text-purple-400 mb-1">{obj.pinyin}</p>
-                    <p className="text-slate-400">{obj.label_en}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-            
-            {/* Centered unlock CTA */}
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-[2px]">
-              <div className="bg-slate-800 border border-purple-500/50 rounded-xl p-6 max-w-sm mx-4 text-center shadow-2xl">
-                <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
-                  <Lock className="w-7 h-7 text-purple-400" />
-                </div>
-                <h4 className="text-xl font-bold text-white mb-2">
-                  Unlock {lockedWords.length} More Words
-                </h4>
-                <p className="text-slate-400 text-sm mb-5">
-                  Sign up free to see all words, save vocabulary, and practice with flashcards.
-                </p>
-                <Link href="/signup">
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700 mb-3">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Create Free Account
-                  </Button>
-                </Link>
-                <Link href="/login" className="text-sm text-slate-400 hover:text-white">
-                  Already have an account? Sign in
-                </Link>
+
+          <div className="relative flex min-h-[280px] items-center justify-center overflow-hidden rounded-xl border border-slate-700 bg-slate-900/50 p-4 sm:min-h-[300px] sm:p-5">
+            <div className="pointer-events-none absolute inset-0 select-none p-4 sm:p-5">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 opacity-25 blur-[4px]">
+                {lockedWords.slice(0, 6).map((obj) => (
+                  <Card
+                    key={obj.id}
+                    className="min-h-36 p-4 bg-slate-800/70 border-slate-700"
+                  >
+                    <div className="flex-1">
+                      <span className="inline-block px-2 py-0.5 rounded text-xs font-medium mb-2 bg-slate-600 text-slate-300">
+                        {obj.category}
+                      </span>
+                      <h3 className="text-2xl font-bold text-white mb-1">{obj.label_zh}</h3>
+                      <p className="text-lg text-purple-400 mb-1">{obj.pinyin}</p>
+                      <p className="text-slate-400">{obj.label_en}</p>
+                    </div>
+                  </Card>
+                ))}
               </div>
+            </div>
+
+            <div className="absolute inset-0 bg-slate-950/55" />
+
+            <div className="relative z-10 w-full max-w-md rounded-lg border border-purple-500/40 bg-slate-800/95 p-5 text-center shadow-2xl shadow-purple-950/20 sm:p-6">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/20">
+                <Lock className="w-6 h-6 text-purple-300" />
+              </div>
+              <h4 className="text-xl font-bold text-white mb-2">
+                Unlock {lockedWords.length} More Words
+              </h4>
+              <p className="text-slate-300 text-sm leading-6 mb-5">
+                Sign up free to see every detected word, save vocabulary, and practice with flashcards.
+              </p>
+              <Link href="/signup" className="block">
+                <Button className="w-full bg-purple-600 text-white hover:bg-purple-700">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Create Free Account
+                </Button>
+              </Link>
+              <Link href="/login" className="mt-3 inline-block text-sm text-slate-400 hover:text-white">
+                Already have an account? Sign in
+              </Link>
             </div>
           </div>
         </section>
@@ -246,7 +245,7 @@ export function TrialResult({
           Try Another Photo
         </Button>
         <Link href="/signup">
-          <Button className="bg-purple-600 hover:bg-purple-700">
+          <Button className="bg-purple-600 text-white hover:bg-purple-700">
             <UserPlus className="w-4 h-4 mr-2" />
             Sign Up to Save Words
           </Button>

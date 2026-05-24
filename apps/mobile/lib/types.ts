@@ -112,9 +112,12 @@ export interface AnalysisResponse {
     id: string;
     en: string;
     zh: string;
+    label_en?: string;
+    label_zh?: string;
     pinyin: string;
     confidence: number;
     category: string;
+    hsk_level?: number | null;
     hskLevel?: number | null;
     example?: { zh: string; pinyin: string; en: string } | null;
   }>;

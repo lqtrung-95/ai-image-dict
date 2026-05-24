@@ -39,7 +39,7 @@ export default function CaptureModal() {
   const [signInAction, setSignInAction] = useState<'listen' | 'save' | null>(null);
   const [lists, setLists] = useState<VocabularyList[]>([]);
   const [showListModal, setShowListModal] = useState(false);
-  const [wordToSave, setWordToSave] = useState<{ id: string; en: string; zh: string; pinyin: string; category: string; hskLevel?: number | null } | null>(null);
+  const [wordToSave, setWordToSave] = useState<{ id: string; en: string; zh: string; pinyin: string; category: string; hskLevel?: number | null; example?: { zh: string; pinyin: string; en: string } | null } | null>(null);
   const [saving, setSaving] = useState(false);
 
   const slideAnim = useRef(new Animated.Value(height)).current;
@@ -129,7 +129,7 @@ export default function CaptureModal() {
   };
 
   // Handle save action - show sign-in modal for guests
-  const handleSave = (obj: { id: string; en: string; zh: string; pinyin: string; category: string; hskLevel?: number | null }) => {
+  const handleSave = (obj: { id: string; en: string; zh: string; pinyin: string; category: string; hskLevel?: number | null; example?: { zh: string; pinyin: string; en: string } | null }) => {
     if (!isAuthenticated) {
       setSignInAction('save');
       setShowSignInModal(true);
@@ -140,7 +140,7 @@ export default function CaptureModal() {
   };
 
   // Save word function - shows list selection modal
-  const saveWord = (obj: { id: string; en: string; zh: string; pinyin: string; category: string }) => {
+  const saveWord = (obj: { id: string; en: string; zh: string; pinyin: string; category: string; example?: { zh: string; pinyin: string; en: string } | null }) => {
     setWordToSave(obj);
     setShowListModal(true);
   };
@@ -160,12 +160,15 @@ export default function CaptureModal() {
         wordEn: wordToSave.en,
         detectedObjectId: wordToSave.id,
         hskLevel: wordToSave.hskLevel ?? null,
+        exampleSentence: wordToSave.example
+          ? `${wordToSave.example.zh} (${wordToSave.example.pinyin}) - ${wordToSave.example.en}`
+          : undefined,
       };
       if (listId) {
         payload.listId = listId;
       }
 
-      const response = await apiClient.post<{ id: string; wordZh: string; wordPinyin: string; wordEn: string; isLearned: boolean; createdAt: string }>('/api/vocabulary', payload);
+      await apiClient.post<{ id: string; wordZh: string; wordPinyin: string; wordEn: string; isLearned: boolean; createdAt: string }>('/api/vocabulary', payload);
 
       // Invalidate vocabulary cache to trigger refetch on next navigation
       // We clear the cache so that home/practice pages will fetch fresh data
@@ -441,6 +444,12 @@ export default function CaptureModal() {
                           <Text style={[styles.englishText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
                             {obj.en}
                           </Text>
+
+                          {obj.example && (
+                            <Text style={[styles.exampleText, { color: isDark ? '#9ca3af' : '#6b7280' }]}>
+                              {obj.example.zh} ({obj.example.pinyin}) - {obj.example.en}
+                            </Text>
+                          )}
                         </View>
 
                         {/* Action Buttons */}
@@ -907,6 +916,12 @@ const styles = StyleSheet.create({
   englishText: {
     fontSize: 14,
     marginTop: 4,
+  },
+  exampleText: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    lineHeight: 18,
+    marginTop: 8,
   },
   actionButtons: {
     flexDirection: 'row',

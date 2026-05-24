@@ -188,7 +188,8 @@ WITH CHECK (auth.uid() = user_id);
 INSERT INTO storage.buckets (id, name, public)
 VALUES
   ('photos', 'photos', true),
-  ('avatars', 'avatars', true);
+  ('avatars', 'avatars', true),
+  ('tts', 'tts', false);
 
 -- Set bucket policies
 CREATE POLICY "Users can upload their photos"
@@ -198,6 +199,9 @@ WITH CHECK (bucket_id = 'photos' AND auth.uid()::text = owner);
 CREATE POLICY "Users can view photos"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'photos');
+
+-- The tts bucket is accessed by server-side service role only.
+-- No public policy is required.
 ```
 
 ### 6. Create Database Triggers

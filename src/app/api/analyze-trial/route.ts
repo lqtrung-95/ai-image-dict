@@ -38,31 +38,40 @@ export async function POST(request: NextRequest) {
     const allObjects = [
       ...(analysis.objects || []).map((obj: AIObject) => ({
         id: `trial-obj-${Math.random().toString(36).substr(2, 9)}`,
+        label_en: obj.en,
+        label_zh: obj.zh,
         en: obj.en,
         zh: obj.zh,
         pinyin: obj.pinyin,
         confidence: obj.confidence || 0.9,
         category: 'object',
+        hsk_level: obj.hskLevel ?? null,
         hskLevel: obj.hskLevel ?? null,
         example: obj.example,
       })),
       ...(analysis.colors || []).map((obj: AIObject) => ({
         id: `trial-color-${Math.random().toString(36).substr(2, 9)}`,
+        label_en: obj.en,
+        label_zh: obj.zh,
         en: obj.en,
         zh: obj.zh,
         pinyin: obj.pinyin,
         confidence: 0.95,
         category: 'color',
+        hsk_level: obj.hskLevel ?? null,
         hskLevel: obj.hskLevel ?? null,
         example: obj.example,
       })),
       ...(analysis.actions || []).map((obj: AIObject) => ({
         id: `trial-action-${Math.random().toString(36).substr(2, 9)}`,
+        label_en: obj.en,
+        label_zh: obj.zh,
         en: obj.en,
         zh: obj.zh,
         pinyin: obj.pinyin,
         confidence: 0.85,
         category: 'action',
+        hsk_level: obj.hskLevel ?? null,
         hskLevel: obj.hskLevel ?? null,
         example: obj.example,
       })),
@@ -103,4 +112,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
