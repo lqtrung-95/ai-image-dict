@@ -241,8 +241,8 @@ export function DashboardHome() {
           <Link href="/history" className="text-slate-500 hover:text-slate-300 transition-colors">
             History
           </Link>
-          <Link href="/collections" className="text-slate-500 hover:text-slate-300 transition-colors">
-            Collections
+          <Link href="/lists" className="text-slate-500 hover:text-slate-300 transition-colors">
+            Lists
           </Link>
           <Link href="/progress" className="text-slate-500 hover:text-slate-300 transition-colors">
             Progress

@@ -18,16 +18,7 @@ export async function GET(request: NextRequest) {
 
     const { data: stories, error } = await supabase
       .from('photo_stories')
-      .select(`
-        *,
-        story_photos(
-          id,
-          photo_analysis_id,
-          order_index,
-          caption,
-          photo_analyses(id, image_url, created_at)
-        )
-      `)
+      .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -36,10 +27,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch stories' }, { status: 500 });
     }
 
-    // Calculate photo count for each story
-    const storiesWithCount = (stories || []).map(story => ({
+    const storyIds = (stories || []).map((story) => story.id);
+    let photoCounts: Record<string, number> = {};
+
+    if (storyIds.length > 0) {
+      const { data: storyPhotos, error: photosError } = await supabase
+        .from('story_photos')
+        .select('story_id')
+        .in('story_id', storyIds);
+
+      if (photosError) {
+        console.error('Story photo counts fetch error:', photosError);
+      }
+
+      photoCounts = (storyPhotos || []).reduce((counts: Record<string, number>, photo) => {
+        counts[photo.story_id] = (counts[photo.story_id] || 0) + 1;
+        return counts;
+      }, {});
+    }
+
+    const storiesWithCount = (stories || []).map((story) => ({
       ...story,
-      photoCount: story.story_photos?.length || 0,
+      photoCount: photoCounts[story.id] || 0,
     }));
 
     return NextResponse.json({ stories: storiesWithCount });

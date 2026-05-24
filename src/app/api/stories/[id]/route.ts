@@ -6,6 +6,116 @@ import { generateStoryFromWords } from '@/lib/groq';
 
 export const dynamic = 'force-dynamic';
 
+interface StoryPhotoRow {
+  id: string;
+  photo_analysis_id: string;
+  order_index: number;
+  caption: string | null;
+}
+
+interface PhotoAnalysisRow {
+  id: string;
+  image_url: string;
+  created_at: string;
+}
+
+interface DetectedObjectRow {
+  analysis_id: string;
+  id: string;
+  label_en: string;
+  label_zh: string;
+  pinyin: string;
+  confidence: number;
+  category: string;
+}
+
+async function fetchStoryPhotos(supabase: ReturnType<typeof createServiceClient>, storyId: string) {
+  const { data: storyPhotos, error: photosError } = await supabase
+    .from('story_photos')
+    .select('id, photo_analysis_id, order_index, caption')
+    .eq('story_id', storyId)
+    .order('order_index', { ascending: true });
+
+  if (photosError) {
+    throw photosError;
+  }
+
+  const sortedPhotos = (storyPhotos || []) as StoryPhotoRow[];
+  const analysisIds = sortedPhotos.map((photo) => photo.photo_analysis_id).filter(Boolean);
+
+  if (analysisIds.length === 0) {
+    return {
+      photos: [],
+      allVocabulary: [] as DetectedObjectRow[],
+    };
+  }
+
+  const [{ data: analyses, error: analysesError }, { data: detectedObjects, error: vocabError }] =
+    await Promise.all([
+      supabase
+        .from('photo_analyses')
+        .select('id, image_url, created_at')
+        .in('id', analysisIds),
+      supabase
+        .from('detected_objects')
+        .select('analysis_id, id, label_en, label_zh, pinyin, confidence, category')
+        .in('analysis_id', analysisIds),
+    ]);
+
+  if (analysesError) {
+    throw analysesError;
+  }
+
+  if (vocabError) {
+    console.error('Vocabulary fetch error:', vocabError);
+  }
+
+  const analysesById = new Map(
+    ((analyses || []) as PhotoAnalysisRow[]).map((analysis) => [analysis.id, analysis])
+  );
+
+  const allVocabulary = (detectedObjects || []) as DetectedObjectRow[];
+  const vocabularyByAnalysis: Record<string, DetectedObjectRow[]> = {};
+  allVocabulary.forEach((obj) => {
+    if (!vocabularyByAnalysis[obj.analysis_id]) {
+      vocabularyByAnalysis[obj.analysis_id] = [];
+    }
+    vocabularyByAnalysis[obj.analysis_id].push(obj);
+  });
+
+  const photos = sortedPhotos.map((storyPhoto) => {
+    const analysis = analysesById.get(storyPhoto.photo_analysis_id);
+    return {
+      story_photo_id: storyPhoto.id,
+      caption: storyPhoto.caption,
+      id: analysis?.id || storyPhoto.photo_analysis_id,
+      image_url: analysis?.image_url || '',
+      created_at: analysis?.created_at || '',
+      vocabulary: vocabularyByAnalysis[storyPhoto.photo_analysis_id] || [],
+    };
+  });
+
+  return { photos, allVocabulary };
+}
+
+function getUniqueWords(allVocabulary: DetectedObjectRow[]) {
+  const words: Array<{ zh: string; pinyin: string; en: string }> = [];
+  const seenWords = new Set<string>();
+
+  for (const obj of allVocabulary) {
+    if (!seenWords.has(obj.label_zh)) {
+      seenWords.add(obj.label_zh);
+      words.push({
+        zh: obj.label_zh,
+        pinyin: obj.pinyin,
+        en: obj.label_en,
+      });
+    }
+  }
+
+  return words;
+}
+
 // GET /api/stories/[id] - Get a specific story with details
 export async function GET(
   request: NextRequest,
@@ -24,20 +134,7 @@ export async function GET(
 
     const { data: story, error } = await supabase
       .from('photo_stories')
-      .select(`
-        *,
-        story_photos(
-          id,
-          photo_analysis_id,
-          order_index,
-          caption,
-          photo_analyses(
-            id,
-            image_url,
-            created_at
-          )
-        )
-      `)
+      .select('*')
       .eq('id', storyId)
       .eq('user_id', user.id)
       .single();
@@ -51,68 +148,7 @@ export async function GET(
       return NextResponse.json({ error: 'Story not found' }, { status: 404 });
     }
 
-    // Flatten and organize the data
-    const sortedPhotos = (story.story_photos || [])
-      .sort((a: { order_index: number }, b: { order_index: number }) => a.order_index - b.order_index);
-
-    // Get all photo_analysis_ids to fetch vocabulary
-    const analysisIds = sortedPhotos
-      .map((sp: { photo_analyses?: { id: string } }) => sp.photo_analyses?.id)
-      .filter(Boolean);
-
-    // Fetch detected objects (vocabulary) for all photos in parallel
-    let allVocabulary: Array<{
-      analysis_id: string;
-      id: string;
-      label_en: string;
-      label_zh: string;
-      pinyin: string;
-      confidence: number;
-      category: string;
-    }> = [];
-
-    if (analysisIds.length > 0) {
-      const { data: detectedObjects, error: vocabError } = await supabase
-        .from('detected_objects')
-        .select('*')
-        .in('analysis_id', analysisIds);
-
-      if (vocabError) {
-        console.error('Vocabulary fetch error:', vocabError);
-      }
-
-      console.log('Analysis IDs:', analysisIds);
-      console.log('Detected objects:', detectedObjects);
-
-      allVocabulary = detectedObjects || [];
-    }
-
-    // Group vocabulary by photo_analysis_id
-    const vocabularyByAnalysis: Record<string, typeof allVocabulary> = {};
-    allVocabulary.forEach((obj) => {
-      if (!vocabularyByAnalysis[obj.analysis_id]) {
-        vocabularyByAnalysis[obj.analysis_id] = [];
-      }
-      vocabularyByAnalysis[obj.analysis_id].push(obj);
-    });
-
-    // Build photos with vocabulary
-    const photos = sortedPhotos.map((sp: {
-      id: string;
-      caption: string | null;
-      photo_analyses?: {
-        id: string;
-        image_url: string;
-        created_at: string;
-      };
-    }) => ({
-      story_photo_id: sp.id,
-      caption: sp.caption,
-      id: sp.photo_analyses?.id || '',
-      image_url: sp.photo_analyses?.image_url || '',
-      created_at: sp.photo_analyses?.created_at || '',
-      vocabulary: vocabularyByAnalysis[sp.photo_analyses?.id || ''] || [],
-    }));
+    const { photos, allVocabulary } = await fetchStoryPhotos(supabase, storyId);
 
     // Calculate total unique vocabulary count
     const uniqueWords = new Set(allVocabulary.map((v) => v.label_zh));
@@ -234,25 +270,10 @@ export async function POST(
 
     const supabase = createServiceClient();
 
-    // Get story with vocabulary
+    // Get story
     const { data: story, error } = await supabase
       .from('photo_stories')
-      .select(`
-        *,
-        story_photos(
-          id,
-          photo_analysis_id,
-          photo_analyses(
-            id,
-            detected_objects(
-              id,
-              label_zh,
-              label_en,
-              pinyin
-            )
-          )
-        )
-      `)
+      .select('*')
       .eq('id', storyId)
       .eq('user_id', user.id)
       .single();
@@ -261,26 +282,8 @@ export async function POST(
       return NextResponse.json({ error: 'Story not found' }, { status: 404 });
     }
 
-    // Collect all unique words from all photos
-    const words: Array<{ zh: string; pinyin: string; en: string }> = [];
-    const seenWords = new Set<string>();
-
-    for (const sp of story.story_photos || []) {
-      for (const obj of sp.photo_analyses?.detected_objects || []) {
-        if (!seenWords.has(obj.label_zh)) {
-          seenWords.add(obj.label_zh);
-          words.push({
-            zh: obj.label_zh,
-            pinyin: obj.pinyin,
-            en: obj.label_en,
-          });
-        }
-      }
-    }
-
-    if (words.length === 0) {
-      return NextResponse.json({ error: 'No vocabulary found to generate story' }, { status: 400 });
-    }
+    const storyPhotos = await fetchStoryPhotos(supabase, storyId);
+    const words = getUniqueWords(storyPhotos.allVocabulary);
 
     if (words.length === 0) {
       return NextResponse.json({ error: 'No vocabulary found to generate story' }, { status: 400 });
@@ -297,20 +300,7 @@ export async function POST(
       })
       .eq('id', storyId)
       .eq('user_id', user.id)
-      .select(`
-        *,
-        story_photos(
-          id,
-          photo_analysis_id,
-          order_index,
-          caption,
-          photo_analyses(
-            id,
-            image_url,
-            created_at
-          )
-        )
-      `)
+      .select('*')
       .single();
 
     if (updateError) {
@@ -318,57 +308,7 @@ export async function POST(
     }
 
     const storyData = updatedStory || story;
-
-    // Reuse the same transformation logic as GET
-    const sortedPhotos = (storyData.story_photos || [])
-      .sort((a: { order_index: number }, b: { order_index: number }) => a.order_index - b.order_index);
-
-    const analysisIds = sortedPhotos
-      .map((sp: { photo_analyses?: { id: string } }) => sp.photo_analyses?.id)
-      .filter(Boolean);
-
-    let allVocabulary: Array<{
-      analysis_id: string;
-      id: string;
-      label_en: string;
-      label_zh: string;
-      pinyin: string;
-      confidence: number;
-      category: string;
-    }> = [];
-
-    if (analysisIds.length > 0) {
-      const { data: detectedObjects } = await supabase
-        .from('detected_objects')
-        .select('*')
-        .in('analysis_id', analysisIds);
-      allVocabulary = detectedObjects || [];
-    }
-
-    const vocabularyByAnalysis: Record<string, typeof allVocabulary> = {};
-    allVocabulary.forEach((obj) => {
-      if (!vocabularyByAnalysis[obj.analysis_id]) {
-        vocabularyByAnalysis[obj.analysis_id] = [];
-      }
-      vocabularyByAnalysis[obj.analysis_id].push(obj);
-    });
-
-    const photos = sortedPhotos.map((sp: {
-      id: string;
-      caption: string | null;
-      photo_analyses?: {
-        id: string;
-        image_url: string;
-        created_at: string;
-      };
-    }) => ({
-      story_photo_id: sp.id,
-      caption: sp.caption,
-      id: sp.photo_analyses?.id || '',
-      image_url: sp.photo_analyses?.image_url || '',
-      created_at: sp.photo_analyses?.created_at || '',
-      vocabulary: vocabularyByAnalysis[sp.photo_analyses?.id || ''] || [],
-    }));
+    const { photos, allVocabulary } = await fetchStoryPhotos(supabase, storyId);
 
     const uniqueWords = new Set(allVocabulary.map((v) => v.label_zh));
 
