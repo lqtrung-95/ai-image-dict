@@ -15,6 +15,12 @@ const TTS_BUCKET = 'tts';
 const TTS_VOICE = 'cmn-CN-Wavenet-A';
 const AUDIO_CACHE_SECONDS = 31536000; // 1 year
 
+function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  const arrayBuffer = new ArrayBuffer(buffer.byteLength);
+  new Uint8Array(arrayBuffer).set(buffer);
+  return arrayBuffer;
+}
+
 function fallbackResponse(reason: string, remaining: number) {
   return NextResponse.json(
     { fallback: true, reason },
@@ -28,7 +34,7 @@ function fallbackResponse(reason: string, remaining: number) {
 }
 
 function audioResponse(audioBuffer: Buffer, remaining: number, cacheStatus: 'HIT' | 'MISS') {
-  return new NextResponse(audioBuffer, {
+  return new NextResponse(bufferToArrayBuffer(audioBuffer), {
     headers: {
       'Content-Type': 'audio/mpeg',
       'Cache-Control': `public, max-age=${AUDIO_CACHE_SECONDS}, immutable`,
