@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
 import { supabase } from '@/lib/supabase-client';
+import { signInWithOAuth } from '@/lib/oauth-sign-in';
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
@@ -24,6 +25,27 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [oauthLoading, setOauthLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setOauthLoading(true);
+    setError('');
+
+    try {
+      const session = await signInWithOAuth('google');
+      if (session?.user) {
+        setAuthenticated({
+          id: session.user.id,
+          email: session.user.email || '',
+        });
+        router.replace('/(tabs)');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign in failed');
+    } finally {
+      setOauthLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -131,8 +153,25 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
+            onPress={handleGoogleSignIn}
+            disabled={loading || oauthLoading}
+            style={styles.oauthButton}
+          >
+            <Ionicons name="logo-google" size={20} color="#4285F4" />
+            <Text style={[styles.oauthButtonText, { color: textColor }]}>
+              {oauthLoading ? 'Connecting...' : 'Continue with Google'}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: subtextColor }]} />
+            <Text style={[styles.dividerText, { color: subtextColor }]}>or with email</Text>
+            <View style={[styles.dividerLine, { backgroundColor: subtextColor }]} />
+          </View>
+
+          <TouchableOpacity
             onPress={handleLogin}
-            disabled={loading}
+            disabled={loading || oauthLoading}
             style={styles.loginButton}
           >
             {loading ? (
@@ -229,6 +268,35 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+  },
+  oauthButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(124, 58, 237, 0.35)',
+  },
+  oauthButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: 4,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    opacity: 0.35,
+  },
+  dividerText: {
+    fontSize: 12,
+    textTransform: 'uppercase',
   },
   loginButton: {
     backgroundColor: '#7c3aed',

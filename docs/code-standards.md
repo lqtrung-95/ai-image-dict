@@ -492,6 +492,114 @@ export function VocabularyCard({ word }: VocabularyCardProps) {
 
 ---
 
+## Internationalization (i18n) & Native Language Support
+
+### Language Configuration
+
+**Supported Languages:**
+```typescript
+// src/lib/constants.ts
+export const SUPPORTED_LANGUAGES = {
+  en: { name: 'English', native: 'English' },
+  vi: { name: 'Vietnamese', native: 'Tiếng Việt' },
+  ko: { name: 'Korean', native: '한국어' },
+  ja: { name: 'Japanese', native: '日本語' },
+  es: { name: 'Spanish', native: 'Español' },
+} as const;
+
+export type NativeLanguage = keyof typeof SUPPORTED_LANGUAGES;
+```
+
+### User Language Preference
+
+**Accessing user language:**
+```typescript
+// Hook pattern
+const useUserLanguage = () => {
+  const { user } = useAuth();
+  return user?.user_metadata?.native_language || 'en';
+};
+
+// In component
+const userLanguage = useUserLanguage();
+const translatedWord = word.word_native?.[userLanguage] || word.word_en;
+```
+
+### API Patterns with Language
+
+**Including language in API calls:**
+```typescript
+// When calling Groq API from server
+const language = user.native_language;
+const groqPrompt = generatePrompt(image, language);
+const response = await groq.create({ prompt: groqPrompt });
+
+// Groq response includes native language translations
+const wordData = {
+  word_zh: response.label_zh,
+  word_pinyin: response.pinyin,
+  word_en: response.label_en,
+  word_native: {  // Store all language translations
+    en: response.label_en,
+    vi: response.label_vi,
+    ko: response.label_ko,
+    ja: response.label_ja,
+    es: response.label_es,
+  },
+  example_sentence_zh: response.example_zh,
+  example_sentence_native: response.example[language],
+};
+```
+
+### Component Display Pattern
+
+**Display translations based on user preference:**
+```typescript
+interface WordDisplayProps {
+  word: VocabularyItem;
+  userLanguage: NativeLanguage;
+}
+
+export function WordDisplay({ word, userLanguage }: WordDisplayProps) {
+  // Get translation in user's language, fallback to English
+  const translation = word.word_native?.[userLanguage] || word.word_en;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-2xl font-bold">{word.word_zh}</p>
+      <p className="text-slate-300">{word.word_pinyin}</p>
+      <p className="text-white">{translation}</p>
+      <p className="text-sm text-slate-400">
+        {word.example_sentence_zh}
+      </p>
+      <p className="text-sm text-slate-300">
+        {word.example_sentence_native}
+      </p>
+    </div>
+  );
+}
+```
+
+### Database Query Pattern
+
+**Filter by language when needed:**
+```typescript
+// Don't filter in query - store all translations, filter on display
+const words = await supabase
+  .from('vocabulary_items')
+  .select('*')
+  .eq('user_id', userId)
+  .limit(50);
+
+// Filter to user's language on display (already have all languages in JSONB)
+const displayWords = words.map(word => ({
+  ...word,
+  display_translation: word.word_native[userLanguage],
+}));
+```
+
+---
+
 ## Error Handling
 
 ### Try-Catch Pattern
@@ -541,181 +649,35 @@ export function CameraCapture() {
 }
 ```
 
-### User-Friendly Errors
-
-```typescript
-// ✓ Good: User-friendly error messages
-const errorMessages: Record<string, string> = {
-  'File too large': 'Photo must be smaller than 10MB',
-  'No objects detected': 'Try a photo with clear objects',
-  'Network error': 'Check your connection and try again',
-};
-
-// ✗ Bad: Technical errors exposed to user
-<p>{error.stack}</p> // Never show stack traces
-<p>{error.toString()}</p> // Confusing for non-developers
-```
-
-### Error Boundaries
-
-**Use ErrorBoundary component for React errors:**
-
-```typescript
-// ✓ Good: Wrap risky components
-<ErrorBoundary fallback={<ErrorMessage />}>
-  <VocabularyCard word={word} />
-</ErrorBoundary>
-
-// See: src/components/ui/error-boundary.tsx
-```
+- Map technical errors to user-friendly messages (never expose stack traces)
+- Use `<ErrorBoundary>` component (`src/components/ui/error-boundary.tsx`) for React errors
 
 ---
 
 ## State Management
 
-### useState Patterns
-
-```typescript
-// ✓ Good: Separate concerns
-const [words, setWords] = useState<Word[]>([]);
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
-
-// ✓ Good: Complex state with reducer
-const [state, dispatch] = useReducer(reducer, initialState);
-
-// ✗ Bad: Combined state
-const [uiState, setUiState] = useState({
-  words: [],
-  loading: false,
-  error: null,
-}); // Hard to update individual fields
-```
-
-### Fetching Data
-
-```typescript
-// ✓ Good: useEffect for side effects
-useEffect(() => {
-  let mounted = true;
-
-  const fetchData = async () => {
-    try {
-      const response = await fetch('/api/vocabulary');
-      if (!mounted) return; // Ignore if component unmounted
-      const data = await response.json();
-      setWords(data);
-    } catch (err) {
-      if (mounted) setError('Failed to load vocabulary');
-    }
-  };
-
-  fetchData();
-  return () => { mounted = false; }; // Cleanup
-}, []); // Empty deps = run once on mount
-
-// ✗ Bad: Unnecessary fetch on every render
-function VocabularyList() {
-  const [words, setWords] = useState([]);
-
-  // This runs every render!
-  fetch('/api/vocabulary').then(r => r.json()).then(setWords);
-
-  return <div>{words.map(w => <div key={w.id}>{w.label}</div>)}</div>;
-}
-```
+- Separate state concerns: `useState` for simple, `useReducer` for complex
+- Always use cleanup in `useEffect` (`mounted` flag pattern)
+- Never fetch data outside `useEffect` — causes infinite re-renders
 
 ---
 
 ## Testing Strategy
 
-### Unit Tests
+### Test Focus Areas
 
-**Focus on pure functions and hooks:**
+- **Unit tests**: Pure functions (utils, SM-2 algorithm, validation)
+- **Component tests**: User interactions and rendering (`@testing-library/react`)
+- **API tests**: Route handlers with mocked Supabase
 
-```typescript
-// src/lib/utils.ts
-export function formatPinyin(pinyin: string): string {
-  return pinyin.toLowerCase().trim();
-}
+### Coverage Goals
 
-// src/lib/__tests__/utils.test.ts
-import { formatPinyin } from '../utils';
-
-describe('formatPinyin', () => {
-  it('should lowercase pinyin', () => {
-    expect(formatPinyin('NI HAO')).toBe('ni hao');
-  });
-
-  it('should trim whitespace', () => {
-    expect(formatPinyin('  xiexie  ')).toBe('xiexie');
-  });
-});
-```
-
-### Component Tests
-
-**Test user interactions and rendering:**
-
-```typescript
-import { render, screen, fireEvent } from '@testing-library/react';
-import { VocabularyCard } from '../VocabularyCard';
-
-describe('VocabularyCard', () => {
-  it('should render word', () => {
-    const word = { labelZh: '你好', pinyin: 'nǐ hǎo', labelEn: 'hello' };
-    render(<VocabularyCard word={word} onSave={jest.fn()} />);
-
-    expect(screen.getByText('你好')).toBeInTheDocument();
-  });
-
-  it('should call onSave when save button clicked', async () => {
-    const mockSave = jest.fn();
-    const word = { /* ... */ };
-    render(<VocabularyCard word={word} onSave={mockSave} />);
-
-    fireEvent.click(screen.getByText('Save'));
-    expect(mockSave).toHaveBeenCalledWith(word);
-  });
-});
-```
-
-### API Tests
-
-**Test route handlers with mocked Supabase:**
-
-```typescript
-import { POST } from '@/app/api/vocabulary/route';
-import { createClient } from '@/lib/supabase/server';
-
-jest.mock('@/lib/supabase/server');
-
-describe('POST /api/vocabulary', () => {
-  it('should save vocabulary item', async () => {
-    const mockSupabase = {
-      from: jest.fn().mockReturnValue({
-        insert: jest.fn().mockResolvedValue({ data: [{ id: '1' }] }),
-      }),
-    };
-    (createClient as jest.Mock).mockReturnValue(mockSupabase);
-
-    const req = new Request('http://localhost:3000/api/vocabulary', {
-      method: 'POST',
-      body: JSON.stringify({ wordZh: '你好', pinyin: 'nǐ hǎo' }),
-    });
-
-    const response = await POST(req);
-    expect(response.status).toBe(201);
-  });
-});
-```
-
-### Test Coverage Goals
-
-- Utilities & helpers: 100%
-- Hooks: 80%+
-- Components: 70%+ (focus on user interactions)
-- API routes: 80%+ (focus on happy path + error cases)
+| Area | Target | Focus |
+|------|--------|-------|
+| Utilities | 100% | Pure functions |
+| Hooks | 80%+ | State management |
+| Components | 70%+ | User interactions |
+| API routes | 80%+ | Happy path + errors |
 
 ---
 
@@ -774,93 +736,18 @@ Before submitting PR:
 
 ## Performance Guidelines
 
-### Image Optimization
-
-```typescript
-// ✓ Good: Compress before upload
-import { compressImage } from '@/lib/utils';
-
-const compressedBlob = await compressImage(file, {
-  maxWidth: 1024,
-  maxHeight: 1024,
-  quality: 0.85,
-});
-
-// ✗ Bad: Send original file
-const formData = new FormData();
-formData.append('file', originalFile); // Could be 50MB+
-```
-
-### Code Splitting
-
-```typescript
-// ✓ Good: Lazy load heavy components
-import dynamic from 'next/dynamic';
-
-const QuizComponent = dynamic(() => import('@/components/quiz/Quiz'), {
-  loading: () => <Skeleton />,
-});
-
-// Use in template
-<Suspense fallback={<Loading />}>
-  <QuizComponent />
-</Suspense>
-```
-
-### Avoiding Prop Drilling
-
-```typescript
-// ✓ Good: Use context for shared data
-const UserContext = createContext<User | null>(null);
-
-export function useUser() {
-  const user = useContext(UserContext);
-  if (!user) throw new Error('useUser must be in UserProvider');
-  return user;
-}
-
-// Use anywhere without prop drilling
-function VocabularyCard() {
-  const user = useUser();
-  return <div>{user.name}</div>;
-}
-```
+- **Image optimization**: Always compress before upload (max 1024px, quality 0.85)
+- **Code splitting**: Use `next/dynamic` for heavy components (Quiz, Games)
+- **Context over prop drilling**: Use React Context for shared data (auth, online status)
+- **Memoization**: `useMemo`/`useCallback` for expensive computations, not simple values
 
 ---
 
 ## Documentation Standards
 
-### Inline Comments
-
-```typescript
-// ✓ Good: Explain "why", not "what"
-// User data is cached for 5 minutes to reduce API calls
-const cachedUser = useMemo(() => fetchUser(), [userId]);
-
-// ✗ Bad: Obvious from code
-// Get the user
-const user = getUser();
-```
-
-### Function Documentation
-
-```typescript
-/**
- * Compresses an image file to reduce file size
- * @param file - The image file to compress
- * @param options - Compression options
- * @returns Promise resolving to compressed blob
- * @throws Error if compression fails
- * @example
- * const blob = await compressImage(file, { quality: 0.85 });
- */
-export async function compressImage(
-  file: File,
-  options: CompressionOptions
-): Promise<Blob> {
-  // ...
-}
-```
+- Comment "why", not "what" — explain business logic, not obvious code
+- Use JSDoc for public functions with `@param`, `@returns`, `@throws`
+- No `console.log` in production — use structured error handling
 
 ---
 

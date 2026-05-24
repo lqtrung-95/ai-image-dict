@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -106,6 +107,9 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SocialAuthButtons redirectTo="/" />
+          <AuthDivider />
+
           <form onSubmit={handleSignup} className="space-y-4">
             {error && (
               <div className="p-3 text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-md">

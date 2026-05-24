@@ -10,8 +10,8 @@
 
 This roadmap tracks the development phases from MVP through sustainable growth. Each phase builds on previous work with clear success criteria and user impact.
 
-**Current Status:** Phase 1 - MVP (Active)
-**Target Launch:** End of Month 1 (February 2026)
+**Current Status:** Phase 1 - MVP (Complete) → Phase 2 - Growth & Language Support (Active)
+**Target Launch:** MVP launched (Feb 2026), Phase 2 launching (Mar 2026)
 
 ---
 
@@ -99,41 +99,67 @@ This roadmap tracks the development phases from MVP through sustainable growth. 
 
 ---
 
-## Phase 2: Growth & Polish (February to March 2026)
+## Phase 2: Growth & Native Language Support (March 2026)
 
-**Goal:** 500+ MAU, expanded features, native app packages
+**Goal:** 500+ MAU, native language selection feature, enhanced mobile experience
+
+### Native Language Selection (NEW)
+
+Users can choose their native language for translations:
+- English (en) - default
+- Vietnamese (vi)
+- Korean (ko)
+- Japanese (ja)
+- Spanish (es)
+
+Each vocabulary word displays translation in user's chosen language. AI prompts updated to return translations in selected language.
 
 ### Milestones
 
 | Milestone | Status | Target | Owner |
 |-----------|--------|--------|-------|
-| Multiple quiz modes | Pending | Feb 20 | Dev |
-| Collections feature | Pending | Feb 25 | Dev |
-| Word of day | Pending | Feb 28 | Dev |
-| Mobile app (iOS/Android) | Pending | Mar 5 | Dev |
-| Community marketing | Pending | Mar 1 | PM |
-| Analytics dashboard | Pending | Mar 10 | Dev |
+| Native language DB schema | In Design | Mar 5 | Dev |
+| Groq prompt engineering | In Design | Mar 8 | Dev |
+| Language selector UI | Pending | Mar 10 | Dev |
+| Translation caching | Pending | Mar 12 | Dev |
+| Multiple quiz modes | Complete | ✓ Done | Dev |
+| Collections feature | Complete | ✓ Done | Dev |
+| Word of day | Complete | ✓ Done | Dev |
+| Mobile app (iOS/Android) | In Progress | Mar 20 | Dev |
+| Community marketing | In Progress | Mar 1+ | PM |
+| Analytics dashboard | Complete | ✓ Done | Dev |
+| 500+ MAU target | Pending | Mar 31 | PM |
 
 ### Features
 
-**New Features**
-- [ ] Multiple choice quiz (Chinese → English)
-- [ ] Listening quiz (Chinese audio → English)
-- [ ] Pinyin input quiz (type Pinyin for character)
-- [ ] Collections/categories (organize words)
-- [ ] Search & filter vocabulary
-- [ ] Word of day feature
-- [ ] Advanced progress stats
-- [ ] Pronunciation guide (Google TTS + Web Speech)
+**Native Language Selection (NEW)**
+- [ ] Add `native_language` column to profiles table
+- [ ] Update Groq API prompt for language parameter
+- [ ] Store translations in word_native JSONB
+- [ ] Language selector in signup & settings
+- [ ] Display translations based on user preference
+- [ ] Example sentences in native language
+- [ ] Example sentences support for all 5 languages
+- [ ] Language change with cache invalidation
 
-**Improvements**
+**Existing Features Maintained**
+- [x] Multiple choice quiz (Chinese → native language)
+- [x] Listening quiz (Chinese audio → native language)
+- [x] Pinyin input quiz (type Pinyin for character)
+- [x] Collections/categories (organize words)
+- [x] Search & filter vocabulary
+- [x] Word of day feature
+- [x] Advanced progress stats (HSK distribution, heatmap)
+- [x] Pronunciation guide (Google TTS + Web Speech)
+
+**Mobile & UX Improvements**
+- [ ] Mobile app via Capacitor (iOS/Android)
 - [ ] Better image compression algorithm
 - [ ] Loading state animations
-- [ ] Offline support (service worker)
-- [ ] Dark/light mode toggle
+- [ ] Offline support (service worker, cached pages)
+- [ ] Dark theme optimized
 - [ ] Accessibility audit (WCAG AA)
-- [ ] Mobile app via Capacitor (iOS/Android)
-- [ ] Push notifications (optional)
+- [ ] Push notifications (practice reminders)
 
 ### Marketing & Acquisition
 

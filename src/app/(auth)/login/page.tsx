@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -17,6 +18,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/';
+  const authError = searchParams.get('error');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,10 +51,16 @@ function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SocialAuthButtons redirectTo={redirectTo} />
+          <AuthDivider />
+
           <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
+            {(error || authError) && (
               <div className="p-3 text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-md">
-                {error}
+                {error ||
+                  (authError === 'auth_callback_failed'
+                    ? 'Sign in failed. Please try again.'
+                    : 'Sign in failed. Please try again.')}
               </div>
             )}
 

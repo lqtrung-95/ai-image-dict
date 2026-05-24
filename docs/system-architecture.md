@@ -191,7 +191,9 @@ CREATE TABLE profiles (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id),
   display_name VARCHAR(255),
   avatar_url TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
+  native_language VARCHAR(10) DEFAULT 'en',  -- 'en', 'vi', 'ko', 'ja', 'es'
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Photo analyses (AI results)
@@ -222,8 +224,13 @@ CREATE TABLE vocabulary_items (
   word_zh VARCHAR(255),
   word_pinyin VARCHAR(255),
   word_en VARCHAR(255),
+  word_native JSONB,  -- {'en': 'translation', 'vi': 'dịch', 'ko': '번역', 'ja': '翻訳', 'es': 'traducción'}
+  hsk_level INT,  -- 1-6
+  example_sentence_zh TEXT,
+  example_sentence_native TEXT,  -- Shown in user's native language
   detected_object_id UUID REFERENCES detected_objects(id),
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Word collections
@@ -288,11 +295,13 @@ CREATE TABLE upgrade_interest (
    ↓
 3. Convert to Base64 & POST to /api/analyze
    ↓
-4. API Route Handler
+4. API Route Handler (/api/analyze)
    ├─ Check auth (get user_id)
+   ├─ Fetch user's native_language preference
    ├─ Check rate limit (daily_usage table)
-   ├─ Call Groq API with Base64 + prompt
-   └─ Parse JSON response
+   ├─ Call Groq API with Base64 + prompt (includes native_language parameter)
+   ├─ Parse JSON response (includes translations in native language)
+   └─ Store translations in word_native JSONB
    ↓
 5. Save to Database
    ├─ Insert photo_analyses row
@@ -491,6 +500,126 @@ CREATE POLICY user_vocabulary ON vocabulary_items
 - **Tool:** Terraform (future)
 - **Version Control:** Infrastructure in git
 - **CI/CD:** Automated deployment pipelines
+
+---
+
+## Native Language Selection Implementation
+
+### Overview
+Users can choose their native language for translations (English, Vietnamese, Korean, Japanese, Spanish). This allows learners to understand Chinese vocabulary in their own language.
+
+### Data Storage
+
+**Profile Update:** `profiles.native_language` (VARCHAR, default='en')
+
+**Vocabulary Enhancement:** `vocabulary_items.word_native` stores translations for multiple languages:
+```json
+{
+  "en": "cat",
+  "vi": "con mèo",
+  "ko": "고양이",
+  "ja": "猫",
+  "es": "gato"
+}
+```
+
+### API Changes
+
+**POST /api/analyze (with language support):**
+```typescript
+// Request includes user's native language
+const language = user.native_language || 'en';
+
+// Groq prompt includes language parameter:
+const prompt = `Detect objects in image and provide translations in ${language}...`;
+
+// Response structure includes native language translations
+{
+  objects: [{
+    label_zh: "猫",
+    label_en: "cat",
+    label_native: "con mèo",  // Vietnamese example
+    pinyin: "māo",
+    confidence: 0.95
+  }]
+}
+```
+
+**PUT /api/user/profile (language update):**
+```typescript
+// Update user's native language preference
+{
+  native_language: "vi"  // Vietnamese
+}
+// Invalidate cache for user's vocabulary
+```
+
+### Frontend Implementation
+
+**Signup/Settings Flow:**
+1. Show language selector during signup
+2. Store in localStorage temporarily
+3. Submit with profile creation
+4. Display in settings page with change option
+5. Re-fetch vocabulary on language change to display new translations
+
+**UI Components:**
+- Language selector dropdown (settings page)
+- Flag icons for visual language identification
+- Confirmation dialog on language change
+
+### Groq Prompt Engineering
+
+**Updated Prompt Template:**
+```
+Detect objects in the image. For each object, provide:
+- Chinese characters (simplified)
+- Pinyin romanization
+- English translation
+- {native_language} translation  // Dynamic based on user preference
+- Confidence score
+- HSK level (if applicable)
+- Example sentence in Chinese
+- Example sentence in {native_language}
+
+Return as JSON...
+```
+
+### Supported Languages
+
+| Code | Language | Native Name |
+|------|----------|------------|
+| en | English | English |
+| vi | Vietnamese | Tiếng Việt |
+| ko | Korean | 한국어 |
+| ja | Japanese | 日本語 |
+| es | Spanish | Español |
+
+### Caching Strategy
+
+**Per-Language Caching:**
+- Cache translations by language
+- Use `word_native` JSONB for fast retrieval
+- Invalidate on language change
+- TTL: 30 days (stable vocabulary)
+
+**API Calls Minimized:**
+- Only call Groq when analyzing new photo
+- Reuse cached translations for existing words
+- Batch translation requests if adding multiple languages
+
+### Migration Path
+
+**For Existing Users:**
+1. Set `native_language='en'` (default)
+2. Migrate existing `word_en` values to `word_native['en']`
+3. Offer language selection prompt on next login
+4. Option to re-analyze photos in new language
+
+**For New Users:**
+1. Select language during signup
+2. All new analyses include native language translations
+3. Can change anytime in settings
 
 ---
 
