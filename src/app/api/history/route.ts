@@ -7,15 +7,12 @@ export const dynamic = 'force-dynamic';
 // GET /api/history - Fetch user's photo analysis history
 export async function GET(request: NextRequest) {
   try {
-    console.log('[API History] GET request received');
     const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
-      console.log('[API History] Unauthorized:', authError?.message);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('[API History] User:', user.id);
     const supabase = createServiceClient();
 
     const { data, error } = await supabase
@@ -45,7 +42,6 @@ export async function GET(request: NextRequest) {
       })),
     }));
 
-    console.log('[API History] Found', analyses.length, 'analyses');
     return NextResponse.json({ analyses });
   } catch (error) {
     console.error('[API History] Error:', error);

@@ -11,8 +11,6 @@ export async function createClientWithAuth(request?: NextRequest) {
   // Try to get token from Authorization header (mobile app)
   const authHeader = request?.headers.get('authorization');
   const authToken = authHeader?.replace('Bearer ', '');
-  console.log('[createClientWithAuth] Auth header:', authHeader ? 'present' : 'missing');
-  console.log('[createClientWithAuth] Token:', authToken ? `present (${authToken.length} chars)` : 'missing');
 
   // Create client with custom auth header if token exists
   const client = createServerClient(
@@ -52,24 +50,16 @@ export async function createClientWithAuth(request?: NextRequest) {
  * Supports both cookie-based (web) and Bearer token (mobile) auth
  */
 export async function getAuthUser(request?: NextRequest) {
-  console.log('[getAuthUser] Checking auth...');
-
   // For mobile requests with Bearer token, verify directly with Supabase
   // Headers are case-insensitive per HTTP spec, but Next.js normalizes to lowercase
   const headers = Object.fromEntries(request?.headers.entries() || []);
   const authHeader = headers['authorization'];
-  console.log('[getAuthUser] Auth header:', authHeader ? 'present' : 'missing');
-  console.log('[getAuthUser] All header keys:', Object.keys(headers));
 
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.replace('Bearer ', '');
-    console.log('[getAuthUser] Token length:', token.length);
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    console.log('[getAuthUser] Supabase URL exists:', !!supabaseUrl);
-    console.log('[getAuthUser] Anon key exists:', !!anonKey);
 
     // Verify the token by making a request to Supabase auth
     const response = await fetch(
@@ -82,16 +72,12 @@ export async function getAuthUser(request?: NextRequest) {
       }
     );
 
-    console.log('[getAuthUser] Supabase auth response status:', response.status);
-
     if (response.ok) {
       const user = await response.json();
-      console.log('[getAuthUser] User authenticated:', user.id);
       return { user, error: null };
     } else {
       const errorText = await response.text();
       console.error('[getAuthUser] Token validation failed:', response.status, errorText);
-      console.error('[getAuthUser] Token first 20 chars:', token.substring(0, 20));
       return { user: null, error: new Error(`Invalid token: ${response.status}`) };
     }
   }
@@ -99,6 +85,5 @@ export async function getAuthUser(request?: NextRequest) {
   // For web requests, use the standard cookie-based auth
   const supabase = await createClientWithAuth(request);
   const { data: { user }, error } = await supabase.auth.getUser();
-  console.log('[getAuthUser] Cookie auth result:', { user: !!user, error: error?.message });
   return { user, error };
 }

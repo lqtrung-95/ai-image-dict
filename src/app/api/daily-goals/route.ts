@@ -79,20 +79,16 @@ export async function GET(request: NextRequest) {
  * Create or update a daily goal
  */
 export async function POST(request: NextRequest) {
-  console.log('[POST /api/daily-goals] Received request');
   try {
     const { user, error: authError } = await getAuthUser(request);
-    console.log('[POST /api/daily-goals] Auth result:', { user: !!user, error: authError?.message });
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const supabase = createServiceClient();
-    console.log('[POST /api/daily-goals] Service client created');
 
     const body = await request.json();
-    console.log('[POST /api/daily-goals] Request body:', body);
     const { goalType, targetValue, isActive = true } = body;
 
     // Validate goal type
@@ -106,7 +102,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Target value must be between 1 and 100' }, { status: 400 });
     }
 
-    console.log('[POST /api/daily-goals] Checking for existing goal:', { userId: user.id, goalType });
     // First try to update existing goal
     const { data: existingGoal, error: findError } = await supabase
       .from('daily_goals')
@@ -114,8 +109,6 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .eq('goal_type', goalType)
       .maybeSingle();
-
-    console.log('[POST /api/daily-goals] Existing goal check:', { existingGoal: !!existingGoal, findError: findError?.message });
 
     if (findError) {
       console.error('[POST /api/daily-goals] Find error:', findError);
@@ -125,7 +118,6 @@ export async function POST(request: NextRequest) {
     let data;
     let error;
     if (existingGoal) {
-      console.log('[POST /api/daily-goals] Updating existing goal:', existingGoal.id);
       const updateResult = await supabase
         .from('daily_goals')
         .update({
@@ -138,7 +130,6 @@ export async function POST(request: NextRequest) {
       data = updateResult.data?.[0];
       error = updateResult.error;
     } else {
-      console.log('[POST /api/daily-goals] Inserting new goal');
       const insertResult = await supabase
         .from('daily_goals')
         .insert({
@@ -151,7 +142,6 @@ export async function POST(request: NextRequest) {
       data = insertResult.data?.[0];
       error = insertResult.error;
     }
-    console.log('[POST /api/daily-goals] Save result:', { success: !!data, error: error?.message, errorDetails: error });
 
     if (error) {
       console.error('[POST /api/daily-goals] Goal save error:', error);

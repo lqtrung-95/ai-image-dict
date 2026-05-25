@@ -263,7 +263,7 @@ export function TrialResult({
             'Save words to vocabulary',
             'Practice with flashcards',
             'Track learning streak',
-            'Organize with collections',
+            'Organize with lists',
             'AI-generated example sentences',
           ].map((benefit) => (
             <li key={benefit} className="flex items-center gap-2">

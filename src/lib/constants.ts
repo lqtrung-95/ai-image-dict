@@ -16,8 +16,8 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 export const API_ROUTES = {
   ANALYZE: `${API_BASE}/api/analyze`,
   VOCABULARY: `${API_BASE}/api/vocabulary`,
-  COLLECTIONS: `${API_BASE}/api/collections`,
-  ANALYSES: `${API_BASE}/api/analyses`,
+  LISTS: `${API_BASE}/api/lists`,
+  HISTORY: `${API_BASE}/api/history`,
   TTS: `${API_BASE}/api/tts`,
 } as const;
 
@@ -32,4 +32,3 @@ export const TTS_SPEAKING_RATE = 0.85;
 // UI constants
 export const TOAST_DURATION = 3000;
 export const DEBOUNCE_DELAY = 300;
-

@@ -219,7 +219,7 @@ export default function HomePage() {
               { icon: '📸', text: 'Unlimited photo analysis' },
               { icon: '🔊', text: 'Native pronunciation' },
               { icon: '🎴', text: 'Flashcard practice' },
-              { icon: '📁', text: 'Organize collections' },
+              { icon: '📁', text: 'Organize lists' },
               { icon: '🔥', text: 'Daily streak tracking' },
               { icon: '💡', text: 'Example sentences' },
             ].map((item) => (

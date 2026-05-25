@@ -7,16 +7,10 @@ export const dynamic = 'force-dynamic';
 // POST /api/analyze-trial - Trial analysis for non-logged-in users
 export async function POST(request: NextRequest) {
   try {
-    console.log('[analyze-trial] Received request');
-    console.log('[analyze-trial] Headers:', Object.fromEntries(request.headers.entries()));
-
     const { image } = await request.json();
     if (!image) {
-      console.log('[analyze-trial] No image provided');
       return NextResponse.json({ error: 'Image required' }, { status: 400 });
     }
-
-    console.log('[analyze-trial] Image received, length:', image.length);
 
     // Extract base64 from data URL
     const base64Image = extractBase64(image);

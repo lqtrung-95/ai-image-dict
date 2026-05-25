@@ -19,6 +19,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -52,3 +53,4 @@ capacitor.config.local.ts
 .opencode
 CLAUDE.*
 supabase/.temp
+repomix-output.xml

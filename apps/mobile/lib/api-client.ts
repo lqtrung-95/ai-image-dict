@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { API_ROUTES } from './constants';
 import { supabase } from './supabase-client';
 
 interface ApiError {
@@ -21,8 +20,6 @@ class ApiClient {
 
     // Request interceptor to add auth token
     this.client.interceptors.request.use(async (config) => {
-      console.log('[API] Request to:', config.url);
-
       try {
         const { data, error } = await supabase.auth.getSession();
         if (error) {
@@ -30,29 +27,22 @@ class ApiClient {
         }
 
         const token = data.session?.access_token;
-        console.log('[API] Token exists:', !!token);
 
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('[API] Added Authorization header');
         }
       } catch (e) {
         console.error('[API] Failed to get auth headers:', e);
       }
 
-      console.log('[API] Request headers:', config.headers);
       return config;
     });
 
     // Response interceptor for error handling
     this.client.interceptors.response.use(
-      (response) => {
-        console.log('[API] Response status:', response.status);
-        return response;
-      },
+      (response) => response,
       (error: AxiosError) => {
         const responseData = error.response?.data as any;
-        console.log('[API] Response error:', error.response?.status, responseData);
         const apiError: ApiError = {
           message: responseData?.details || responseData?.error || error.message || 'An error occurred',
           status: error.response?.status,
@@ -100,19 +90,6 @@ class ApiClient {
       },
     });
     return response.data;
-  }
-
-  // Debug method to check auth state
-  async debugAuth(): Promise<{ hasToken: boolean; tokenPrefix?: string; user?: string }> {
-    const { data, error } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    const user = data.session?.user;
-
-    return {
-      hasToken: !!token,
-      tokenPrefix: token ? `${token.substring(0, 20)}...` : undefined,
-      user: user?.email,
-    };
   }
 }
 

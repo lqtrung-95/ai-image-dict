@@ -13,10 +13,8 @@ export const dynamic = 'force-dynamic';
  * Record a practice attempt and update SRS state for a vocabulary item
  */
 export async function POST(request: NextRequest) {
-  console.log('[WordAttempts] POST handler started');
   try {
     const { user, error: authError } = await getAuthUser(request);
-    console.log('[WordAttempts] Auth result:', { user: !!user, error: authError?.message });
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,8 +28,6 @@ export async function POST(request: NextRequest) {
       rating,
       responseTimeMs,
     } = body;
-
-    console.log('[WordAttempts] Request body:', { vocabularyItemId, quizMode, rating, userId: user.id });
 
     // Validate required fields
     if (!vocabularyItemId || !rating) {
@@ -50,13 +46,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch current vocabulary item state
-    console.log('[WordAttempts] Looking up vocab item:', vocabularyItemId, 'for user:', user.id);
-
     // Use admin client to bypass RLS policies
-    console.log('[WordAttempts] Creating admin client...');
     const { createClient } = await import('@supabase/supabase-js');
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    console.log('[WordAttempts] Service key exists:', !!serviceKey, 'Length:', serviceKey?.length);
 
     if (!serviceKey) {
       console.error('[WordAttempts] SUPABASE_SERVICE_ROLE_KEY not set!');
@@ -72,27 +64,15 @@ export async function POST(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    console.log('[WordAttempts] Querying for vocab item...');
     const { data: vocabItems, error: fetchError } = await supabaseAdmin
       .from('vocabulary_items')
       .select('id, easiness_factor, interval_days, repetitions, correct_streak, user_id')
       .eq('id', vocabularyItemId);
 
     const vocabItem = vocabItems?.[0];
-    console.log('[WordAttempts] Found items:', vocabItems?.length);
-
-    console.log('[WordAttempts] Lookup result:', {
-      foundCount: vocabItems?.length,
-      vocabItemId: vocabItem?.id,
-      error: fetchError?.message,
-      errorCode: fetchError?.code,
-      userId: user.id,
-      vocabUserId: vocabItem?.user_id
-    });
 
     if (fetchError || !vocabItem) {
       console.error('[WordAttempts] Vocab item not found:', vocabularyItemId, 'Error:', fetchError);
-      console.error('[WordAttempts] Service role key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
       return NextResponse.json(
         { error: 'Vocabulary item not found' },
         { status: 404 }
