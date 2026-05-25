@@ -17,6 +17,7 @@ import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { playSuccessFeedback, playErrorFeedback, playCompleteFeedback } from '@/lib/haptic-feedback-utils';
 import { soundEffects } from '@/lib/sound-effects-manager';
 import { CelebrationOverlay } from '@/components/celebration-overlay';
+import { devLog } from '@/lib/logger';
 import type { VocabularyItem } from '@/lib/types';
 
 type QuizMode = 'flashcard' | 'multiple-choice' | 'listening';
@@ -57,8 +58,8 @@ export default function PracticeSessionScreen() {
         total: number;
       }>('/api/practice/due-words?limit=20');
 
-      console.log('[Practice] Loaded words:', response.items?.length);
-      console.log('[Practice] First word sample:', response.items?.[0]);
+      devLog('[Practice] Loaded words:', response.items?.length);
+      devLog('[Practice] First word sample:', response.items?.[0]);
 
       let practiceWords: PracticeWord[] = response.items || [];
 
@@ -348,8 +349,8 @@ export default function PracticeSessionScreen() {
                         source={{ uri: currentWord.photoUrl, cache: 'force-cache' }}
                         style={styles.wordImage}
                         resizeMode="cover"
-                        onError={(e) => console.log('[Image] Load error:', e.nativeEvent.error)}
-                        onLoad={() => console.log('[Image] Loaded successfully')}
+                        onError={(e) => devLog('[Image] Load error:', e.nativeEvent.error)}
+                        onLoad={() => devLog('[Image] Loaded successfully')}
                       />
                     </View>
                   ) : null}

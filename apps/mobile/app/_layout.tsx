@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { supabase } from '@/lib/supabase-client';
 import { soundEffects } from '@/lib/sound-effects-manager';
 import { notificationManager, addNotificationResponseListener } from '@/lib/notification-manager';
+import { devLog } from '@/lib/logger';
 import '../global.css';
 
 const queryClient = new QueryClient();
@@ -65,7 +66,7 @@ function AuthNavigator() {
     // Listen for notification taps
     responseListener.current = addNotificationResponseListener((response) => {
       const { data } = response.notification.request.content;
-      console.log('[Notifications] Response received:', data);
+      devLog('[Notifications] Response received:', data);
 
       // Navigate based on notification type
       if (data?.screen === 'practice') {
@@ -121,6 +122,7 @@ function AuthNavigator() {
       <Stack.Screen name="stories" options={{ headerShown: false }} />
       <Stack.Screen name="stories/new" options={{ headerShown: false }} />
       <Stack.Screen name="import" options={{ headerShown: false }} />
+      <Stack.Screen name="upgrade" options={{ headerShown: false }} />
       <Stack.Screen name="progress" options={{ headerShown: false }} />
       <Stack.Screen name="practice-session" options={{ headerShown: false }} />
       <Stack.Screen name="list/[id]" options={{ headerShown: false }} />

@@ -92,15 +92,6 @@ export interface WordPracticeAttempt {
   createdAt: Date;
 }
 
-// Collection types
-export interface Collection {
-  id: string;
-  userId: string;
-  name: string;
-  color: string;
-  createdAt: Date;
-}
-
 // API Response types
 export interface AnalysisResponse {
   id: string;

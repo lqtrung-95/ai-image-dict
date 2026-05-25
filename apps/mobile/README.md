@@ -1,6 +1,6 @@
 # AI Image Dictionary - Mobile App
 
-React Native mobile app built with Expo SDK 52+ for iOS and Android.
+React Native mobile app built with Expo SDK 54 for iOS and Android.
 
 ## Features
 
@@ -8,19 +8,20 @@ React Native mobile app built with Expo SDK 52+ for iOS and Android.
 - **Photo Analysis**: Capture or upload photos for AI-powered Chinese vocabulary extraction
 - **Vocabulary Management**: View, search, and organize saved words
 - **Practice Modes**: Flashcards, multiple choice, and listening exercises
-- **Offline Support**: SQLite for local data storage
+- **Stories & Imports**: Create stories from photo analyses and import vocabulary from text/URLs
+- **Upgrade Surface**: Mobile Pro plan screen ready for RevenueCat or native IAP integration
 - **Dark Mode**: Automatic theme switching
 
 ## Tech Stack
 
-- **Framework**: React Native with Expo SDK 52
+- **Framework**: React Native with Expo SDK 54
 - **Navigation**: Expo Router (file-based)
 - **Styling**: NativeWind v4 (Tailwind CSS for React Native)
 - **State Management**: Zustand (client), TanStack Query (server)
 - **Auth**: Supabase Auth with expo-secure-store
-- **Storage**: expo-sqlite for offline data
+- **Storage**: AsyncStorage for local preferences/cache; expo-sqlite is installed but offline sync is not implemented
 - **Camera**: expo-image-picker
-- **TTS**: expo-speech
+- **TTS**: Native `expo-speech` pronunciation in mobile; backend Google Cloud TTS is available for cached web/API playback
 
 ## Project Structure
 
@@ -32,7 +33,14 @@ app/
 │   ├── capture.tsx   # Photo capture & analysis
 │   ├── vocabulary.tsx # Vocabulary list
 │   ├── practice.tsx  # Practice modes
+│   ├── lists.tsx     # Vocabulary lists
+│   ├── progress.tsx  # Progress stats
 │   └── settings.tsx  # Settings & profile
+├── history.tsx       # Photo analysis history
+├── stories.tsx       # Story list
+├── stories/new.tsx   # Story creation
+├── import.tsx        # Vocabulary import
+├── upgrade.tsx       # Pro plan/paywall screen
 ├── _layout.tsx       # Root layout
 lib/
 ├── types.ts          # TypeScript types
@@ -98,6 +106,16 @@ The mobile app connects to the existing Next.js API:
 - `GET /api/stats` - Get learning statistics
 - `GET /api/word-of-day` - Get daily word
 - `GET /api/practice/due-words` - Get words due for review
+- `POST /api/tts` - Generate cached Mandarin pronunciation audio
+- `GET /api/lists` - Get vocabulary lists
+- `GET /api/history` - Get photo analysis history
+- `GET /api/stories` - Get generated stories
+
+## Production Notes
+
+- Connect `app/upgrade.tsx` to RevenueCat or native in-app purchases before release.
+- Keep anonymous and free-user limits aligned with `lib/monetization.ts` and backend rate limits.
+- Offline SQLite sync is not currently implemented. Add it only after the online learning loop is stable.
 
 ## Building for Production
 

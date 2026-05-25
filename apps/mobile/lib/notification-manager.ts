@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { devLog } from './logger';
 
 // Configure notifications
 Notifications.setNotificationHandler({
@@ -39,7 +39,7 @@ class NotificationManager {
         await this.scheduleDailyReminder();
       }
 
-      console.log('[Notifications] Initialized, enabled:', this.enabled);
+      devLog('[Notifications] Initialized, enabled:', this.enabled);
     } catch (error) {
       console.error('[Notifications] Failed to initialize:', error);
     }
@@ -56,7 +56,7 @@ class NotificationManager {
     }
 
     if (finalStatus !== 'granted') {
-      console.log('[Notifications] Permission not granted');
+      devLog('[Notifications] Permission not granted');
       return false;
     }
 
@@ -79,19 +79,19 @@ class NotificationManager {
       if (enabled) {
         const hasPermission = await this.requestPermissions();
         if (!hasPermission) {
-          console.log('[Notifications] Cannot enable - no permission');
+          devLog('[Notifications] Cannot enable - no permission');
           return false;
         }
 
         await this.scheduleDailyReminder();
         this.enabled = true;
         await AsyncStorage.setItem('notificationsEnabled', 'true');
-        console.log('[Notifications] Daily reminder enabled');
+        devLog('[Notifications] Daily reminder enabled');
       } else {
         await this.cancelDailyReminder();
         this.enabled = false;
         await AsyncStorage.setItem('notificationsEnabled', 'false');
-        console.log('[Notifications] Daily reminder disabled');
+        devLog('[Notifications] Daily reminder disabled');
       }
 
       return true;
@@ -135,7 +135,7 @@ class NotificationManager {
         } as Notifications.DailyTriggerInput,
       });
 
-      console.log('[Notifications] Scheduled daily reminder at', this.reminderTime);
+      devLog('[Notifications] Scheduled daily reminder at', this.reminderTime);
     } catch (error) {
       console.error('[Notifications] Failed to schedule reminder:', error);
     }
@@ -145,7 +145,7 @@ class NotificationManager {
   private async cancelDailyReminder(): Promise<void> {
     try {
       await Notifications.cancelScheduledNotificationAsync(REMINDER_NOTIFICATION_ID);
-      console.log('[Notifications] Cancelled daily reminder');
+      devLog('[Notifications] Cancelled daily reminder');
     } catch (error) {
       console.error('[Notifications] Failed to cancel reminder:', error);
     }
@@ -170,7 +170,7 @@ class NotificationManager {
     try {
       const hasPermission = await this.requestPermissions();
       if (!hasPermission) {
-        console.log('[Notifications] Cannot send test - no permission');
+        devLog('[Notifications] Cannot send test - no permission');
         return;
       }
 
@@ -183,7 +183,7 @@ class NotificationManager {
         trigger: null, // Immediate
       });
 
-      console.log('[Notifications] Test notification sent');
+      devLog('[Notifications] Test notification sent');
     } catch (error) {
       console.error('[Notifications] Failed to send test:', error);
     }
@@ -203,7 +203,7 @@ class NotificationManager {
   async cancelAllNotifications(): Promise<void> {
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
-      console.log('[Notifications] Cancelled all notifications');
+      devLog('[Notifications] Cancelled all notifications');
     } catch (error) {
       console.error('[Notifications] Failed to cancel all:', error);
     }

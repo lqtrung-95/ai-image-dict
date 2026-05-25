@@ -21,6 +21,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useVocabularyStore } from '@/stores/vocabulary-store';
 import { apiClient } from '@/lib/api-client';
 import { compressImage, imageToBase64 } from '@/lib/image-utils';
+import { devLog } from '@/lib/logger';
+import { FREE_LIMITS } from '@/lib/monetization';
 import type { AnalysisResponse, VocabularyList } from '@/lib/types';
 
 const { width, height } = Dimensions.get('window');
@@ -29,7 +31,8 @@ export default function CaptureModal() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { isAuthenticated, useTrial, hasUsedTrial } = useAuthStore();
+  const { isAuthenticated, useTrial, trialAnalysisCount } = useAuthStore();
+  const trialAnalysesRemaining = Math.max(0, FREE_LIMITS.guestAnalyses - trialAnalysisCount);
 
   const [image, setImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -105,7 +108,7 @@ export default function CaptureModal() {
 
   // TTS function using expo-speech
   const speakWord = (word: string) => {
-    console.log('Speaking:', word);
+    devLog('Speaking:', word);
     try {
       Speech.speak(word, {
         language: 'zh-CN',
@@ -228,7 +231,7 @@ export default function CaptureModal() {
 
     // Check trial eligibility
     if (!isAuthenticated) {
-      if (hasUsedTrial) {
+      if (trialAnalysesRemaining <= 0) {
         setShowUpgradeModal(true);
         return;
       }
@@ -237,13 +240,13 @@ export default function CaptureModal() {
 
     setAnalyzing(true);
     try {
-      console.log('Compressing image...');
+      devLog('Compressing image...');
       const compressedUri = await compressImage(image, 1024);
-      console.log('Compressed URI:', compressedUri);
+      devLog('Compressed URI:', compressedUri);
 
-      console.log('Converting to base64...');
+      devLog('Converting to base64...');
       const base64Image = await imageToBase64(compressedUri);
-      console.log('Base64 length:', base64Image.length);
+      devLog('Base64 length:', base64Image.length);
 
       // Check if image is too large (max 5MB for base64)
       if (base64Image.length > 7 * 1024 * 1024) {
@@ -252,14 +255,14 @@ export default function CaptureModal() {
         return;
       }
 
-      console.log('Sending to API...');
+      devLog('Sending to API...');
       // Use /api/analyze for authenticated users (saves to history), /api/analyze-trial for guests
       const endpoint = isAuthenticated ? '/api/analyze' : '/api/analyze-trial';
       const response = await apiClient.post<AnalysisResponse>(endpoint, {
         image: base64Image,
       });
 
-      console.log('API response received:', response);
+      devLog('API response received:', response);
       setResult(response);
 
       // Animate results in
@@ -334,7 +337,9 @@ export default function CaptureModal() {
               <View style={styles.trialBadge}>
                 <Ionicons name="gift" size={16} color="#7c3aed" />
                 <Text style={styles.trialText}>
-                  {hasUsedTrial ? 'Trial used - Sign up for more' : '1 free analysis available'}
+                  {trialAnalysesRemaining > 0
+                    ? `${trialAnalysesRemaining} free analysis${trialAnalysesRemaining === 1 ? '' : 'es'} available`
+                    : 'Trial used - Sign up for more'}
                 </Text>
               </View>
             )}

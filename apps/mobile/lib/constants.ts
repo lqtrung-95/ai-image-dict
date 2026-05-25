@@ -35,7 +35,7 @@ export const TOAST_DURATION = 3000;
 export const DEBOUNCE_DELAY = 300;
 
 // Free trial
-export const MAX_FREE_ANALYSES = 2;
+export const MAX_FREE_ANALYSES = 1;
 export const MAX_DAILY_ANALYSES = 6;
 
 // HSK Levels

@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
 import { apiClient } from '@/lib/api-client';
+import { devLog } from '@/lib/logger';
 import type { VocabularyItem } from '@/lib/types';
 
 export default function VocabularyScreen() {
@@ -32,9 +33,9 @@ export default function VocabularyScreen() {
   const loadWords = async () => {
     if (!isAuthenticated) return;
     try {
-      console.log('[Vocabulary] Loading words...');
+      devLog('[Vocabulary] Loading words...');
       const response = await apiClient.get<{ items: VocabularyItem[]; total: number; hasMore: boolean }>('/api/vocabulary');
-      console.log('[Vocabulary] Loaded', response.items?.length || 0, 'words');
+      devLog('[Vocabulary] Loaded', response.items?.length || 0, 'words');
       setWords(response.items || []);
     } catch (error) {
       console.error('Failed to load vocabulary:', error);
@@ -118,7 +119,7 @@ export default function VocabularyScreen() {
           <View style={[styles.guestCard, { backgroundColor: cardColor }]}>
             <Ionicons name="book-outline" size={64} color="#7c3aed" />
             <Text style={[styles.guestTitle, { color: textColor }]}>
-              Your Vocabulary Collection
+              Your Vocabulary
             </Text>
             <Text style={[styles.guestSubtitle, { color: subtextColor }]}>
               Sign in to see all the words you have saved and track your learning progress

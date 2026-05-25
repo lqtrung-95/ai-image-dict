@@ -433,6 +433,14 @@ export default function SettingsScreen() {
       title: 'Account',
       items: [
         {
+          icon: 'sparkles',
+          label: 'Upgrade to Pro',
+          value: '$4.99/mo',
+          onPress: () => {
+            router.push('/upgrade');
+          },
+        },
+        {
           icon: 'person',
           label: 'Email',
           value: user?.email,

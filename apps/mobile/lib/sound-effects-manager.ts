@@ -1,5 +1,5 @@
 import { Audio } from 'expo-av';
-import { Platform } from 'react-native';
+import { devLog, devWarn } from './logger';
 
 // Sound effect types for different interactions
 export type SoundEffect =
@@ -78,9 +78,9 @@ class SoundEffectsManager {
       await this.preloadSounds(['buttonClick', 'correctAnswer', 'wrongAnswer', 'success']);
 
       this.initialized = true;
-      console.log('[SoundEffects] Initialized successfully');
+      devLog('[SoundEffects] Initialized successfully');
     } catch (error) {
-      console.warn('[SoundEffects] Failed to initialize, using haptics fallback:', error);
+      devWarn('[SoundEffects] Failed to initialize, using haptics fallback:', error);
       this.useHapticsFallback = true;
     }
   }
@@ -95,7 +95,7 @@ class SoundEffectsManager {
         );
         this.sounds.set(effect, sound);
       } catch (error) {
-        console.warn(`[SoundEffects] Failed to preload ${effect}:`, error);
+        devWarn(`[SoundEffects] Failed to preload ${effect}:`, error);
       }
     }
   }
@@ -116,27 +116,27 @@ class SoundEffectsManager {
     // Try each extension in order
     for (const ext of config.extensions) {
       const key = `${config.file}${ext}`;
-      console.log(`[SoundEffects] Looking for: ${key}`);
+      devLog(`[SoundEffects] Looking for: ${key}`);
       const soundModule = SoundEffectsManager.requires[key];
       if (soundModule) {
-        console.log(`[SoundEffects] Found: ${key}`);
+        devLog(`[SoundEffects] Found: ${key}`);
         return soundModule;
       }
     }
 
     // If no file found, return null (graceful fallback)
-    console.warn(`[SoundEffects] No file found for ${effect}`);
+    devWarn(`[SoundEffects] No file found for ${effect}`);
     return null;
   }
 
   // Play a sound effect
   async play(effect: SoundEffect): Promise<void> {
     if (!this.enabled) {
-      console.log(`[SoundEffects] Play called but disabled: ${effect}`);
+      devLog(`[SoundEffects] Play called but disabled: ${effect}`);
       return;
     }
 
-    console.log(`[SoundEffects] Playing: ${effect}`);
+    devLog(`[SoundEffects] Playing: ${effect}`);
 
     try {
       // Check if sound is preloaded
@@ -144,17 +144,17 @@ class SoundEffectsManager {
 
       if (sound) {
         // Replay preloaded sound
-        console.log(`[SoundEffects] Using preloaded: ${effect}`);
+        devLog(`[SoundEffects] Using preloaded: ${effect}`);
         await sound.setPositionAsync(0);
         await sound.playAsync();
       } else {
         // Load and play on-demand
         const source = this.getSoundSource(effect);
         if (!source) {
-          console.warn(`[SoundEffects] No source for: ${effect}`);
+          devWarn(`[SoundEffects] No source for: ${effect}`);
           return;
         }
-        console.log(`[SoundEffects] Loading on-demand: ${effect}`);
+        devLog(`[SoundEffects] Loading on-demand: ${effect}`);
         const { sound: newSound } = await Audio.Sound.createAsync(
           source,
           { volume: SOUND_VOLUMES[effect], shouldPlay: true }
@@ -169,7 +169,7 @@ class SoundEffectsManager {
       }
     } catch (error) {
       // Silently fail - sounds are optional
-      console.log(`[SoundEffects] Could not play ${effect}:`, error);
+      devLog(`[SoundEffects] Could not play ${effect}:`, error);
     }
   }
 
@@ -188,7 +188,7 @@ class SoundEffectsManager {
       try {
         await sound.stopAsync();
       } catch (error) {
-        console.warn(`[SoundEffects] Failed to stop ${effect}:`, error);
+        devWarn(`[SoundEffects] Failed to stop ${effect}:`, error);
       }
     }
   }
@@ -199,7 +199,7 @@ class SoundEffectsManager {
       try {
         await sound.unloadAsync();
       } catch (error) {
-        console.warn(`[SoundEffects] Failed to unload ${effect}:`, error);
+        devWarn(`[SoundEffects] Failed to unload ${effect}:`, error);
       }
     }
     this.sounds.clear();

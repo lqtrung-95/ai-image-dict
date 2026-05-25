@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/stores/auth-store';
 import { apiClient } from '@/lib/api-client';
+import { devLog } from '@/lib/logger';
 
 interface Analysis {
   id: string;
@@ -38,10 +39,10 @@ export default function HistoryScreen() {
   const subtextColor = isDark ? '#9ca3af' : '#6b7280';
 
   const fetchAnalyses = useCallback(async () => {
-    console.log('[History] Fetching analyses...');
+    devLog('[History] Fetching analyses...');
     try {
       const data = await apiClient.get<{ analyses: Analysis[] }>('/api/history');
-      console.log('[History] Fetched:', data.analyses?.length || 0, 'analyses');
+      devLog('[History] Fetched:', data.analyses?.length || 0, 'analyses');
       setAnalyses(data.analyses || []);
     } catch (error) {
       console.error('[History] Failed to fetch analyses:', error);

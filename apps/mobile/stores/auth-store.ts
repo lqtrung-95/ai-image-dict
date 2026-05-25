@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FREE_LIMITS } from '@/lib/monetization';
 
 interface AuthState {
   isAuthenticated: boolean;
-  hasUsedTrial: boolean;
   trialAnalysisCount: number;
   user: { id: string; email: string; displayName?: string; avatarUrl?: string } | null;
   setAuthenticated: (user: { id: string; email: string; displayName?: string; avatarUrl?: string } | null) => void;
@@ -18,7 +18,6 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       isAuthenticated: false,
-      hasUsedTrial: false,
       trialAnalysisCount: 0,
       user: null,
 
@@ -27,7 +26,7 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: !!user,
           user,
           // Reset trial when user logs in
-          trialAnalysisCount: user ? 0 : get().trialAnalysisCount
+          trialAnalysisCount: user ? 0 : get().trialAnalysisCount,
         });
       },
 
@@ -39,18 +38,16 @@ export const useAuthStore = create<AuthState>()(
               ...currentUser,
               displayName: profile.displayName ?? currentUser.displayName,
               avatarUrl: profile.avatarUrl ?? currentUser.avatarUrl,
-            }
+            },
           });
         }
       },
 
       useTrial: () => {
-        const { trialAnalysisCount, hasUsedTrial } = get();
-        // Allow 1 free trial analysis
-        if (trialAnalysisCount < 1) {
+        const { trialAnalysisCount } = get();
+        if (trialAnalysisCount < FREE_LIMITS.guestAnalyses) {
           set({
             trialAnalysisCount: trialAnalysisCount + 1,
-            hasUsedTrial: true
           });
           return true;
         }
@@ -58,14 +55,14 @@ export const useAuthStore = create<AuthState>()(
       },
 
       resetTrial: () => {
-        set({ trialAnalysisCount: 0, hasUsedTrial: false });
+        set({ trialAnalysisCount: 0 });
       },
 
       logout: () => {
         set({
           isAuthenticated: false,
           user: null,
-          trialAnalysisCount: 0
+          trialAnalysisCount: 0,
         });
       },
     }),
