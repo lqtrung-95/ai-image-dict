@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientWithAuth, getAuthUser } from '@/lib/supabase/api-auth';
+import { HSK_SEED_WORDS } from '@/lib/word-of-day-hsk-words';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/word-of-day - Get word of the day
+// GET /api/word-of-day - Get word of the day.
+// Serves a curated HSK word chosen deterministically by date, so even users
+// with an empty vocabulary discover (and can learn) a new word each day.
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClientWithAuth(request);
@@ -16,81 +19,21 @@ export async function GET(request: NextRequest) {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // Check if we already have a word for today
-    const { data: todayHistory } = await supabase
-      .from('word_of_day_history')
-      .select(`
-        *,
-        vocabulary_items(*)
-      `)
-      .eq('user_id', user.id)
-      .eq('date_shown', today)
-      .single();
+    // Deterministic per-day pick from the curated list
+    const seed = parseInt(today.split('-').join(''), 10);
+    const word = HSK_SEED_WORDS[seed % HSK_SEED_WORDS.length];
 
-    if (todayHistory) {
-      const word = todayHistory.vocabulary_items || {
-        id: todayHistory.id,
-        word_zh: todayHistory.word_zh,
-        word_pinyin: todayHistory.word_pinyin,
-        word_en: todayHistory.word_en,
-        example_sentence: todayHistory.example_sentence,
-        hsk_level: todayHistory.hsk_level,
-      };
-      return NextResponse.json({
-        word,
-        history: todayHistory,
-        isNew: false,
-      });
-    }
-
-    // Get user's vocabulary count
-    const { count: vocabCount } = await supabase
+    // Tell the client whether the user already has this word, so the card
+    // can hide the "Save" action for words already in their library.
+    const { count } = await supabase
       .from('vocabulary_items')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    if (!vocabCount || vocabCount === 0) {
-      return NextResponse.json({ word: null });
-    }
-
-    // Use date as seed to get consistent word for the day
-    const seed = today.split('-').join('');
-    const index = parseInt(seed) % vocabCount;
-
-    // Get the word at that index
-    const { data: words } = await supabase
-      .from('vocabulary_items')
-      .select('*')
+      .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
-      .range(index, index);
-
-    if (!words || words.length === 0) {
-      return NextResponse.json({ word: null });
-    }
-
-    const selectedWord = words[0];
-
-    // Record in history (store word data directly in case vocab item is deleted later)
-    const { data: history } = await supabase
-      .from('word_of_day_history')
-      .insert({
-        user_id: user.id,
-        vocabulary_item_id: selectedWord.id,
-        word_zh: selectedWord.word_zh,
-        word_pinyin: selectedWord.word_pinyin,
-        word_en: selectedWord.word_en,
-        example_sentence: selectedWord.example_sentence,
-        hsk_level: selectedWord.hsk_level,
-        date_shown: today,
-      })
-      .select()
-      .single();
+      .eq('word_zh', word.word_zh);
 
     return NextResponse.json({
-      word: selectedWord,
-      history,
-      isNew: true,
+      word,
+      alreadySaved: (count ?? 0) > 0,
     });
   } catch (error) {
     console.error('Word of day error:', error);
