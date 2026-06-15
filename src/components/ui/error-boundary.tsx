@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="w-8 h-8 text-red-400" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Something went wrong</h2>
-          <p className="text-slate-400 mb-6 max-w-md">
+          <p className="text-[#bacbbe] mb-6 max-w-md">
             An unexpected error occurred. Please try refreshing the page.
           </p>
           <Button
@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
               this.setState({ hasError: false, error: undefined });
               window.location.reload();
             }}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-[#76ffbb] hover:opacity-90"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh Page

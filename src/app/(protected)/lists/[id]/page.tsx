@@ -131,12 +131,12 @@ export default function ListDetailPage() {
     return (
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-10 h-10 bg-slate-700 rounded-lg animate-pulse" />
-          <div className="h-8 w-48 bg-slate-700 rounded animate-pulse" />
+          <div className="w-10 h-10 bg-[#272a2e] rounded-lg animate-pulse" />
+          <div className="h-8 w-48 bg-[#272a2e] rounded animate-pulse" />
         </div>
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 bg-slate-800/50 rounded-lg animate-pulse" />
+            <div key={i} className="h-16 bg-[#1c2024] rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function ListDetailPage() {
       <div className="mb-6">
         <Link
           href="/lists"
-          className="inline-flex items-center text-slate-400 hover:text-white mb-4"
+          className="inline-flex items-center text-[#bacbbe] hover:text-[#e0e2e8] mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back to Lists
@@ -176,13 +176,13 @@ export default function ListDetailPage() {
                 {list.isPublic ? (
                   <span title="Public"><Globe className="w-4 h-4 text-green-400" /></span>
                 ) : (
-                  <span title="Private"><Lock className="w-4 h-4 text-slate-500" /></span>
+                  <span title="Private"><Lock className="w-4 h-4 text-[#849589]" /></span>
                 )}
               </div>
               {list.description && (
-                <p className="text-slate-400 mt-1">{list.description}</p>
+                <p className="text-[#bacbbe] mt-1">{list.description}</p>
               )}
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-[#849589] mt-1">
                 {list.wordCount} words &middot; {progressPercent}% learned
               </p>
             </div>
@@ -190,7 +190,7 @@ export default function ListDetailPage() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-slate-400 hover:text-white"
+            className="text-[#bacbbe] hover:text-[#e0e2e8]"
           >
             <Edit2 className="w-4 h-4" />
           </Button>
@@ -198,7 +198,7 @@ export default function ListDetailPage() {
 
         {/* Progress bar */}
         {list.wordCount > 0 && (
-          <div className="mt-4 h-2 bg-slate-700 rounded-full overflow-hidden">
+          <div className="mt-4 h-2 bg-[#272a2e] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-300"
               style={{ width: `${progressPercent}%`, backgroundColor: list.color }}
@@ -210,17 +210,17 @@ export default function ListDetailPage() {
       {/* Actions bar */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#bacbbe]" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search words..."
-            className="pl-9 bg-slate-800/50 border-slate-700 text-white"
+            className="pl-9 bg-[#1c2024] border-white/10 text-white"
           />
         </div>
         <Button
           onClick={() => setIsAddDialogOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700"
+          className="bg-[#76ffbb] hover:opacity-90"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Words
@@ -244,14 +244,14 @@ export default function ListDetailPage() {
       {/* Word list */}
       {words.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <BookOpen className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">No words yet</h2>
-          <p className="text-slate-400 mb-6">Add words from your vocabulary to this list</p>
+          <p className="text-[#bacbbe] mb-6">Add words from your vocabulary to this list</p>
           <Button
             onClick={() => setIsAddDialogOpen(true)}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-[#76ffbb] hover:opacity-90"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Words
@@ -262,8 +262,8 @@ export default function ListDetailPage() {
           {filteredWords.map((word) => (
             <Card
               key={word.id}
-              className={`p-4 bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-colors cursor-pointer ${
-                selectedWords.has(word.id) ? 'border-purple-500 bg-purple-500/10' : ''
+              className={`p-4 bg-[#1c2024] border-white/10 hover:border-white/10 transition-colors cursor-pointer ${
+                selectedWords.has(word.id) ? 'border-[#76ffbb] bg-[#76ffbb]/10' : ''
               }`}
               onClick={() => toggleWordSelection(word.id)}
             >
@@ -279,14 +279,14 @@ export default function ListDetailPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xl font-medium text-white">{word.wordZh}</span>
-                      <span className="text-slate-400">{word.wordPinyin}</span>
+                      <span className="text-[#bacbbe]">{word.wordPinyin}</span>
                       {word.hskLevel && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-[#76ffbb]/10 text-[#76ffbb]/80">
                           HSK {word.hskLevel}
                         </span>
                       )}
                     </div>
-                    <p className="text-slate-400">{word.wordEn}</p>
+                    <p className="text-[#bacbbe]">{word.wordEn}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

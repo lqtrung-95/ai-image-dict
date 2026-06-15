@@ -17,7 +17,7 @@ export function VocabularyListCard({ list, onDelete }: VocabularyListCardProps) 
     : 0;
 
   return (
-    <Card className="group bg-slate-800/50 border-slate-700 hover:border-purple-500/50 transition-colors overflow-hidden">
+    <Card className="group bg-[#1c2024] border-white/10 hover:border-[#76ffbb]/50 transition-colors overflow-hidden">
       <Link href={`/lists/${list.id}`} className="block p-4">
         <div className="flex items-center gap-3">
           <div
@@ -32,23 +32,23 @@ export function VocabularyListCard({ list, onDelete }: VocabularyListCardProps) 
               {list.isPublic ? (
                 <span title="Public"><Globe className="w-3 h-3 text-green-400 flex-shrink-0" /></span>
               ) : (
-                <span title="Private"><Lock className="w-3 h-3 text-slate-500 flex-shrink-0" /></span>
+                <span title="Private"><Lock className="w-3 h-3 text-[#849589] flex-shrink-0" /></span>
               )}
             </div>
-            <p className="text-sm text-slate-400 flex items-center gap-1">
+            <p className="text-sm text-[#bacbbe] flex items-center gap-1">
               <BookOpen className="w-3 h-3" />
               {list.wordCount || 0} words
               {(list.wordCount || 0) > 0 && (
-                <span className="text-purple-400 ml-1">({progressPercent}% learned)</span>
+                <span className="text-[#76ffbb] ml-1">({progressPercent}% learned)</span>
               )}
             </p>
           </div>
-          <ChevronRight className="w-5 h-5 text-slate-500 flex-shrink-0" />
+          <ChevronRight className="w-5 h-5 text-[#849589] flex-shrink-0" />
         </div>
 
         {/* Progress bar */}
         {(list.wordCount || 0) > 0 && (
-          <div className="mt-3 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div className="mt-3 h-1.5 bg-[#272a2e] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-300"
               style={{
@@ -61,7 +61,7 @@ export function VocabularyListCard({ list, onDelete }: VocabularyListCardProps) 
       </Link>
 
       {onDelete && (
-        <div className="px-4 pb-3 pt-0 flex justify-end border-t border-slate-700/50">
+        <div className="px-4 pb-3 pt-0 flex justify-end border-t border-white/10/50">
           <Button
             variant="ghost"
             size="sm"
@@ -69,7 +69,7 @@ export function VocabularyListCard({ list, onDelete }: VocabularyListCardProps) 
               e.preventDefault();
               onDelete(list.id);
             }}
-            className="h-8 text-slate-400 hover:text-red-400 hover:bg-red-500/20"
+            className="h-8 text-[#bacbbe] hover:text-red-400 hover:bg-red-500/20"
           >
             <Trash2 className="w-4 h-4 mr-1" />
             Delete

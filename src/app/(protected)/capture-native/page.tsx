@@ -61,9 +61,9 @@ export default function NativeCapturePage() {
   if (!isNative && typeof window !== 'undefined') {
     return (
       <div className="container mx-auto px-4 py-6 max-w-2xl text-center">
-        <p className="text-slate-400 mb-4">Native camera is only available in the mobile app.</p>
+        <p className="text-[#bacbbe] mb-4">Native camera is only available in the mobile app.</p>
         <Link href="/capture">
-          <Button className="bg-purple-600 hover:bg-purple-700">
+          <Button className="bg-[#76ffbb] hover:opacity-90">
             Use Web Camera
           </Button>
         </Link>
@@ -75,7 +75,7 @@ export default function NativeCapturePage() {
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <div className="flex items-center gap-4 mb-6">
         <Link href="/">
-          <Button variant="ghost" size="icon" className="text-slate-400">
+          <Button variant="ghost" size="icon" className="text-[#bacbbe]">
             <ChevronLeft className="w-5 h-5" />
           </Button>
         </Link>
@@ -83,14 +83,14 @@ export default function NativeCapturePage() {
       </div>
 
       {!capturedImage ? (
-        <Card className="bg-slate-800/50 border-slate-700 p-8">
+        <Card className="bg-[#1c2024] border-white/10 p-8">
           <div className="text-center space-y-6">
-            <div className="w-20 h-20 mx-auto rounded-full bg-purple-600/20 flex items-center justify-center">
-              <Camera className="w-10 h-10 text-purple-400" />
+            <div className="w-20 h-20 mx-auto rounded-full bg-[#76ffbb]/10 flex items-center justify-center">
+              <Camera className="w-10 h-10 text-[#76ffbb]" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-white mb-2">Capture Vocabulary</h2>
-              <p className="text-slate-400">
+              <p className="text-[#bacbbe]">
                 Take a photo of objects around you to learn their names in Chinese
               </p>
             </div>
@@ -98,7 +98,7 @@ export default function NativeCapturePage() {
               <Button
                 onClick={handleTakePhoto}
                 disabled={isLoading}
-                className="bg-purple-600 hover:bg-purple-700 h-14 text-lg"
+                className="bg-[#76ffbb] hover:opacity-90 h-14 text-lg"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -111,7 +111,7 @@ export default function NativeCapturePage() {
                 onClick={handleSelectFromGallery}
                 disabled={isLoading}
                 variant="outline"
-                className="border-slate-600 text-slate-300 hover:bg-slate-700 h-14"
+                className="border-white/10 text-[#e0e2e8] hover:bg-[#272a2e] h-14"
               >
                 <ImageIcon className="w-5 h-5 mr-2" />
                 Choose from Gallery
@@ -120,8 +120,8 @@ export default function NativeCapturePage() {
           </div>
         </Card>
       ) : (
-        <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
-          <div className="aspect-square bg-slate-900 relative">
+        <Card className="bg-[#1c2024] border-white/10 overflow-hidden">
+          <div className="aspect-square bg-[#101417] relative">
             <img
               src={capturedImage}
               alt="Captured"
@@ -132,14 +132,14 @@ export default function NativeCapturePage() {
             <Button
               onClick={handleRetake}
               variant="outline"
-              className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+              className="flex-1 border-white/10 text-[#e0e2e8] hover:bg-[#272a2e]"
             >
               Retake
             </Button>
             <Button
               onClick={handleAnalyze}
               disabled={analyzing}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-[#76ffbb] hover:opacity-90"
             >
               {analyzing ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

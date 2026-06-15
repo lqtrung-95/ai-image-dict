@@ -142,19 +142,19 @@ export default function VocabularyPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">My Vocabulary</h1>
-          <p className="text-slate-400">
+          <p className="text-[#bacbbe]">
             {total} words · {learnedCount} learned
           </p>
         </div>
 
         <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#bacbbe]" />
           <Input
             type="text"
             placeholder="Search words..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="pl-10 bg-slate-800/50 border-slate-600 text-white"
+            className="pl-10 bg-[#1c2024] border-white/10 text-white"
           />
         </div>
         <AnkiExportButton />
@@ -164,13 +164,13 @@ export default function VocabularyPage() {
         <VocabularyListSkeleton count={9} />
       ) : items.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <BookOpen className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">
             {searchQuery ? 'No words found' : 'No vocabulary yet'}
           </h2>
-          <p className="text-slate-400 mb-6">
+          <p className="text-[#bacbbe] mb-6">
             {searchQuery
               ? 'Try a different search term'
               : 'Start capturing photos to build your vocabulary!'}
@@ -178,7 +178,7 @@ export default function VocabularyPage() {
           {!searchQuery && (
             <Button
               onClick={() => (window.location.href = '/capture')}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-[#76ffbb] hover:opacity-90"
             >
               Capture Photo
             </Button>
@@ -217,7 +217,7 @@ export default function VocabularyPage() {
             <div className="text-center mt-8">
               <Button
                 variant="outline"
-                className="border-slate-600 text-slate-200"
+                className="border-white/10 text-[#e0e2e8]"
                 onClick={() => {
                   // TODO: Implement pagination
                 }}

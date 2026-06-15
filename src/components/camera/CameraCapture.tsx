@@ -45,16 +45,16 @@ export function CameraCapture({ onCapture, onClose, className }: CameraCapturePr
           <AlertCircle className="w-8 h-8 text-red-400" />
         </div>
         <h3 className="text-lg font-medium text-white mb-2">Camera Access Required</h3>
-        <p className="text-slate-400 mb-4 max-w-sm">{error}</p>
+        <p className="text-[#bacbbe] mb-4 max-w-sm">{error}</p>
         <div className="flex gap-2">
           <Button
             onClick={() => startCamera('environment')}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-[#76ffbb] hover:opacity-90"
           >
             Try Again
           </Button>
           {onClose && (
-            <Button variant="outline" onClick={onClose} className="border-slate-600">
+            <Button variant="outline" onClick={onClose} className="border-white/10">
               Cancel
             </Button>
           )}
@@ -77,10 +77,10 @@ export function CameraCapture({ onCapture, onClose, className }: CameraCapturePr
 
       {/* Loading overlay */}
       {!isReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#101417]">
           <div className="text-center">
-            <div className="w-12 h-12 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-400">Initializing camera...</p>
+            <div className="w-12 h-12 border-2 border-[#76ffbb] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-[#bacbbe]">Initializing camera...</p>
           </div>
         </div>
       )}

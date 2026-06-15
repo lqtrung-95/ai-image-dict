@@ -144,16 +144,16 @@ export function MatchingGame() {
 
   if (loading) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-        <div className="h-8 w-48 bg-slate-700 rounded animate-pulse mx-auto" />
+      <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
+        <div className="h-8 w-48 bg-[#272a2e] rounded animate-pulse mx-auto" />
       </Card>
     );
   }
 
   if (vocabulary.length < 4) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-        <p className="text-slate-400">
+      <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
+        <p className="text-[#bacbbe]">
           You need at least 4 words in your vocabulary to play. Start by capturing some photos!
         </p>
       </Card>
@@ -167,16 +167,16 @@ export function MatchingGame() {
         <div className="flex gap-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-white">{moves}</p>
-            <p className="text-xs text-slate-400">Moves</p>
+            <p className="text-xs text-[#bacbbe]">Moves</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold text-purple-400">
+            <p className="text-2xl font-bold text-[#76ffbb]">
               {matchedPairs}/6
             </p>
-            <p className="text-xs text-slate-400">Matched</p>
+            <p className="text-xs text-[#bacbbe]">Matched</p>
           </div>
         </div>
-        <Button variant="outline" onClick={resetGame} className="border-slate-600">
+        <Button variant="outline" onClick={resetGame} className="border-white/10">
           <RefreshCw className="w-4 h-4 mr-2" />
           New Game
         </Button>
@@ -187,7 +187,7 @@ export function MatchingGame() {
         <Card className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 border-green-500/30 p-6 text-center">
           <Trophy className="w-12 h-12 text-green-400 mx-auto mb-3" />
           <h2 className="text-xl font-bold text-white mb-2">Well Done!</h2>
-          <p className="text-slate-300">
+          <p className="text-[#e0e2e8]">
             You completed the game in {moves} moves
           </p>
         </Card>
@@ -203,8 +203,8 @@ export function MatchingGame() {
             className={cn(
               'aspect-square rounded-xl p-2 text-center transition-all duration-300 font-medium',
               card.isMatched && 'bg-green-500/20 border-2 border-green-500/50 opacity-50',
-              card.isFlipped && !card.isMatched && 'bg-purple-600 border-2 border-purple-500',
-              !card.isFlipped && !card.isMatched && 'bg-slate-700 border-2 border-slate-600 hover:border-slate-500',
+              card.isFlipped && !card.isMatched && 'bg-[#76ffbb] border-2 border-[#76ffbb]',
+              !card.isFlipped && !card.isMatched && 'bg-[#272a2e] border-2 border-white/10 hover:border-slate-500',
               card.type === 'chinese' && card.isFlipped && 'text-xl'
             )}
           >
@@ -229,7 +229,7 @@ export function MatchingGame() {
         ))}
       </div>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-[#849589]">
         Flip cards to find matching pairs. Match Chinese with English!
       </p>
     </div>

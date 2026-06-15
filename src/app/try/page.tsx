@@ -144,20 +144,20 @@ export default function TryPage() {
   if (!hasTrialsLeft && mode === 'choose') {
     return (
       <div className="container mx-auto px-4 py-12 max-w-lg text-center">
-        <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8">
+        <div className="bg-[#1c2024] border border-white/10 rounded-2xl p-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/20 flex items-center justify-center">
             <Sparkles className="w-8 h-8 text-orange-400" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">
             You've used all {MAX_TRIALS_PER_DAY} free trials today! 🎉
           </h1>
-          <p className="text-slate-400 mb-6">
+          <p className="text-[#bacbbe] mb-6">
             Come back tomorrow for more, or create a free account for unlimited analyses.
           </p>
           <div className="space-y-3">
             <Button 
               onClick={() => router.push('/signup')}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-[#76ffbb] hover:opacity-90"
               size="lg"
             >
               Create Free Account
@@ -165,12 +165,12 @@ export default function TryPage() {
             <Button 
               onClick={() => router.push('/login')}
               variant="outline"
-              className="w-full border-slate-600 text-slate-300"
+              className="w-full border-white/10 text-[#e0e2e8]"
             >
               Already have an account? Sign in
             </Button>
           </div>
-          <p className="text-slate-500 text-sm mt-6">
+          <p className="text-[#849589] text-sm mt-6">
             Free trials reset daily at midnight.
           </p>
         </div>
@@ -184,13 +184,13 @@ export default function TryPage() {
         <>
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-3">Try AI Image Dictionary</h1>
-            <p className="text-slate-400">
+            <p className="text-[#bacbbe]">
               Capture or upload a photo to see AI-powered Chinese vocabulary detection in action.
             </p>
             {/* Trial counter */}
-            <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              <span className="text-purple-300 text-sm">
+            <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-[#76ffbb]/10 border border-[#76ffbb]/20">
+              <Sparkles className="w-4 h-4 text-[#76ffbb]" />
+              <span className="text-[#76ffbb]/80 text-sm">
                 {trialsRemaining} free {trialsRemaining === 1 ? 'trial' : 'trials'} remaining today
               </span>
             </div>
@@ -204,40 +204,40 @@ export default function TryPage() {
             <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
               <button
                 onClick={() => setMode('camera')}
-                className="group p-8 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-all text-left"
+                className="group p-8 rounded-2xl bg-[#1c2024] border border-white/10 hover:border-[#76ffbb]/50 transition-all text-left"
               >
-                <div className="w-16 h-16 mb-4 rounded-full bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Camera className="w-8 h-8 text-purple-400" />
+                <div className="w-16 h-16 mb-4 rounded-full bg-[#76ffbb]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Camera className="w-8 h-8 text-[#76ffbb]" />
                 </div>
                 <h2 className="text-xl font-semibold text-white mb-2">Use Camera</h2>
-                <p className="text-slate-400">
+                <p className="text-[#bacbbe]">
                   Take a photo of objects around you
                 </p>
               </button>
 
               <button
                 onClick={() => setMode('upload')}
-                className="group p-8 rounded-2xl bg-slate-800/50 border border-slate-700 hover:border-blue-500/50 transition-all text-left"
+                className="group p-8 rounded-2xl bg-[#1c2024] border border-white/10 hover:border-blue-500/50 transition-all text-left"
               >
                 <div className="w-16 h-16 mb-4 rounded-full bg-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Upload className="w-8 h-8 text-blue-400" />
                 </div>
                 <h2 className="text-xl font-semibold text-white mb-2">Upload Photo</h2>
-                <p className="text-slate-400">
+                <p className="text-[#bacbbe]">
                   Choose an image from your device
                 </p>
               </button>
             </div>
           )}
 
-          <p className="text-center text-slate-500 text-sm mt-8">
+          <p className="text-center text-[#849589] text-sm mt-8">
             Your photo is analyzed securely and not stored.
           </p>
 
           {/* Signup CTA */}
-          <Card className="max-w-2xl mx-auto mt-8 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-purple-500/20">
+          <Card className="max-w-2xl mx-auto mt-8 p-4 bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-[#76ffbb]/20">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-slate-300 text-sm">
+              <p className="text-[#e0e2e8] text-sm">
                 Want unlimited analyses and vocabulary saving?
               </p>
               <Button 
@@ -256,14 +256,14 @@ export default function TryPage() {
           <Button
             variant="ghost"
             onClick={() => setMode('choose')}
-            className="text-slate-400 mb-4"
+            className="text-[#bacbbe] mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-white">Take a Photo</h1>
-            <span className="text-sm text-purple-400">
+            <span className="text-sm text-[#76ffbb]">
               {trialsRemaining} {trialsRemaining === 1 ? 'trial' : 'trials'} left
             </span>
           </div>
@@ -276,14 +276,14 @@ export default function TryPage() {
           <Button
             variant="ghost"
             onClick={() => setMode('choose')}
-            className="text-slate-400 mb-4"
+            className="text-[#bacbbe] mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-white">Upload Photo</h1>
-            <span className="text-sm text-purple-400">
+            <span className="text-sm text-[#76ffbb]">
               {trialsRemaining} {trialsRemaining === 1 ? 'trial' : 'trials'} left
             </span>
           </div>
@@ -302,7 +302,7 @@ export default function TryPage() {
         <>
           {/* Trial counter reminder */}
           <div className="mb-4 text-center">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-sm text-slate-400">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1c2024] text-sm text-[#bacbbe]">
               {trialsRemaining} free {trialsRemaining === 1 ? 'trial' : 'trials'} remaining today
             </span>
           </div>
@@ -344,7 +344,7 @@ function CameraSection({ onCapture }: { onCapture: (data: string) => void }) {
   }, []);
 
   if (!CameraComponent) {
-    return <div className="h-72 bg-slate-800/50 rounded-2xl animate-pulse" />;
+    return <div className="h-72 bg-[#1c2024] rounded-2xl animate-pulse" />;
   }
 
   return (

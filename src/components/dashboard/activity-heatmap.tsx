@@ -37,7 +37,7 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
 
   const getColorClass = (count: number): string => {
     if (count < 0) return 'bg-transparent';
-    if (count === 0) return 'bg-slate-700';
+    if (count === 0) return 'bg-[#272a2e]';
     const intensity = count / maxReviews;
     if (intensity < 0.25) return 'bg-green-900';
     if (intensity < 0.5) return 'bg-green-700';
@@ -49,10 +49,10 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
   const totalReviews = activity.reduce((sum, a) => sum + a.wordsReviewed, 0);
 
   return (
-    <Card className="p-4 bg-slate-800/50 border-slate-700">
+    <Card className="p-4 bg-[#1c2024] border-white/10">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium text-white">Activity</h3>
-        <span className="text-sm text-slate-400">
+        <span className="text-sm text-[#bacbbe]">
           {totalReviews} reviews in {activity.length} days
         </span>
       </div>
@@ -61,7 +61,7 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
         {/* Day labels */}
         <div className="flex flex-col gap-1 mr-1">
           {days.map((day, i) => (
-            <div key={day} className="h-3 text-[10px] text-slate-500 flex items-center">
+            <div key={day} className="h-3 text-[10px] text-[#849589] flex items-center">
               {i % 2 === 1 ? day : ''}
             </div>
           ))}
@@ -84,10 +84,10 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-2 mt-3 text-xs text-slate-400">
+      <div className="flex items-center gap-2 mt-3 text-xs text-[#bacbbe]">
         <span>Less</span>
         <div className="flex gap-1">
-          <div className="w-3 h-3 rounded-sm bg-slate-700" />
+          <div className="w-3 h-3 rounded-sm bg-[#272a2e]" />
           <div className="w-3 h-3 rounded-sm bg-green-900" />
           <div className="w-3 h-3 rounded-sm bg-green-700" />
           <div className="w-3 h-3 rounded-sm bg-green-500" />

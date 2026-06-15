@@ -75,11 +75,11 @@ export function ImportPreviewTable({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-white">Preview: {sourceTitle}</h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[#bacbbe]">
             {selectedIds.size} of {words.length} words selected
           </p>
         </div>
-        <Button variant="ghost" onClick={onCancel} className="text-slate-400 hover:text-white">
+        <Button variant="ghost" onClick={onCancel} className="text-[#bacbbe] hover:text-[#e0e2e8]">
           <X className="w-4 h-4 mr-1" />
           Cancel
         </Button>
@@ -88,22 +88,22 @@ export function ImportPreviewTable({
       {/* Search and list selector */}
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#bacbbe]" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search words..."
-            className="pl-9 bg-slate-800/50 border-slate-700 text-white"
+            className="pl-9 bg-[#1c2024] border-white/10 text-white"
           />
         </div>
         <Select value={selectedListId} onValueChange={setSelectedListId}>
-          <SelectTrigger className="w-[180px] bg-slate-800/50 border-slate-700 text-white">
+          <SelectTrigger className="w-[180px] bg-[#1c2024] border-white/10 text-white">
             <SelectValue placeholder="Add to list..." />
           </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700">
-            <SelectItem value="none" className="text-slate-300">No list</SelectItem>
+          <SelectContent className="bg-[#1c2024] border-white/10">
+            <SelectItem value="none" className="text-[#e0e2e8]">No list</SelectItem>
             {lists.map((list) => (
-              <SelectItem key={list.id} value={list.id} className="text-slate-300">
+              <SelectItem key={list.id} value={list.id} className="text-[#e0e2e8]">
                 {list.name}
               </SelectItem>
             ))}
@@ -115,7 +115,7 @@ export function ImportPreviewTable({
       <div className="flex items-center gap-2">
         <button
           onClick={toggleAll}
-          className="text-sm text-purple-400 hover:text-purple-300"
+          className="text-sm text-[#76ffbb] hover:text-[#76ffbb]/80"
         >
           {selectedIds.size === words.length ? 'Deselect all' : 'Select all'}
         </button>
@@ -133,13 +133,13 @@ export function ImportPreviewTable({
               onClick={() => toggleWord(actualIndex)}
               className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                 isSelected
-                  ? 'bg-purple-500/20 border border-purple-500/50'
-                  : 'bg-slate-800/30 border border-transparent hover:bg-slate-800/50'
+                  ? 'bg-[#76ffbb]/10 border border-[#76ffbb]/50'
+                  : 'bg-[#1c2024]/50 border border-transparent hover:bg-[#1c2024]'
               }`}
             >
               <div
                 className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
-                  isSelected ? 'bg-purple-600' : 'border border-slate-500'
+                  isSelected ? 'bg-[#76ffbb]' : 'border border-slate-500'
                 }`}
               >
                 {isSelected && <Check className="w-3 h-3 text-white" />}
@@ -147,16 +147,16 @@ export function ImportPreviewTable({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-medium text-white">{word.zh}</span>
-                  <span className="text-slate-400">{word.pinyin}</span>
+                  <span className="text-[#bacbbe]">{word.pinyin}</span>
                   {word.hskLevel && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-[#76ffbb]/10 text-[#76ffbb]/80">
                       HSK {word.hskLevel}
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-slate-400 truncate">{word.en}</p>
+                <p className="text-sm text-[#bacbbe] truncate">{word.en}</p>
                 {word.example && (
-                  <p className="text-xs text-slate-500 truncate mt-1">{word.example}</p>
+                  <p className="text-xs text-[#849589] truncate mt-1">{word.example}</p>
                 )}
               </div>
             </div>
@@ -165,14 +165,14 @@ export function ImportPreviewTable({
       </div>
 
       {/* Save button */}
-      <div className="flex gap-3 pt-4 border-t border-slate-700">
-        <Button variant="ghost" onClick={onCancel} className="flex-1 text-slate-300">
+      <div className="flex gap-3 pt-4 border-t border-white/10">
+        <Button variant="ghost" onClick={onCancel} className="flex-1 text-[#e0e2e8]">
           Cancel
         </Button>
         <Button
           onClick={handleSave}
           disabled={selectedIds.size === 0 || saving}
-          className="flex-1 bg-purple-600 hover:bg-purple-700"
+          className="flex-1 bg-[#76ffbb] hover:opacity-90"
         >
           {saving ? (
             <>

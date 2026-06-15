@@ -65,20 +65,20 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-        <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+      <div className="">
+        <Card className="w-full max-w-md bg-[#1c2024] border-white/5">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-white">Password Updated</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-[#bacbbe]">
               Your password has been successfully reset
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-slate-400 mb-4">
+            <p className="text-[#bacbbe] mb-4">
               Redirecting you to login...
             </p>
             <Link href="/login">
-              <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-700">
+              <Button variant="outline" className="border-white/10 text-[#e0e2e8] hover:bg-[#272a2e]">
                 Go to Login
               </Button>
             </Link>
@@ -89,11 +89,11 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+    <div className="">
+      <Card className="w-full max-w-md bg-[#1c2024] border-white/5">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-white">Set New Password</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-[#bacbbe]">
             Enter your new password below
           </CardDescription>
         </CardHeader>
@@ -106,7 +106,7 @@ export default function ResetPasswordPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-200">
+              <Label htmlFor="password" className="text-[#e0e2e8]">
                 New Password
               </Label>
               <Input
@@ -117,12 +117,12 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                className="bg-[#272a2e] border-white/10 text-white placeholder:text-[#bacbbe]"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-slate-200">
+              <Label htmlFor="confirmPassword" className="text-[#e0e2e8]">
                 Confirm Password
               </Label>
               <Input
@@ -132,21 +132,21 @@ export default function ResetPasswordPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                className="bg-[#272a2e] border-white/10 text-white placeholder:text-[#bacbbe]"
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              className="w-full bg-[#76ffbb] hover:opacity-90 text-[#003822] font-semibold"
               disabled={loading}
             >
               {loading ? 'Updating...' : 'Reset Password'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-slate-400">
-            <Link href="/login" className="text-purple-400 hover:text-purple-300 font-medium">
+          <div className="mt-6 text-center text-[#bacbbe]">
+            <Link href="/login" className="text-[#76ffbb] hover:text-[#76ffbb]/80 font-medium">
               Back to Login
             </Link>
           </div>

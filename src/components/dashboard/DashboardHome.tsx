@@ -94,11 +94,11 @@ export function DashboardHome() {
 
   if (loading) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-slate-900">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#101417]">
         <div className="container mx-auto px-4 py-8 max-w-xl">
-          <div className="h-8 bg-slate-800 rounded w-48 mb-2 animate-pulse" />
-          <div className="h-5 bg-slate-800 rounded w-64 mb-8 animate-pulse" />
-          <div className="h-32 bg-slate-800 rounded-lg animate-pulse" />
+          <div className="h-8 bg-[#1c2024] rounded w-48 mb-2 animate-pulse" />
+          <div className="h-5 bg-[#1c2024] rounded w-64 mb-8 animate-pulse" />
+          <div className="h-32 bg-[#1c2024] rounded-lg animate-pulse" />
         </div>
       </div>
     );
@@ -107,7 +107,7 @@ export function DashboardHome() {
   // Empty state - no words yet
   if (!hasWords) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-slate-900">
+      <div className="min-h-[calc(100vh-4rem)] bg-[#101417]">
         <div className="container mx-auto px-4 py-8 max-w-xl">
           {/* Header */}
           <h1 className="text-2xl font-semibold text-white mb-1">
@@ -115,19 +115,19 @@ export function DashboardHome() {
           </h1>
           
           <div className="mt-16 text-center">
-            <p className="text-slate-400 text-lg mb-8">
+            <p className="text-[#bacbbe] text-lg mb-8">
               You have no words yet
             </p>
             
             <Button 
               onClick={handleAddWords}
-              className="bg-purple-600 hover:bg-purple-700 h-12 px-8 text-base"
+              className="bg-[#76ffbb] hover:opacity-90 h-12 px-8 text-base"
             >
               <Plus className="w-5 h-5 mr-2" />
               Add your first word
             </Button>
             
-            <p className="text-slate-500 text-sm mt-6">
+            <p className="text-[#849589] text-sm mt-6">
               Tip: Take a photo of any object to learn its Chinese name
             </p>
           </div>
@@ -139,7 +139,7 @@ export function DashboardHome() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-900">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#101417]">
       <div className="container mx-auto px-4 py-8 max-w-xl">
         
         {/* 1. Header - Simple greeting */}
@@ -147,27 +147,27 @@ export function DashboardHome() {
           <h1 className="text-2xl font-semibold text-white mb-1">
             Welcome back, {displayName}
           </h1>
-          <p className="text-slate-400">
+          <p className="text-[#bacbbe]">
             Ready to learn some Chinese?
           </p>
         </header>
 
         {/* 2. Primary Action - Continue Learning */}
-        <section className="mb-6 p-5 rounded-lg border border-slate-700 bg-slate-800/30">
+        <section className="mb-6 p-5 rounded-lg border border-white/10 bg-[#1c2024]/50">
           <h2 className="text-lg font-medium text-white mb-1">
             Continue Learning
           </h2>
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-[#bacbbe] text-sm mb-4">
             {wordsToLearn} {wordsToLearn === 1 ? 'word' : 'words'} waiting for review
           </p>
           <div className="flex gap-3">
             <Link href="/practice" className="flex-1">
-              <Button className="w-full bg-purple-600 hover:bg-purple-700 h-11">
+              <Button className="w-full bg-[#76ffbb] hover:opacity-90 h-11">
                 Flashcards
               </Button>
             </Link>
             <Link href="/quiz" className="flex-1">
-              <Button variant="outline" className="w-full border-purple-500/50 text-purple-400 hover:bg-purple-500/10 h-11">
+              <Button variant="outline" className="w-full border-[#76ffbb]/50 text-[#76ffbb] hover:bg-[#76ffbb]/10 h-11">
                 Quiz
               </Button>
             </Link>
@@ -179,7 +179,7 @@ export function DashboardHome() {
           <Button 
             variant="outline" 
             onClick={handleAddWords}
-            className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 h-11"
+            className="w-full border-white/10 text-[#e0e2e8] hover:bg-[#1c2024] h-11"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add new words
@@ -187,7 +187,7 @@ export function DashboardHome() {
         </section>
 
         {/* 4. Lightweight Stats Row */}
-        <section className="flex justify-between text-sm text-slate-500 mb-8 px-1">
+        <section className="flex justify-between text-sm text-[#849589] mb-8 px-1">
           <span>🔥 {stats?.currentStreak || 0} days</span>
           <span>📘 {stats?.totalWords || 0} words</span>
           <span>✅ {stats?.learnedWords || 0} mastered</span>
@@ -196,14 +196,14 @@ export function DashboardHome() {
 
         {/* 5. Learning Progress */}
         <section className="mb-10">
-          <p className="text-sm text-slate-500 mb-3">Learning progress</p>
-          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+          <p className="text-sm text-[#849589] mb-3">Learning progress</p>
+          <div className="h-2 bg-[#1c2024] rounded-full overflow-hidden">
             <div 
               className="h-full bg-slate-600 transition-all duration-500"
               style={{ width: `${masteryPercent}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-slate-600 mt-2">
+          <div className="flex justify-between text-xs text-[#849589] mt-2">
             <span>{stats?.learnedWords || 0} mastered</span>
             <span>{wordsToLearn} to learn</span>
           </div>
@@ -211,15 +211,15 @@ export function DashboardHome() {
 
         {/* 6. Word of the Day */}
         {wordOfDay && (
-          <section className="mb-10 p-4 rounded-lg border border-slate-800">
-            <p className="text-xs text-slate-500 uppercase tracking-wide mb-3">
+          <section className="mb-10 p-4 rounded-lg border border-white/5">
+            <p className="text-xs text-[#849589] uppercase tracking-wide mb-3">
               Word of the day
             </p>
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-3xl font-bold text-white mb-1">{wordOfDay.word_zh}</p>
-                <p className="text-purple-400 mb-1">{wordOfDay.word_pinyin}</p>
-                <p className="text-slate-400 text-sm">{wordOfDay.word_en}</p>
+                <p className="text-[#76ffbb] mb-1">{wordOfDay.word_pinyin}</p>
+                <p className="text-[#bacbbe] text-sm">{wordOfDay.word_en}</p>
               </div>
               <Button
                 variant="ghost"
@@ -227,7 +227,7 @@ export function DashboardHome() {
                 onClick={handleSpeak}
                 className={cn(
                   'h-10 w-10 rounded-full mt-1',
-                  isPlaying ? 'text-purple-400 bg-purple-500/20' : 'text-slate-500 hover:text-white'
+                  isPlaying ? 'text-[#76ffbb] bg-[#76ffbb]/10' : 'text-[#849589] hover:text-[#e0e2e8]'
                 )}
               >
                 <Volume2 className="w-5 h-5" />
@@ -238,13 +238,13 @@ export function DashboardHome() {
 
         {/* 7. Utility Links */}
         <section className="flex justify-center gap-8 text-sm">
-          <Link href="/history" className="text-slate-500 hover:text-slate-300 transition-colors">
+          <Link href="/history" className="text-[#849589] hover:text-[#e0e2e8] transition-colors">
             History
           </Link>
-          <Link href="/lists" className="text-slate-500 hover:text-slate-300 transition-colors">
+          <Link href="/lists" className="text-[#849589] hover:text-[#e0e2e8] transition-colors">
             Lists
           </Link>
-          <Link href="/progress" className="text-slate-500 hover:text-slate-300 transition-colors">
+          <Link href="/progress" className="text-[#849589] hover:text-[#e0e2e8] transition-colors">
             Progress
           </Link>
         </section>
@@ -265,7 +265,7 @@ function AddWordsModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-800 border-slate-700 max-w-sm">
+      <DialogContent className="bg-[#1c2024] border-white/10 max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-white">Add new words</DialogTitle>
         </DialogHeader>
@@ -273,24 +273,24 @@ function AddWordsModal({
           <Link href="/capture" className="block">
             <Button 
               variant="outline" 
-              className="w-full h-14 border-slate-700 text-white hover:bg-slate-700 justify-start px-4"
+              className="w-full h-14 border-white/10 text-white hover:bg-[#272a2e] justify-start px-4"
             >
-              <Camera className="w-5 h-5 mr-3 text-purple-400" />
+              <Camera className="w-5 h-5 mr-3 text-[#76ffbb]" />
               <div className="text-left">
                 <p className="font-medium">Take photo</p>
-                <p className="text-xs text-slate-400">Use your camera</p>
+                <p className="text-xs text-[#bacbbe]">Use your camera</p>
               </div>
             </Button>
           </Link>
           <Link href="/upload" className="block">
             <Button 
               variant="outline" 
-              className="w-full h-14 border-slate-700 text-white hover:bg-slate-700 justify-start px-4"
+              className="w-full h-14 border-white/10 text-white hover:bg-[#272a2e] justify-start px-4"
             >
               <Upload className="w-5 h-5 mr-3 text-blue-400" />
               <div className="text-left">
                 <p className="font-medium">Upload from gallery</p>
-                <p className="text-xs text-slate-400">Choose existing photo</p>
+                <p className="text-xs text-[#bacbbe]">Choose existing photo</p>
               </div>
             </Button>
           </Link>

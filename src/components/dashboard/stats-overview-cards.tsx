@@ -52,7 +52,7 @@ export function StatsOverviewCards({
       {stats.map((stat) => (
         <Card
           key={stat.label}
-          className="p-4 bg-slate-800/50 border-slate-700"
+          className="p-4 bg-[#1c2024] border-white/10"
         >
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
@@ -60,7 +60,7 @@ export function StatsOverviewCards({
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-sm text-slate-400">{stat.label}</p>
+              <p className="text-sm text-[#bacbbe]">{stat.label}</p>
             </div>
           </div>
         </Card>

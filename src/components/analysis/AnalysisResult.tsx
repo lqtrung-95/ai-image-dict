@@ -113,7 +113,7 @@ export function AnalysisResult({
   return (
     <div className="space-y-6">
       {/* Image */}
-      <div className="relative rounded-xl overflow-hidden bg-slate-800">
+      <div className="relative rounded-xl overflow-hidden bg-[#1c2024]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
@@ -124,15 +124,15 @@ export function AnalysisResult({
 
       {/* Scene description */}
       {sceneDescription && (
-        <div className="p-4 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
-          <h3 className="text-sm font-medium text-slate-400">Scene Description</h3>
+        <div className="p-4 rounded-lg bg-[#1c2024] border border-white/10 space-y-2">
+          <h3 className="text-sm font-medium text-[#bacbbe]">Scene Description</h3>
           {sceneDescriptionZh && (
             <p className="text-xl text-white">{sceneDescriptionZh}</p>
           )}
           {sceneDescriptionPinyin && (
-            <p className="text-purple-400 text-sm">{sceneDescriptionPinyin}</p>
+            <p className="text-[#76ffbb] text-sm">{sceneDescriptionPinyin}</p>
           )}
-          <p className="text-slate-300">{sceneDescription}</p>
+          <p className="text-[#e0e2e8]">{sceneDescription}</p>
         </div>
       )}
 
@@ -213,12 +213,12 @@ export function AnalysisResult({
       )}
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-700">
+      <div className="flex flex-wrap gap-3 pt-4 border-t border-white/10">
         {isMobile ? (
           // Mobile: Single button
           <Button
             variant="outline"
-            className="border-slate-600 text-slate-200"
+            className="border-white/10 text-[#e0e2e8]"
             onClick={onUploadAnother}
           >
             <ImagePlus className="w-4 h-4 mr-2" />
@@ -228,14 +228,14 @@ export function AnalysisResult({
           // Desktop: Two buttons
           <>
             <Link href="/capture">
-              <Button variant="outline" className="border-slate-600 text-slate-200">
+              <Button variant="outline" className="border-white/10 text-[#e0e2e8]">
                 <Camera className="w-4 h-4 mr-2" />
                 Capture Another
               </Button>
             </Link>
             <Button
               variant="outline"
-              className="border-slate-600 text-slate-200"
+              className="border-white/10 text-[#e0e2e8]"
               onClick={onUploadAnother}
             >
               <Upload className="w-4 h-4 mr-2" />
@@ -246,7 +246,7 @@ export function AnalysisResult({
         <Button
           variant="outline"
           onClick={handleShare}
-          className="border-slate-600 text-slate-200"
+          className="border-white/10 text-[#e0e2e8]"
         >
           <Share2 className="w-4 h-4 mr-2" />
           Share

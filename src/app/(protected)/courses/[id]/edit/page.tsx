@@ -158,7 +158,7 @@ export default function EditCoursePage() {
     return (
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#76ffbb]" />
         </div>
       </div>
     );
@@ -171,19 +171,19 @@ export default function EditCoursePage() {
       <div className="flex items-center justify-between mb-6">
         <Link
           href={`/courses/${courseId}`}
-          className="inline-flex items-center text-slate-400 hover:text-white"
+          className="inline-flex items-center text-[#bacbbe] hover:text-[#e0e2e8]"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back to Course
         </Link>
         <div className="flex gap-2">
           <Link href={`/courses/${courseId}`}>
-            <Button variant="ghost" className="text-slate-300">
+            <Button variant="ghost" className="text-[#e0e2e8]">
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
           </Link>
-          <Button onClick={handleSave} disabled={saving} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={handleSave} disabled={saving} className="bg-[#76ffbb] hover:opacity-90">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Save
           </Button>
@@ -193,36 +193,36 @@ export default function EditCoursePage() {
       <h1 className="text-2xl font-bold text-white mb-6">Edit Course</h1>
 
       {/* Course details */}
-      <Card className="p-6 bg-slate-800/50 border-slate-700 mb-6">
+      <Card className="p-6 bg-[#1c2024] border-white/10 mb-6">
         <div className="space-y-4">
           <div>
-            <Label className="text-slate-200">Course Name</Label>
+            <Label className="text-[#e0e2e8]">Course Name</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 bg-slate-700/50 border-slate-600 text-white"
+              className="mt-1 bg-[#272a2e] border-white/10 text-white"
               maxLength={150}
             />
           </div>
           <div>
-            <Label className="text-slate-200">Description</Label>
+            <Label className="text-[#e0e2e8]">Description</Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 bg-slate-700/50 border-slate-600 text-white resize-none"
+              className="mt-1 bg-[#272a2e] border-white/10 text-white resize-none"
               rows={2}
             />
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
-              <Label className="text-slate-200">Difficulty Level</Label>
+              <Label className="text-[#e0e2e8]">Difficulty Level</Label>
               <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
-                <SelectTrigger className="mt-1 bg-slate-700/50 border-slate-600 text-white">
+                <SelectTrigger className="mt-1 bg-[#272a2e] border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectContent className="bg-[#1c2024] border-white/10">
                   {[1, 2, 3, 4, 5, 6].map((level) => (
-                    <SelectItem key={level} value={level.toString()} className="text-slate-300">
+                    <SelectItem key={level} value={level.toString()} className="text-[#e0e2e8]">
                       HSK {level}
                     </SelectItem>
                   ))}
@@ -231,8 +231,8 @@ export default function EditCoursePage() {
             </div>
             <div className="flex items-end gap-3 pb-1">
               <div>
-                <Label className="text-slate-200">Published</Label>
-                <p className="text-xs text-slate-500">Visible to all users</p>
+                <Label className="text-[#e0e2e8]">Published</Label>
+                <p className="text-xs text-[#849589]">Visible to all users</p>
               </div>
               <Switch checked={isPublished} onCheckedChange={setIsPublished} />
             </div>
@@ -241,31 +241,31 @@ export default function EditCoursePage() {
       </Card>
 
       {/* Add word form */}
-      <Card className="p-4 bg-slate-800/50 border-slate-700 mb-4">
+      <Card className="p-4 bg-[#1c2024] border-white/10 mb-4">
         <h3 className="font-medium text-white mb-3">Add Word</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Input
             value={newWord.zh}
             onChange={(e) => setNewWord((p) => ({ ...p, zh: e.target.value }))}
             placeholder="中文"
-            className="bg-slate-700/50 border-slate-600 text-white"
+            className="bg-[#272a2e] border-white/10 text-white"
           />
           <Input
             value={newWord.pinyin}
             onChange={(e) => setNewWord((p) => ({ ...p, pinyin: e.target.value }))}
             placeholder="pīnyīn"
-            className="bg-slate-700/50 border-slate-600 text-white"
+            className="bg-[#272a2e] border-white/10 text-white"
           />
           <Input
             value={newWord.en}
             onChange={(e) => setNewWord((p) => ({ ...p, en: e.target.value }))}
             placeholder="English"
-            className="bg-slate-700/50 border-slate-600 text-white"
+            className="bg-[#272a2e] border-white/10 text-white"
           />
           <Button
             onClick={handleAddWord}
             disabled={addingWord || !newWord.zh || !newWord.pinyin || !newWord.en}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-[#76ffbb] hover:opacity-90"
           >
             {addingWord ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
           </Button>
@@ -279,28 +279,28 @@ export default function EditCoursePage() {
           {words.map((word, index) => (
             <Card
               key={word.id}
-              className="p-3 bg-slate-800/30 border-slate-700 flex items-center gap-3"
+              className="p-3 bg-[#1c2024]/50 border-white/10 flex items-center gap-3"
             >
-              <span className="text-slate-500 text-sm w-6">{index + 1}</span>
+              <span className="text-[#849589] text-sm w-6">{index + 1}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-white">{word.word_zh}</span>
-                  <span className="text-slate-400 text-sm">{word.word_pinyin}</span>
+                  <span className="text-[#bacbbe] text-sm">{word.word_pinyin}</span>
                 </div>
-                <p className="text-sm text-slate-400 truncate">{word.word_en}</p>
+                <p className="text-sm text-[#bacbbe] truncate">{word.word_en}</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => handleDeleteWord(word.id)}
-                className="text-slate-400 hover:text-red-400 hover:bg-red-500/20"
+                className="text-[#bacbbe] hover:text-red-400 hover:bg-red-500/20"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </Card>
           ))}
           {words.length === 0 && (
-            <p className="text-center text-slate-500 py-8">
+            <p className="text-center text-[#849589] py-8">
               No words yet. Add some vocabulary above!
             </p>
           )}

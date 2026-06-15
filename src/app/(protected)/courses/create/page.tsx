@@ -65,61 +65,61 @@ export default function CreateCoursePage() {
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <Link
         href="/courses"
-        className="inline-flex items-center text-slate-400 hover:text-white mb-6"
+        className="inline-flex items-center text-[#bacbbe] hover:text-[#e0e2e8] mb-6"
       >
         <ArrowLeft className="w-4 h-4 mr-1" />
         Back to Courses
       </Link>
 
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-          <BookOpen className="w-6 h-6 text-purple-400" />
+        <div className="w-12 h-12 rounded-xl bg-[#76ffbb]/10 flex items-center justify-center">
+          <BookOpen className="w-6 h-6 text-[#76ffbb]" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Create Course</h1>
-          <p className="text-slate-400">Share your vocabulary collection with the community</p>
+          <p className="text-[#bacbbe]">Share your vocabulary collection with the community</p>
         </div>
       </div>
 
-      <Card className="p-6 bg-slate-800/50 border-slate-700">
+      <Card className="p-6 bg-[#1c2024] border-white/10">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label className="text-slate-200">Course Name *</Label>
+            <Label className="text-[#e0e2e8]">Course Name *</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Essential HSK 3 Vocabulary"
-              className="mt-1 bg-slate-700/50 border-slate-600 text-white"
+              className="mt-1 bg-[#272a2e] border-white/10 text-white"
               maxLength={150}
               disabled={creating}
             />
           </div>
 
           <div>
-            <Label className="text-slate-200">Description</Label>
+            <Label className="text-[#e0e2e8]">Description</Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What will learners gain from this course?"
-              className="mt-1 bg-slate-700/50 border-slate-600 text-white resize-none"
+              className="mt-1 bg-[#272a2e] border-white/10 text-white resize-none"
               rows={3}
               disabled={creating}
             />
           </div>
 
           <div>
-            <Label className="text-slate-200">Difficulty Level</Label>
+            <Label className="text-[#e0e2e8]">Difficulty Level</Label>
             <Select value={difficultyLevel} onValueChange={setDifficultyLevel} disabled={creating}>
-              <SelectTrigger className="mt-1 bg-slate-700/50 border-slate-600 text-white">
+              <SelectTrigger className="mt-1 bg-[#272a2e] border-white/10 text-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="1" className="text-slate-300">HSK 1 - Beginner</SelectItem>
-                <SelectItem value="2" className="text-slate-300">HSK 2 - Elementary</SelectItem>
-                <SelectItem value="3" className="text-slate-300">HSK 3 - Intermediate</SelectItem>
-                <SelectItem value="4" className="text-slate-300">HSK 4 - Upper Intermediate</SelectItem>
-                <SelectItem value="5" className="text-slate-300">HSK 5 - Advanced</SelectItem>
-                <SelectItem value="6" className="text-slate-300">HSK 6 - Proficient</SelectItem>
+              <SelectContent className="bg-[#1c2024] border-white/10">
+                <SelectItem value="1" className="text-[#e0e2e8]">HSK 1 - Beginner</SelectItem>
+                <SelectItem value="2" className="text-[#e0e2e8]">HSK 2 - Elementary</SelectItem>
+                <SelectItem value="3" className="text-[#e0e2e8]">HSK 3 - Intermediate</SelectItem>
+                <SelectItem value="4" className="text-[#e0e2e8]">HSK 4 - Upper Intermediate</SelectItem>
+                <SelectItem value="5" className="text-[#e0e2e8]">HSK 5 - Advanced</SelectItem>
+                <SelectItem value="6" className="text-[#e0e2e8]">HSK 6 - Proficient</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -129,7 +129,7 @@ export default function CreateCoursePage() {
               type="button"
               variant="ghost"
               onClick={() => router.back()}
-              className="flex-1 text-slate-300"
+              className="flex-1 text-[#e0e2e8]"
               disabled={creating}
             >
               Cancel
@@ -137,7 +137,7 @@ export default function CreateCoursePage() {
             <Button
               type="submit"
               disabled={!name.trim() || creating}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-[#76ffbb] hover:opacity-90"
             >
               {creating ? (
                 <>
@@ -152,7 +152,7 @@ export default function CreateCoursePage() {
         </form>
       </Card>
 
-      <p className="mt-4 text-sm text-slate-500 text-center">
+      <p className="mt-4 text-sm text-[#849589] text-center">
         After creating, you can add vocabulary and publish your course
       </p>
     </div>

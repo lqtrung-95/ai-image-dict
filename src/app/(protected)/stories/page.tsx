@@ -62,7 +62,7 @@ export default function StoriesPage() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 bg-slate-800/50 rounded-xl animate-pulse" />
+            <div key={i} className="h-64 bg-[#1c2024] rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -74,10 +74,10 @@ export default function StoriesPage() {
       <div className="flex items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Photo Stories</h1>
-          <p className="text-slate-400">Create stories from your photos to organize vocabulary by context</p>
+          <p className="text-[#bacbbe]">Create stories from your photos to organize vocabulary by context</p>
         </div>
         <Link href="/stories/new">
-          <Button className="bg-purple-600 hover:bg-purple-700">
+          <Button className="bg-[#76ffbb] hover:opacity-90">
             <Plus className="w-4 h-4 mr-2" />
             Create Story
           </Button>
@@ -86,16 +86,16 @@ export default function StoriesPage() {
 
       {stories.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <BookOpen className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">No stories yet</h2>
-          <p className="text-slate-400 mb-6 max-w-md mx-auto">
+          <p className="text-[#bacbbe] mb-6 max-w-md mx-auto">
             Create photo stories to organize your vocabulary by context. For example: &ldquo;My Kitchen&rdquo;,
             &ldquo;At the Park&rdquo;, or &ldquo;Restaurant Visit&rdquo;.
           </p>
           <Link href="/stories/new">
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button className="bg-[#76ffbb] hover:opacity-90">
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Story
             </Button>
@@ -106,10 +106,10 @@ export default function StoriesPage() {
           {stories.map((story) => (
             <Card
               key={story.id}
-              className="bg-slate-800/50 border-slate-700 overflow-hidden hover:border-purple-500/50 transition-colors group"
+              className="bg-[#1c2024] border-white/10 overflow-hidden hover:border-[#76ffbb]/50 transition-colors group"
             >
               <Link href={`/stories/${story.id}`}>
-                <div className="aspect-video bg-slate-700 relative overflow-hidden cursor-pointer">
+                <div className="aspect-video bg-[#272a2e] relative overflow-hidden cursor-pointer">
                   {story.cover_image_url ? (
                     <img
                       src={story.cover_image_url}
@@ -118,7 +118,7 @@ export default function StoriesPage() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ImageIcon className="w-12 h-12 text-slate-600" />
+                      <ImageIcon className="w-12 h-12 text-[#849589]" />
                     </div>
                   )}
                   <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-1 rounded text-xs text-white">
@@ -130,12 +130,12 @@ export default function StoriesPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <Link href={`/stories/${story.id}`}>
-                      <h3 className="font-semibold text-white mb-1 cursor-pointer hover:text-purple-400 transition-colors">
+                      <h3 className="font-semibold text-white mb-1 cursor-pointer hover:text-[#76ffbb] transition-colors">
                         {story.title}
                       </h3>
                     </Link>
                     {story.description && (
-                      <p className="text-sm text-slate-400 line-clamp-2">{story.description}</p>
+                      <p className="text-sm text-[#bacbbe] line-clamp-2">{story.description}</p>
                     )}
                   </div>
                   <Button
@@ -146,7 +146,7 @@ export default function StoriesPage() {
                       e.stopPropagation();
                       handleDelete(story.id);
                     }}
-                    className="text-slate-500 hover:text-red-400 hover:bg-red-500/10 -mr-2 -mt-2"
+                    className="text-[#849589] hover:text-red-400 hover:bg-red-500/10 -mr-2 -mt-2"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

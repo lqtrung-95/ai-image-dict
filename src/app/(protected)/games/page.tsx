@@ -17,7 +17,7 @@ export default function GamesPage() {
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <Button
           variant="ghost"
-          className="mb-4 -ml-2 text-slate-400"
+          className="mb-4 -ml-2 text-[#bacbbe]"
           onClick={() => setGameMode('menu')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -33,7 +33,7 @@ export default function GamesPage() {
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <Button
           variant="ghost"
-          className="mb-4 -ml-2 text-slate-400"
+          className="mb-4 -ml-2 text-[#bacbbe]"
           onClick={() => setGameMode('menu')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -47,16 +47,16 @@ export default function GamesPage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
-          <Gamepad2 className="w-8 h-8 text-purple-400" />
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#76ffbb]/10 flex items-center justify-center">
+          <Gamepad2 className="w-8 h-8 text-[#76ffbb]" />
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">Vocabulary Games</h1>
-        <p className="text-slate-400">Make learning fun with interactive games</p>
+        <p className="text-[#bacbbe]">Make learning fun with interactive games</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card
-          className="bg-slate-800/50 border-slate-700 p-6 hover:border-purple-500/50 transition-colors cursor-pointer"
+          className="bg-[#1c2024] border-white/10 p-6 hover:border-[#76ffbb]/50 transition-colors cursor-pointer"
           onClick={() => setGameMode('matching')}
         >
           <div className="flex items-start gap-4">
@@ -65,7 +65,7 @@ export default function GamesPage() {
             </div>
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-white mb-1">Matching Game</h2>
-              <p className="text-sm text-slate-400 mb-3">
+              <p className="text-sm text-[#bacbbe] mb-3">
                 Match Chinese characters with their English meanings. Test your recognition skills!
               </p>
               <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
@@ -76,7 +76,7 @@ export default function GamesPage() {
         </Card>
 
         <Card
-          className="bg-slate-800/50 border-slate-700 p-6 hover:border-purple-500/50 transition-colors cursor-pointer"
+          className="bg-[#1c2024] border-white/10 p-6 hover:border-[#76ffbb]/50 transition-colors cursor-pointer"
           onClick={() => setGameMode('quiz')}
         >
           <div className="flex items-start gap-4">
@@ -85,7 +85,7 @@ export default function GamesPage() {
             </div>
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-white mb-1">Quiz Mode</h2>
-              <p className="text-sm text-slate-400 mb-3">
+              <p className="text-sm text-[#bacbbe] mb-3">
                 Multiple choice questions to test your vocabulary knowledge. How many can you get right?
               </p>
               <Button size="sm" className="bg-green-600 hover:bg-green-700">

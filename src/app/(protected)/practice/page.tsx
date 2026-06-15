@@ -209,7 +209,7 @@ export default function PracticePage() {
     return (
       <div className="container mx-auto px-4 py-6 max-w-lg">
         <h1 className="text-2xl font-bold text-white mb-6">Practice</h1>
-        <div className="h-72 bg-slate-800/50 rounded-2xl animate-pulse" />
+        <div className="h-72 bg-[#1c2024] rounded-2xl animate-pulse" />
       </div>
     );
   }
@@ -219,11 +219,11 @@ export default function PracticePage() {
       <div className="container mx-auto px-4 py-6 max-w-lg">
         <h1 className="text-2xl font-bold text-white mb-6">Practice</h1>
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <BookOpen className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">No words due for review</h2>
-          <p className="text-slate-400 mb-6">
+          <p className="text-[#bacbbe] mb-6">
             {dueCount === 0
               ? 'Add some vocabulary by analyzing photos, or check back tomorrow!'
               : 'Great job! Come back later for more practice.'}
@@ -231,14 +231,14 @@ export default function PracticePage() {
           <div className="flex gap-3 justify-center">
             <Button
               onClick={() => router.push('/capture')}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-[#76ffbb] hover:opacity-90"
             >
               Capture Photo
             </Button>
             <Button
               onClick={() => router.push('/progress')}
               variant="outline"
-              className="border-slate-600"
+              className="border-white/10"
             >
               View Progress
             </Button>
@@ -257,7 +257,7 @@ export default function PracticePage() {
       <div className="container mx-auto px-4 py-6 max-w-lg">
         <h1 className="text-2xl font-bold text-white mb-6">Practice Complete!</h1>
 
-        <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
+        <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
             <Trophy className="w-10 h-10 text-white" />
           </div>
@@ -265,7 +265,7 @@ export default function PracticePage() {
           <h2 className="text-3xl font-bold text-white mb-2">
             {percentage}% Success!
           </h2>
-          <p className="text-slate-400 mb-4">
+          <p className="text-[#bacbbe] mb-4">
             You reviewed {totalAnswered} words
           </p>
 
@@ -299,14 +299,14 @@ export default function PracticePage() {
             <Button
               onClick={handleRestart}
               variant="outline"
-              className="flex-1 border-slate-600 text-slate-200"
+              className="flex-1 border-white/10 text-[#e0e2e8]"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Practice Again
             </Button>
             <Button
               onClick={() => router.push('/progress')}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-[#76ffbb] hover:opacity-90"
             >
               View Progress
             </Button>
@@ -322,14 +322,14 @@ export default function PracticePage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Practice</h1>
-          <p className="text-slate-400">
+          <p className="text-[#bacbbe]">
             {currentIndex + 1} of {words.length}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {dueCount > 0 && (
-            <div className="flex items-center gap-1 text-sm text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full">
+            <div className="flex items-center gap-1 text-sm text-[#76ffbb] bg-[#76ffbb]/10 px-2 py-1 rounded-full">
               <Calendar className="w-4 h-4" />
               <span>{dueCount} due</span>
             </div>
@@ -338,7 +338,7 @@ export default function PracticePage() {
             variant="ghost"
             size="icon"
             onClick={handleShuffle}
-            className="text-slate-400 hover:text-white"
+            className="text-[#bacbbe] hover:text-[#e0e2e8]"
           >
             <Shuffle className="w-5 h-5" />
           </Button>
@@ -348,13 +348,13 @@ export default function PracticePage() {
       {/* List Filter */}
       <div className="mb-6">
         <Select value={selectedList} onValueChange={handleListChange}>
-          <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white">
+          <SelectTrigger className="bg-[#1c2024] border-white/10 text-white">
             <SelectValue placeholder="All words" />
           </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700">
-            <SelectItem value="all" className="text-white focus:bg-slate-700">
+          <SelectContent className="bg-[#1c2024] border-white/10">
+            <SelectItem value="all" className="text-white focus:bg-[#272a2e]">
               <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-purple-400" />
+                <Target className="w-4 h-4 text-[#76ffbb]" />
                 All words ({words.length})
               </div>
             </SelectItem>
@@ -362,7 +362,7 @@ export default function PracticePage() {
               <SelectItem
                 key={list.id}
                 value={list.id}
-                className="text-white focus:bg-slate-700"
+                className="text-white focus:bg-[#272a2e]"
               >
                 <div className="flex items-center gap-2">
                   <div
@@ -378,9 +378,9 @@ export default function PracticePage() {
       </div>
 
       {/* Progress Bar */}
-      <div className="h-2 bg-slate-700 rounded-full mb-6 overflow-hidden">
+      <div className="h-2 bg-[#272a2e] rounded-full mb-6 overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-300"
+          className="h-full bg-gradient-to-r from-[#76ffbb] to-[#76ffbb] transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -402,19 +402,19 @@ export default function PracticePage() {
       <div className="flex justify-center gap-4 mt-8">
         <div className="text-center">
           <p className="text-xl font-bold text-red-400">{stats.again}</p>
-          <p className="text-xs text-slate-500">Again</p>
+          <p className="text-xs text-[#849589]">Again</p>
         </div>
         <div className="text-center">
           <p className="text-xl font-bold text-orange-400">{stats.hard}</p>
-          <p className="text-xs text-slate-500">Hard</p>
+          <p className="text-xs text-[#849589]">Hard</p>
         </div>
         <div className="text-center">
           <p className="text-xl font-bold text-green-400">{stats.good}</p>
-          <p className="text-xs text-slate-500">Good</p>
+          <p className="text-xs text-[#849589]">Good</p>
         </div>
         <div className="text-center">
           <p className="text-xl font-bold text-blue-400">{stats.easy}</p>
-          <p className="text-xs text-slate-500">Easy</p>
+          <p className="text-xs text-[#849589]">Easy</p>
         </div>
       </div>
     </div>

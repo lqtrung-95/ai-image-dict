@@ -118,13 +118,13 @@ export function AccountDataManagementSection() {
           <Download className="w-5 h-5 text-blue-400" />
           Data & Privacy
         </h2>
-        <p className="text-slate-400 text-sm mb-4">
+        <p className="text-[#bacbbe] text-sm mb-4">
           Manage your data and privacy settings. Export your data or delete your account.
         </p>
 
         <div className="space-y-4">
           {/* Export Data */}
-          <Card className="bg-slate-800/50 border-slate-700 p-4">
+          <Card className="bg-[#1c2024] border-white/10 p-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3 flex-1">
                 <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
@@ -132,7 +132,7 @@ export function AccountDataManagementSection() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium text-white">Export Your Data</h3>
-                  <p className="text-sm text-slate-400 mt-1">
+                  <p className="text-sm text-[#bacbbe] mt-1">
                     Download all your vocabulary, lists, practice history, and settings as a JSON file.
                     This is useful for backups or if you want to move your data elsewhere.
                   </p>
@@ -163,7 +163,7 @@ export function AccountDataManagementSection() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium text-white">Delete Account</h3>
-                  <p className="text-sm text-slate-400 mt-1">
+                  <p className="text-sm text-[#bacbbe] mt-1">
                     Permanently delete your account and all associated data. This action cannot be undone.
                     Your vocabulary, lists, practice history, and all other data will be permanently removed.
                   </p>
@@ -185,7 +185,7 @@ export function AccountDataManagementSection() {
 
       {/* Delete Account Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
+        <DialogContent className="bg-[#101417] border-white/10 text-white max-w-md">
           {deleteStep === 'confirm' && (
             <>
               <DialogHeader>
@@ -193,7 +193,7 @@ export function AccountDataManagementSection() {
                   <AlertTriangle className="w-5 h-5" />
                   Delete Account
                 </DialogTitle>
-                <DialogDescription className="text-slate-400">
+                <DialogDescription className="text-[#bacbbe]">
                   This action is permanent and cannot be undone. All your data will be permanently deleted.
                 </DialogDescription>
               </DialogHeader>
@@ -212,14 +212,14 @@ export function AccountDataManagementSection() {
                 </div>
 
                 <div>
-                  <label className="text-sm text-slate-300 mb-2 block">
-                    Type <code className="bg-slate-800 px-1.5 py-0.5 rounded text-red-400">DELETE_MY_ACCOUNT</code> to confirm:
+                  <label className="text-sm text-[#e0e2e8] mb-2 block">
+                    Type <code className="bg-[#1c2024] px-1.5 py-0.5 rounded text-red-400">DELETE_MY_ACCOUNT</code> to confirm:
                   </label>
                   <Input
                     value={confirmationText}
                     onChange={(e) => setConfirmationText(e.target.value)}
                     placeholder="DELETE_MY_ACCOUNT"
-                    className="bg-slate-800 border-slate-700 text-white"
+                    className="bg-[#1c2024] border-white/10 text-white"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleDeleteAccount();
@@ -233,7 +233,7 @@ export function AccountDataManagementSection() {
                 <Button
                   variant="outline"
                   onClick={() => setShowDeleteDialog(false)}
-                  className="border-slate-600"
+                  className="border-white/10"
                 >
                   Cancel
                 </Button>
@@ -253,7 +253,7 @@ export function AccountDataManagementSection() {
             <div className="py-8 text-center">
               <Loader2 className="w-12 h-12 animate-spin text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">Deleting Account...</h3>
-              <p className="text-slate-400 text-sm">
+              <p className="text-[#bacbbe] text-sm">
                 This may take a moment. Please don&apos;t close this window.
               </p>
             </div>
@@ -263,7 +263,7 @@ export function AccountDataManagementSection() {
             <div className="py-8 text-center">
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">Account Deleted</h3>
-              <p className="text-slate-400 text-sm">
+              <p className="text-[#bacbbe] text-sm">
                 Your account has been permanently deleted. Redirecting to homepage...
               </p>
             </div>

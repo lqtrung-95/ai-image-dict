@@ -189,7 +189,7 @@ export function VocabularyCard({
   return (
     <div
       className={cn(
-        'group p-4 rounded-xl bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-colors',
+        'group p-4 rounded-xl bg-[#1c2024] border border-white/10 hover:border-[#76ffbb]/50 transition-colors',
         isLearned && 'border-green-500/30 bg-green-900/10',
         onClick && 'cursor-pointer',
         className
@@ -204,7 +204,7 @@ export function VocabularyCard({
             className="flex-shrink-0 group/photo"
             title="View original photo"
           >
-            <div className="w-14 h-14 rounded-lg overflow-hidden border border-slate-600 group-hover/photo:border-purple-500/50 transition-colors">
+            <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 group-hover/photo:border-[#76ffbb]/50 transition-colors">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photoUrl}
@@ -213,7 +213,7 @@ export function VocabularyCard({
               />
             </div>
             {formattedDate && (
-              <p className="text-[10px] text-slate-500 text-center mt-1">{formattedDate}</p>
+              <p className="text-[10px] text-[#849589] text-center mt-1">{formattedDate}</p>
             )}
           </a>
         )}
@@ -224,7 +224,7 @@ export function VocabularyCard({
               <span
                 className={cn(
                   'inline-block px-2 py-0.5 rounded text-xs font-medium',
-                  categoryColors[category] || 'bg-slate-600 text-slate-300'
+                  categoryColors[category] || 'bg-slate-600 text-[#e0e2e8]'
                 )}
               >
                 {category}
@@ -241,8 +241,8 @@ export function VocabularyCard({
             )}
           </div>
           <h3 className="text-2xl font-bold text-white mb-1 truncate">{wordZh}</h3>
-          <p className="text-lg text-purple-400 mb-1">{wordPinyin}</p>
-          <p className="text-slate-400 truncate">{wordEn}</p>
+          <p className="text-lg text-[#76ffbb] mb-1">{wordPinyin}</p>
+          <p className="text-[#bacbbe] truncate">{wordEn}</p>
           {exampleSentence && (
             <button
               onClick={() => setIsExampleExpanded(!isExampleExpanded)}
@@ -250,14 +250,14 @@ export function VocabularyCard({
             >
               <p
                 className={cn(
-                  'text-sm text-slate-500 italic transition-all',
+                  'text-sm text-[#849589] italic transition-all',
                   !isExampleExpanded && 'line-clamp-2'
                 )}
               >
                 &ldquo;{exampleSentence}&rdquo;
               </p>
               {!isExampleExpanded && exampleSentence.length > 80 && (
-                <span className="text-xs text-purple-400 opacity-0 group-hover/example:opacity-100 transition-opacity">
+                <span className="text-xs text-[#76ffbb] opacity-0 group-hover/example:opacity-100 transition-opacity">
                   Tap to expand
                 </span>
               )}
@@ -273,7 +273,7 @@ export function VocabularyCard({
             onClick={handleSpeak}
             className={cn(
               'h-8 w-8 rounded-full',
-              isPlaying ? 'text-purple-400 bg-purple-500/20' : 'text-slate-400 hover:text-white'
+              isPlaying ? 'text-[#76ffbb] bg-[#76ffbb]/10' : 'text-[#bacbbe] hover:text-[#e0e2e8]'
             )}
             aria-label="Play pronunciation"
           >
@@ -287,23 +287,23 @@ export function VocabularyCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-slate-400 hover:text-green-400 hover:bg-green-500/20"
+                  className="h-8 w-8 rounded-full text-[#bacbbe] hover:text-green-400 hover:bg-green-500/20"
                   aria-label="Save to vocabulary"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-slate-800 border-slate-700" align="end">
+              <DropdownMenuContent className="bg-[#1c2024] border-white/10" align="end">
                 <DropdownMenuItem
                   onClick={() => handleSave()}
-                  className="text-white focus:bg-slate-700 cursor-pointer"
+                  className="text-white focus:bg-[#272a2e] cursor-pointer"
                 >
                   <Plus className="w-4 h-4 mr-2 text-green-400" />
                   Save to vocabulary
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-slate-700" />
+                <DropdownMenuSeparator className="bg-[#272a2e]" />
                 {loadingLists ? (
-                  <DropdownMenuItem disabled className="text-slate-400">
+                  <DropdownMenuItem disabled className="text-[#bacbbe]">
                     Loading lists...
                   </DropdownMenuItem>
                 ) : (
@@ -311,17 +311,17 @@ export function VocabularyCard({
                     <DropdownMenuItem
                       key={list.id}
                       onClick={() => handleSave(list.id)}
-                      className="text-white focus:bg-slate-700 cursor-pointer"
+                      className="text-white focus:bg-[#272a2e] cursor-pointer"
                     >
                       <Folder className="w-4 h-4 mr-2" style={{ color: list.color }} />
                       Save to {list.name}
                     </DropdownMenuItem>
                   ))
                 )}
-                <DropdownMenuSeparator className="bg-slate-700" />
+                <DropdownMenuSeparator className="bg-[#272a2e]" />
                 <DropdownMenuItem
                   onClick={() => openCreateDialog('save')}
-                  className="text-purple-400 focus:bg-slate-700 cursor-pointer"
+                  className="text-[#76ffbb] focus:bg-[#272a2e] cursor-pointer"
                 >
                   <FolderPlus className="w-4 h-4 mr-2" />
                   Create new list
@@ -340,7 +340,7 @@ export function VocabularyCard({
                 'h-8 w-8 rounded-full',
                 isLearned
                   ? 'text-green-400 bg-green-500/20'
-                  : 'text-slate-400 hover:text-green-400 hover:bg-green-500/20'
+                  : 'text-[#bacbbe] hover:text-green-400 hover:bg-green-500/20'
               )}
               aria-label={isLearned ? 'Mark as learning' : 'Mark as learned'}
             >
@@ -355,15 +355,15 @@ export function VocabularyCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-slate-400 hover:text-purple-400 hover:bg-purple-500/20"
+                  className="h-8 w-8 rounded-full text-[#bacbbe] hover:text-[#76ffbb] hover:bg-[#76ffbb]/10"
                   aria-label="Add to list"
                 >
                   <FolderPlus className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-slate-800 border-slate-700" align="end">
+              <DropdownMenuContent className="bg-[#1c2024] border-white/10" align="end">
                 {loadingLists ? (
-                  <DropdownMenuItem disabled className="text-slate-400">
+                  <DropdownMenuItem disabled className="text-[#bacbbe]">
                     Loading...
                   </DropdownMenuItem>
                 ) : (
@@ -371,17 +371,17 @@ export function VocabularyCard({
                     <DropdownMenuItem
                       key={list.id}
                       onClick={() => handleAddToList(list.id)}
-                      className="text-white focus:bg-slate-700 cursor-pointer"
+                      className="text-white focus:bg-[#272a2e] cursor-pointer"
                     >
                       <Folder className="w-4 h-4 mr-2" style={{ color: list.color }} />
                       {list.name}
                     </DropdownMenuItem>
                   ))
                 )}
-                {lists.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
+                {lists.length > 0 && <DropdownMenuSeparator className="bg-[#272a2e]" />}
                 <DropdownMenuItem
                   onClick={() => openCreateDialog('add')}
-                  className="text-purple-400 focus:bg-slate-700 cursor-pointer"
+                  className="text-[#76ffbb] focus:bg-[#272a2e] cursor-pointer"
                 >
                   <FolderPlus className="w-4 h-4 mr-2" />
                   Create new list
@@ -396,7 +396,7 @@ export function VocabularyCard({
               variant="ghost"
               size="icon"
               onClick={() => setShowDeleteConfirm(true)}
-              className="h-8 w-8 rounded-full text-slate-500 hover:text-red-400 hover:bg-red-500/20 transition-colors"
+              className="h-8 w-8 rounded-full text-[#849589] hover:text-red-400 hover:bg-red-500/20 transition-colors"
               aria-label="Delete"
             >
               <Trash2 className="w-4 h-4" />
@@ -407,7 +407,7 @@ export function VocabularyCard({
 
       {/* Create List Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="bg-slate-800 border-slate-700 max-w-sm">
+        <DialogContent className="bg-[#1c2024] border-white/10 max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-white">Create List</DialogTitle>
           </DialogHeader>
@@ -417,12 +417,12 @@ export function VocabularyCard({
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
                 placeholder="List name"
-                className="bg-slate-700/50 border-slate-600 text-white"
+                className="bg-[#272a2e] border-white/10 text-white"
                 autoFocus
               />
             </div>
             <div>
-              <p className="text-sm text-slate-400 mb-2">Color</p>
+              <p className="text-sm text-[#bacbbe] mb-2">Color</p>
               <div className="flex flex-wrap gap-2">
                 {COLORS.map((color) => (
                   <button
@@ -440,7 +440,7 @@ export function VocabularyCard({
             <Button
               onClick={handleCreateList}
               disabled={!newListName.trim() || creating}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-[#76ffbb] hover:opacity-90"
             >
               {creating ? 'Creating...' : 'Create & Save'}
             </Button>
@@ -450,19 +450,19 @@ export function VocabularyCard({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent className="bg-slate-800 border-slate-700 max-w-sm">
+        <DialogContent className="bg-[#1c2024] border-white/10 max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-white">Delete Word?</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-slate-400">
+            <p className="text-[#bacbbe]">
               Are you sure you want to remove <span className="text-white font-medium">{wordZh}</span> ({wordEn}) from your vocabulary?
             </p>
             <div className="flex gap-3">
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 border-slate-600 text-slate-200 hover:bg-slate-700"
+                className="flex-1 border-white/10 text-[#e0e2e8] hover:bg-[#272a2e]"
               >
                 Cancel
               </Button>

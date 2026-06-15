@@ -119,8 +119,8 @@ export function ProfileSettingsSection() {
 
   if (loading) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 p-6 mb-8">
-        <div className="h-32 bg-slate-700/50 rounded-xl animate-pulse" />
+      <Card className="bg-[#1c2024] border-white/10 p-6 mb-8">
+        <div className="h-32 bg-[#272a2e] rounded-xl animate-pulse" />
       </Card>
     );
   }
@@ -134,14 +134,14 @@ export function ProfileSettingsSection() {
         Profile
       </h2>
 
-      <Card className="bg-slate-800/50 border-slate-700 p-6">
+      <Card className="bg-[#1c2024] border-white/10 p-6">
         <div className="flex flex-col sm:flex-row gap-6 items-start">
           {/* Avatar */}
           <div className="relative">
             <button
               onClick={handleAvatarClick}
               disabled={uploading}
-              className="relative w-24 h-24 rounded-full overflow-hidden bg-slate-700 border-2 border-slate-600 hover:border-purple-500 transition-colors group"
+              className="relative w-24 h-24 rounded-full overflow-hidden bg-[#272a2e] border-2 border-white/10 hover:border-[#76ffbb] transition-colors group"
             >
               {profile?.avatar_url ? (
                 <img
@@ -150,7 +150,7 @@ export function ProfileSettingsSection() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-purple-600 text-white text-2xl font-bold">
+                <div className="w-full h-full flex items-center justify-center bg-[#76ffbb] text-white text-2xl font-bold">
                   {getInitials(displayName || 'User')}
                 </div>
               )}
@@ -169,14 +169,14 @@ export function ProfileSettingsSection() {
               onChange={handleFileChange}
               className="hidden"
             />
-            <p className="text-xs text-slate-500 mt-2 text-center">
+            <p className="text-xs text-[#849589] mt-2 text-center">
               Click to change
             </p>
           </div>
 
           {/* Display Name */}
           <div className="flex-1 w-full">
-            <label className="text-sm text-slate-400 mb-2 block">
+            <label className="text-sm text-[#bacbbe] mb-2 block">
               Display Name
             </label>
             <div className="flex gap-3">
@@ -184,13 +184,13 @@ export function ProfileSettingsSection() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Enter your display name"
-                className="bg-slate-700 border-slate-600 text-white"
+                className="bg-[#272a2e] border-white/10 text-white"
                 maxLength={50}
               />
               <Button
                 onClick={handleSave}
                 disabled={!hasChanges || saving || displayName.trim().length === 0}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-[#76ffbb] hover:opacity-90"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -199,7 +199,7 @@ export function ProfileSettingsSection() {
                 )}
               </Button>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-[#849589] mt-2">
               This name will be displayed in the app instead of your email.
             </p>
           </div>

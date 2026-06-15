@@ -45,7 +45,7 @@ const HSK_CONFIG: Record<number, { color: string; bg: string; label: string }> =
   3: { color: 'text-yellow-400', bg: 'bg-yellow-500/20', label: 'HSK 3 - Intermediate' },
   4: { color: 'text-orange-400', bg: 'bg-orange-500/20', label: 'HSK 4 - Upper-Intermediate' },
   5: { color: 'text-red-400', bg: 'bg-red-500/20', label: 'HSK 5 - Advanced' },
-  6: { color: 'text-purple-400', bg: 'bg-purple-500/20', label: 'HSK 6 - Proficient' },
+  6: { color: 'text-[#76ffbb]', bg: 'bg-[#76ffbb]/10', label: 'HSK 6 - Proficient' },
 };
 
 function HskBadge({ level }: { level: number }) {
@@ -143,7 +143,7 @@ export function WordDetailModal({ open, onOpenChange, word }: WordDetailModalPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-800 border-slate-700 max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-[#1c2024] border-white/10 max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-3">
             Word Details
@@ -153,7 +153,7 @@ export function WordDetailModal({ open, onOpenChange, word }: WordDetailModalPro
 
         <div className="space-y-6 pt-2">
           {/* Word info */}
-          <div className="text-center p-4 rounded-lg bg-slate-700/30">
+          <div className="text-center p-4 rounded-lg bg-[#272a2e]/30">
             <div className="flex items-center justify-center gap-3 mb-2">
               <h2 className="text-4xl font-bold text-white">{word.wordZh}</h2>
               <Button
@@ -162,14 +162,14 @@ export function WordDetailModal({ open, onOpenChange, word }: WordDetailModalPro
                 onClick={handleSpeak}
                 className={cn(
                   'h-10 w-10 rounded-full',
-                  isPlaying ? 'text-purple-400 bg-purple-500/20' : 'text-slate-400 hover:text-white'
+                  isPlaying ? 'text-[#76ffbb] bg-[#76ffbb]/10' : 'text-[#bacbbe] hover:text-[#e0e2e8]'
                 )}
               >
                 <Volume2 className="w-5 h-5" />
               </Button>
             </div>
-            <p className="text-xl text-purple-400 mb-1">{word.wordPinyin}</p>
-            <p className="text-lg text-slate-300">{word.wordEn}</p>
+            <p className="text-xl text-[#76ffbb] mb-1">{word.wordPinyin}</p>
+            <p className="text-lg text-[#e0e2e8]">{word.wordEn}</p>
           </div>
 
           {/* HSK Level Description */}
@@ -178,7 +178,7 @@ export function WordDetailModal({ open, onOpenChange, word }: WordDetailModalPro
               <p className={cn('text-sm font-medium', hskConfig.color)}>
                 {hskConfig.label}
               </p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-[#bacbbe] mt-1">
                 {hskLevel === 1 && 'Common everyday vocabulary. ~150 words at this level.'}
                 {hskLevel === 2 && 'Basic conversation vocabulary. ~300 words at this level.'}
                 {hskLevel === 3 && 'Daily communication. ~600 words at this level.'}
@@ -192,39 +192,39 @@ export function WordDetailModal({ open, onOpenChange, word }: WordDetailModalPro
           {/* Example sentence */}
           {word.exampleSentence && (
             <div>
-              <h3 className="text-sm font-medium text-slate-400 mb-2">Example</h3>
-              <p className="text-slate-300 italic">&ldquo;{word.exampleSentence}&rdquo;</p>
+              <h3 className="text-sm font-medium text-[#bacbbe] mb-2">Example</h3>
+              <p className="text-[#e0e2e8] italic">&ldquo;{word.exampleSentence}&rdquo;</p>
             </div>
           )}
 
           {/* SRS Stats */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-slate-700/30">
-              <div className="flex items-center gap-2 text-slate-400 mb-1">
+            <div className="p-3 rounded-lg bg-[#272a2e]/30">
+              <div className="flex items-center gap-2 text-[#bacbbe] mb-1">
                 <Calendar className="w-4 h-4" />
                 <span className="text-xs">Next Review</span>
               </div>
               <p className="text-white font-medium">{formatNextReview(word.nextReviewDate)}</p>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-700/30">
-              <div className="flex items-center gap-2 text-slate-400 mb-1">
+            <div className="p-3 rounded-lg bg-[#272a2e]/30">
+              <div className="flex items-center gap-2 text-[#bacbbe] mb-1">
                 <TrendingUp className="w-4 h-4" />
                 <span className="text-xs">Streak</span>
               </div>
               <p className="text-white font-medium">{word.correctStreak || 0} correct</p>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-700/30">
-              <div className="flex items-center gap-2 text-slate-400 mb-1">
+            <div className="p-3 rounded-lg bg-[#272a2e]/30">
+              <div className="flex items-center gap-2 text-[#bacbbe] mb-1">
                 <Clock className="w-4 h-4" />
                 <span className="text-xs">Reviews</span>
               </div>
               <p className="text-white font-medium">{word.repetitions || 0} times</p>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-700/30">
-              <div className="flex items-center gap-2 text-slate-400 mb-1">
+            <div className="p-3 rounded-lg bg-[#272a2e]/30">
+              <div className="flex items-center gap-2 text-[#bacbbe] mb-1">
                 <Star className="w-4 h-4" />
                 <span className="text-xs">Accuracy</span>
               </div>
@@ -245,15 +245,15 @@ export function WordDetailModal({ open, onOpenChange, word }: WordDetailModalPro
 
           {/* Practice History */}
           <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3">Recent Practice</h3>
+            <h3 className="text-sm font-medium text-[#bacbbe] mb-3">Recent Practice</h3>
             {loadingAttempts ? (
               <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-10 bg-slate-700/30 rounded animate-pulse" />
+                  <div key={i} className="h-10 bg-[#272a2e]/30 rounded animate-pulse" />
                 ))}
               </div>
             ) : attempts.length === 0 ? (
-              <p className="text-slate-500 text-sm text-center py-4">
+              <p className="text-[#849589] text-sm text-center py-4">
                 No practice history yet. Start practicing to track progress!
               </p>
             ) : (
@@ -261,15 +261,15 @@ export function WordDetailModal({ open, onOpenChange, word }: WordDetailModalPro
                 {attempts.map((attempt) => (
                   <div
                     key={attempt.id}
-                    className="flex items-center justify-between p-2 rounded bg-slate-700/30"
+                    className="flex items-center justify-between p-2 rounded bg-[#272a2e]/30"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 capitalize">
+                      <span className="text-xs text-[#849589] capitalize">
                         {attempt.quiz_mode.replace('-', ' ')}
                       </span>
                       <RatingBadge rating={attempt.rating} />
                     </div>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[#849589]">
                       {new Date(attempt.created_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',

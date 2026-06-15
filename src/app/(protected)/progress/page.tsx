@@ -107,10 +107,10 @@ export default function ProgressPage() {
         <h1 className="text-2xl font-bold text-white mb-6">Progress</h1>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-slate-800/50 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 bg-[#1c2024] rounded-xl animate-pulse" />
           ))}
         </div>
-        <div className="h-64 bg-slate-800/50 rounded-xl animate-pulse" />
+        <div className="h-64 bg-[#1c2024] rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -134,17 +134,17 @@ export default function ProgressPage() {
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <h1 className="text-2xl font-bold text-white mb-6">Your Progress</h1>
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <TrendingUp className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <TrendingUp className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">No progress yet</h2>
-          <p className="text-slate-400 mb-6 max-w-md mx-auto">
+          <p className="text-[#bacbbe] mb-6 max-w-md mx-auto">
             Start building your vocabulary by analyzing photos. Your progress stats will appear here!
           </p>
           <div className="flex gap-3 justify-center">
             <Button
               onClick={() => router.push('/capture')}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-[#76ffbb] hover:opacity-90"
             >
               <Play className="w-4 h-4 mr-2" />
               Capture Photo
@@ -152,7 +152,7 @@ export default function ProgressPage() {
             <Button
               onClick={() => router.push('/upload')}
               variant="outline"
-              className="border-slate-600"
+              className="border-white/10"
             >
               Upload Image
             </Button>
@@ -179,24 +179,24 @@ export default function ProgressPage() {
 
       {/* Due Today CTA */}
       {stats.dueToday > 0 && (
-        <Card className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/30 p-4 mb-6">
+        <Card className="bg-gradient-to-r from-[#76ffbb]/20 to-pink-600/20 border-[#76ffbb]/30 p-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-purple-400" />
+              <div className="w-12 h-12 rounded-full bg-[#76ffbb]/10 flex items-center justify-center">
+                <Clock className="w-6 h-6 text-[#76ffbb]" />
               </div>
               <div>
                 <p className="text-lg font-semibold text-white">
                   {stats.dueToday} words due for review
                 </p>
-                <p className="text-sm text-purple-300/70">
+                <p className="text-sm text-[#76ffbb]/80/70">
                   Keep your streak alive!
                 </p>
               </div>
             </div>
             <Button
               onClick={() => router.push('/practice')}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-[#76ffbb] hover:opacity-90"
             >
               <Play className="w-4 h-4 mr-2" />
               Practice Now
@@ -211,7 +211,7 @@ export default function ProgressPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {/* Current Streak */}
-        <Card className="bg-gradient-to-br from-orange-500/20 to-slate-800/50 border-orange-500/30 p-4">
+        <Card className="bg-gradient-to-br from-orange-500/20 to-[#1c2024]/50 border-orange-500/30 p-4">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="w-5 h-5 text-orange-400" />
             <span className="text-sm text-orange-400/70">Current Streak</span>
@@ -221,17 +221,17 @@ export default function ProgressPage() {
         </Card>
 
         {/* Due Today */}
-        <Card className="bg-gradient-to-br from-purple-500/20 to-slate-800/50 border-purple-500/30 p-4">
+        <Card className="bg-gradient-to-br from-[#76ffbb]/20 to-[#1c2024]/50 border-[#76ffbb]/30 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5 text-purple-400" />
-            <span className="text-sm text-purple-400/70">Due Today</span>
+            <Clock className="w-5 h-5 text-[#76ffbb]" />
+            <span className="text-sm text-[#76ffbb]/70">Due Today</span>
           </div>
-          <p className="text-3xl font-bold text-purple-400">{stats.dueToday}</p>
-          <p className="text-xs text-purple-400/50">Words to review</p>
+          <p className="text-3xl font-bold text-[#76ffbb]">{stats.dueToday}</p>
+          <p className="text-xs text-[#76ffbb]/50">Words to review</p>
         </Card>
 
         {/* Total Words */}
-        <Card className="bg-gradient-to-br from-blue-500/20 to-slate-800/50 border-blue-500/30 p-4">
+        <Card className="bg-gradient-to-br from-blue-500/20 to-[#1c2024]/50 border-blue-500/30 p-4">
           <div className="flex items-center gap-2 mb-2">
             <BookOpen className="w-5 h-5 text-blue-400" />
             <span className="text-sm text-blue-400/70">Total Words</span>
@@ -241,7 +241,7 @@ export default function ProgressPage() {
         </Card>
 
         {/* Mastered */}
-        <Card className="bg-gradient-to-br from-green-500/20 to-slate-800/50 border-green-500/30 p-4">
+        <Card className="bg-gradient-to-br from-green-500/20 to-[#1c2024]/50 border-green-500/30 p-4">
           <div className="flex items-center gap-2 mb-2">
             <GraduationCap className="w-5 h-5 text-green-400" />
             <span className="text-sm text-green-400/70">Mastered</span>
@@ -255,21 +255,21 @@ export default function ProgressPage() {
       </div>
 
       {/* Mastery Progress Bar */}
-      <Card className="bg-slate-800/50 border-slate-700 p-6 mb-8">
+      <Card className="bg-[#1c2024] border-white/10 p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-400" />
+            <TrendingUp className="w-5 h-5 text-[#76ffbb]" />
             Mastery Progress
           </h2>
-          <span className="text-2xl font-bold text-purple-400">{masteryRate}%</span>
+          <span className="text-2xl font-bold text-[#76ffbb]">{masteryRate}%</span>
         </div>
-        <div className="h-4 bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-4 bg-[#272a2e] rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+            className="h-full bg-gradient-to-r from-[#76ffbb] to-pink-500 transition-all duration-500"
             style={{ width: `${masteryRate}%` }}
           />
         </div>
-        <div className="flex justify-between mt-2 text-sm text-slate-400">
+        <div className="flex justify-between mt-2 text-sm text-[#bacbbe]">
           <span>{stats.learnedWords} mastered</span>
           <span>{stats.totalWords - stats.learnedWords} still learning</span>
         </div>
@@ -278,7 +278,7 @@ export default function ProgressPage() {
       {/* Two Column Layout */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         {/* HSK Distribution */}
-        <Card className="bg-slate-800/50 border-slate-700 p-6">
+        <Card className="bg-[#1c2024] border-white/10 p-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
             <BarChart3 className="w-5 h-5 text-emerald-400" />
             HSK Level Distribution
@@ -291,12 +291,12 @@ export default function ProgressPage() {
                 return (
                   <div key={level}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-slate-300">{HSK_LABELS[level]}</span>
-                      <span className="text-slate-400">
+                      <span className="text-[#e0e2e8]">{HSK_LABELS[level]}</span>
+                      <span className="text-[#bacbbe]">
                         {count} ({percentage}%)
                       </span>
                     </div>
-                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-[#272a2e] rounded-full overflow-hidden">
                       <div
                         className={`h-full ${HSK_COLORS[level]} transition-all duration-500`}
                         style={{ width: `${percentage}%` }}
@@ -307,14 +307,14 @@ export default function ProgressPage() {
               })}
             </div>
           ) : (
-            <p className="text-slate-500 text-center py-8">
+            <p className="text-[#849589] text-center py-8">
               No HSK data yet. Words will be classified as you add them.
             </p>
           )}
         </Card>
 
         {/* Review Forecast */}
-        <Card className="bg-slate-800/50 border-slate-700 p-6">
+        <Card className="bg-[#1c2024] border-white/10 p-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
             <Calendar className="w-5 h-5 text-cyan-400" />
             Review Forecast (Next 7 Days)
@@ -339,7 +339,7 @@ export default function ProgressPage() {
                       style={{ height: `${Math.max(height, 4)}%` }}
                     />
                   </div>
-                  <span className={`text-xs ${isToday ? 'text-cyan-400 font-medium' : 'text-slate-500'}`}>
+                  <span className={`text-xs ${isToday ? 'text-cyan-400 font-medium' : 'text-[#849589]'}`}>
                     {dayName}
                   </span>
                 </div>
@@ -367,7 +367,7 @@ export default function ProgressPage() {
       )}
 
       {/* Words Added Chart */}
-      <Card className="bg-slate-800/50 border-slate-700 p-6 mb-8">
+      <Card className="bg-[#1c2024] border-white/10 p-6 mb-8">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-6">
           <Target className="w-5 h-5 text-blue-400" />
           Words Added (Last 7 Days)
@@ -387,13 +387,13 @@ export default function ProgressPage() {
                   <div
                     className={`w-full rounded-t-md transition-all duration-500 ${
                       isToday
-                        ? 'bg-gradient-to-t from-purple-500 to-pink-500'
+                        ? 'bg-gradient-to-t from-[#76ffbb] to-pink-500'
                         : 'bg-blue-500/60'
                     }`}
                     style={{ height: `${Math.max(height, 4)}%` }}
                   />
                 </div>
-                <span className={`text-xs ${isToday ? 'text-purple-400 font-medium' : 'text-slate-500'}`}>
+                <span className={`text-xs ${isToday ? 'text-[#76ffbb] font-medium' : 'text-[#849589]'}`}>
                   {dayName}
                 </span>
               </div>
@@ -403,20 +403,20 @@ export default function ProgressPage() {
       </Card>
 
       {/* Practice Sessions */}
-      <Card className="bg-slate-800/50 border-slate-700 p-6 mb-8">
+      <Card className="bg-[#1c2024] border-white/10 p-6 mb-8">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Target className="w-5 h-5 text-purple-400" />
+              <Target className="w-5 h-5 text-[#76ffbb]" />
               Practice Sessions
             </h2>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-[#bacbbe] text-sm mt-1">
               You&apos;ve completed {stats.totalPracticeSessions} practice sessions
             </p>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-bold text-purple-400">{stats.totalPracticeSessions}</p>
-            <p className="text-xs text-slate-500">Total sessions</p>
+            <p className="text-3xl font-bold text-[#76ffbb]">{stats.totalPracticeSessions}</p>
+            <p className="text-xs text-[#849589]">Total sessions</p>
           </div>
         </div>
       </Card>

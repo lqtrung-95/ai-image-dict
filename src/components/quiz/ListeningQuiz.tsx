@@ -94,13 +94,13 @@ export function ListeningQuiz({ words, onAnswer, onComplete }: ListeningQuizProp
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-white">Listening Quiz</h2>
-        <span className="text-slate-400">
+        <span className="text-[#bacbbe]">
           {currentIndex + 1} / {words.length}
         </span>
       </div>
 
       {/* Progress Bar */}
-      <div className="h-2 bg-slate-700 rounded-full mb-8 overflow-hidden">
+      <div className="h-2 bg-[#272a2e] rounded-full mb-8 overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300"
           style={{ width: `${progress}%` }}
@@ -109,7 +109,7 @@ export function ListeningQuiz({ words, onAnswer, onComplete }: ListeningQuizProp
 
       {/* Question */}
       <div className="text-center mb-8">
-        <p className="text-slate-400 mb-6">Listen and choose the correct word</p>
+        <p className="text-[#bacbbe] mb-6">Listen and choose the correct word</p>
         
         {/* Big Play Button */}
         <button
@@ -118,7 +118,7 @@ export function ListeningQuiz({ words, onAnswer, onComplete }: ListeningQuizProp
             'w-24 h-24 rounded-full mx-auto flex items-center justify-center transition-all',
             isPlaying
               ? 'bg-blue-500 text-white scale-110'
-              : 'bg-slate-800 text-blue-400 hover:bg-blue-500/20 hover:scale-105'
+              : 'bg-[#1c2024] text-blue-400 hover:bg-blue-500/20 hover:scale-105'
           )}
         >
           {isPlaying ? (
@@ -132,7 +132,7 @@ export function ListeningQuiz({ words, onAnswer, onComplete }: ListeningQuizProp
           )}
         </button>
         
-        <p className="text-slate-500 text-sm mt-4 flex items-center justify-center gap-1">
+        <p className="text-[#849589] text-sm mt-4 flex items-center justify-center gap-1">
           <RefreshCw className="w-3 h-3" />
           Tap to play again
         </p>
@@ -145,7 +145,7 @@ export function ListeningQuiz({ words, onAnswer, onComplete }: ListeningQuizProp
           const isCorrect = option.id === currentWord.id;
           const showResult = isAnswered;
 
-          let bgClass = 'bg-slate-800/50 border-slate-700 hover:border-blue-500/50';
+          let bgClass = 'bg-[#1c2024] border-white/10 hover:border-blue-500/50';
           if (showResult && isCorrect) {
             bgClass = 'bg-green-500/20 border-green-500';
           } else if (showResult && isSelected && !isCorrect) {
@@ -165,7 +165,7 @@ export function ListeningQuiz({ words, onAnswer, onComplete }: ListeningQuizProp
             >
               <p className="text-2xl font-bold text-white mb-1">{option.word_zh}</p>
               {showResult && (
-                <p className="text-sm text-slate-400">{option.word_pinyin}</p>
+                <p className="text-sm text-[#bacbbe]">{option.word_pinyin}</p>
               )}
               {showResult && isCorrect && (
                 <Check className="w-5 h-5 text-green-400 mx-auto mt-2" />
@@ -180,11 +180,11 @@ export function ListeningQuiz({ words, onAnswer, onComplete }: ListeningQuizProp
 
       {/* Show answer after selection */}
       {isAnswered && (
-        <div className="text-center mb-6 p-4 rounded-xl bg-slate-800/50 border border-slate-700">
-          <p className="text-slate-400 text-sm">The answer was</p>
+        <div className="text-center mb-6 p-4 rounded-xl bg-[#1c2024] border border-white/10">
+          <p className="text-[#bacbbe] text-sm">The answer was</p>
           <p className="text-2xl font-bold text-white">{currentWord.word_zh}</p>
           <p className="text-blue-400">{currentWord.word_pinyin}</p>
-          <p className="text-slate-300">{currentWord.word_en}</p>
+          <p className="text-[#e0e2e8]">{currentWord.word_en}</p>
         </div>
       )}
 

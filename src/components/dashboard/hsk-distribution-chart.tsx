@@ -28,15 +28,15 @@ export function HskDistributionChart({ distribution }: HskDistributionChartProps
 
   if (totalWords === 0) {
     return (
-      <Card className="p-4 bg-slate-800/50 border-slate-700">
+      <Card className="p-4 bg-[#1c2024] border-white/10">
         <h3 className="font-medium text-white mb-3">HSK Distribution</h3>
-        <p className="text-slate-400 text-sm">No HSK-tagged words yet.</p>
+        <p className="text-[#bacbbe] text-sm">No HSK-tagged words yet.</p>
       </Card>
     );
   }
 
   return (
-    <Card className="p-4 bg-slate-800/50 border-slate-700">
+    <Card className="p-4 bg-[#1c2024] border-white/10">
       <h3 className="font-medium text-white mb-4">HSK Distribution</h3>
 
       <div className="space-y-3">
@@ -46,8 +46,8 @@ export function HskDistributionChart({ distribution }: HskDistributionChartProps
 
           return (
             <div key={item.level} className="flex items-center gap-3">
-              <span className="text-sm text-slate-400 w-12">HSK {item.level}</span>
-              <div className="flex-1 h-6 bg-slate-700 rounded overflow-hidden">
+              <span className="text-sm text-[#bacbbe] w-12">HSK {item.level}</span>
+              <div className="flex-1 h-6 bg-[#272a2e] rounded overflow-hidden">
                 <div
                   className={`h-full ${color} transition-all flex items-center justify-end pr-2`}
                   style={{ width: `${Math.max(percent, item.count > 0 ? 10 : 0)}%` }}

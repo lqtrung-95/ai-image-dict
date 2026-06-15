@@ -109,7 +109,7 @@ export function PhotoUpload({ onUpload, className }: PhotoUploadProps) {
           <img
             src={preview}
             alt="Preview"
-            className="w-full max-h-[60vh] object-contain bg-slate-800"
+            className="w-full max-h-[60vh] object-contain bg-[#1c2024]"
           />
           <Button
             variant="outline"
@@ -121,10 +121,10 @@ export function PhotoUpload({ onUpload, className }: PhotoUploadProps) {
           </Button>
         </div>
         <div className="flex gap-2 justify-center">
-          <Button variant="outline" onClick={handleClear} className="border-slate-600">
+          <Button variant="outline" onClick={handleClear} className="border-white/10">
             Choose Different
           </Button>
-          <Button onClick={handleConfirm} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={handleConfirm} className="bg-[#76ffbb] hover:opacity-90">
             Analyze Photo
           </Button>
         </div>
@@ -137,8 +137,8 @@ export function PhotoUpload({ onUpload, className }: PhotoUploadProps) {
       className={cn(
         'relative rounded-xl border-2 border-dashed transition-colors',
         isDragging
-          ? 'border-purple-500 bg-purple-500/10'
-          : 'border-slate-600 hover:border-slate-500',
+          ? 'border-[#76ffbb] bg-[#76ffbb]/10'
+          : 'border-white/10 hover:border-slate-500',
         className
       )}
       onDrop={handleDrop}
@@ -156,11 +156,11 @@ export function PhotoUpload({ onUpload, className }: PhotoUploadProps) {
       />
 
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-        <div className="w-16 h-16 rounded-full bg-slate-700/50 flex items-center justify-center mb-4">
+        <div className="w-16 h-16 rounded-full bg-[#272a2e] flex items-center justify-center mb-4">
           {isDragging ? (
-            <ImagePlus className="w-8 h-8 text-purple-400" />
+            <ImagePlus className="w-8 h-8 text-[#76ffbb]" />
           ) : (
-            <Upload className="w-8 h-8 text-slate-400" />
+            <Upload className="w-8 h-8 text-[#bacbbe]" />
           )}
         </div>
 
@@ -168,11 +168,11 @@ export function PhotoUpload({ onUpload, className }: PhotoUploadProps) {
           {isDragging ? 'Drop your image here' : isMobile ? 'Take or choose a photo' : 'Upload a photo'}
         </h3>
 
-        <p className="text-slate-400 text-sm mb-4">
+        <p className="text-[#bacbbe] text-sm mb-4">
           {isMobile ? 'Tap to take a photo or select from gallery' : 'Drag and drop, paste, or click to select'}
         </p>
 
-        <p className="text-slate-500 text-xs">Supports JPEG, PNG, WebP (max 5MB)</p>
+        <p className="text-[#849589] text-xs">Supports JPEG, PNG, WebP (max 5MB)</p>
 
         {error && (
           <div className="mt-4 flex items-center gap-2 text-red-400 text-sm">

@@ -82,22 +82,22 @@ export function MultipleChoiceQuiz({ words, onAnswer, onComplete }: MultipleChoi
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-white">Multiple Choice</h2>
-        <span className="text-slate-400">
+        <span className="text-[#bacbbe]">
           {currentIndex + 1} / {words.length}
         </span>
       </div>
 
       {/* Progress Bar */}
-      <div className="h-2 bg-slate-700 rounded-full mb-8 overflow-hidden">
+      <div className="h-2 bg-[#272a2e] rounded-full mb-8 overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-300"
+          className="h-full bg-gradient-to-r from-[#76ffbb] to-[#76ffbb] transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       {/* Question */}
       <div className="text-center mb-8">
-        <p className="text-slate-400 mb-4">What does this mean?</p>
+        <p className="text-[#bacbbe] mb-4">What does this mean?</p>
         <div className="flex items-center justify-center gap-3">
           <h1 className="text-5xl font-bold text-white">{currentWord.word_zh}</h1>
           <Button
@@ -106,13 +106,13 @@ export function MultipleChoiceQuiz({ words, onAnswer, onComplete }: MultipleChoi
             onClick={handleSpeak}
             className={cn(
               'h-10 w-10 rounded-full',
-              isPlaying ? 'text-purple-400 bg-purple-500/20' : 'text-slate-400 hover:text-white'
+              isPlaying ? 'text-[#76ffbb] bg-[#76ffbb]/10' : 'text-[#bacbbe] hover:text-[#e0e2e8]'
             )}
           >
             <Volume2 className="w-5 h-5" />
           </Button>
         </div>
-        <p className="text-purple-400 text-lg mt-2">{currentWord.word_pinyin}</p>
+        <p className="text-[#76ffbb] text-lg mt-2">{currentWord.word_pinyin}</p>
       </div>
 
       {/* Options */}
@@ -122,7 +122,7 @@ export function MultipleChoiceQuiz({ words, onAnswer, onComplete }: MultipleChoi
           const isCorrect = option.id === currentWord.id;
           const showResult = isAnswered;
 
-          let bgClass = 'bg-slate-800/50 border-slate-700 hover:border-purple-500/50';
+          let bgClass = 'bg-[#1c2024] border-white/10 hover:border-[#76ffbb]/50';
           if (showResult && isCorrect) {
             bgClass = 'bg-green-500/20 border-green-500';
           } else if (showResult && isSelected && !isCorrect) {
@@ -154,7 +154,7 @@ export function MultipleChoiceQuiz({ words, onAnswer, onComplete }: MultipleChoi
       {isAnswered && (
         <Button
           onClick={handleNext}
-          className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-lg"
+          className="w-full h-12 bg-[#76ffbb] hover:opacity-90 text-lg"
         >
           {currentIndex < words.length - 1 ? 'Next' : 'See Results'}
         </Button>

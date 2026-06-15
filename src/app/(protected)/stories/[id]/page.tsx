@@ -173,7 +173,7 @@ export default function StoryDetailPage() {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'color':
-        return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+        return 'bg-[#76ffbb]/10 text-[#76ffbb] border-[#76ffbb]/30';
       case 'action':
         return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
       default:
@@ -184,8 +184,8 @@ export default function StoryDetailPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <div className="h-8 w-48 bg-slate-800/50 rounded animate-pulse mb-6" />
-        <div className="h-64 bg-slate-800/50 rounded-xl animate-pulse" />
+        <div className="h-8 w-48 bg-[#1c2024] rounded animate-pulse mb-6" />
+        <div className="h-64 bg-[#1c2024] rounded-xl animate-pulse" />
       </div>
     );
   }
@@ -196,7 +196,7 @@ export default function StoryDetailPage() {
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <Link href="/stories">
-          <Button variant="ghost" className="-ml-2 text-slate-400">
+          <Button variant="ghost" className="-ml-2 text-[#bacbbe]">
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back to Stories
           </Button>
@@ -215,9 +215,9 @@ export default function StoryDetailPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">{story.title}</h1>
         {story.description && (
-          <p className="text-slate-400">{story.description}</p>
+          <p className="text-[#bacbbe]">{story.description}</p>
         )}
-        <div className="flex items-center gap-4 mt-4 text-sm text-slate-500">
+        <div className="flex items-center gap-4 mt-4 text-sm text-[#849589]">
           <span className="flex items-center gap-1">
             <ImageIcon className="w-4 h-4" />
             {story.photos.length} photos
@@ -226,7 +226,7 @@ export default function StoryDetailPage() {
             <BookOpen className="w-4 h-4" />
             {story.vocabularyCount} unique words
           </span>
-          <span className="text-slate-600">
+          <span className="text-[#849589]">
             ({story.totalVocabularyItems} total items)
           </span>
         </div>
@@ -234,26 +234,26 @@ export default function StoryDetailPage() {
 
       {/* Generated Story */}
       {story.generated_content?.storyZh ? (
-        <Card className="bg-gradient-to-br from-purple-900/30 to-slate-800/50 border-purple-500/30 p-6 mb-8">
+        <Card className="bg-gradient-to-br from-purple-900/30 to-[#1c2024]/50 border-[#76ffbb]/30 p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-5 h-5 text-purple-400" />
+            <Sparkles className="w-5 h-5 text-[#76ffbb]" />
             <h2 className="text-lg font-semibold text-white">AI-Generated Story</h2>
           </div>
 
           <div className="space-y-4">
             {/* Chinese */}
-            <div className="bg-slate-900/50 rounded-lg p-4">
+            <div className="bg-[#101417]/50 rounded-lg p-4">
               <p className="text-lg text-white leading-relaxed">{story.generated_content.storyZh}</p>
             </div>
 
             {/* Pinyin */}
             {story.generated_content.storyPinyin && (
-              <div className="text-slate-400 text-sm italic">{story.generated_content.storyPinyin}</div>
+              <div className="text-[#bacbbe] text-sm italic">{story.generated_content.storyPinyin}</div>
             )}
 
             {/* English */}
             {story.generated_content.storyEn && (
-              <div className="text-slate-300 text-sm border-t border-slate-700 pt-3">
+              <div className="text-[#e0e2e8] text-sm border-t border-white/10 pt-3">
                 {story.generated_content.storyEn}
               </div>
             )}
@@ -264,7 +264,7 @@ export default function StoryDetailPage() {
               size="sm"
               onClick={() => playAudio(story.generated_content!.storyZh, 'story')}
               disabled={playingAudio === 'story'}
-              className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+              className="border-[#76ffbb]/30 text-[#76ffbb] hover:bg-[#76ffbb]/10"
             >
               {playingAudio === 'story' ? (
                 <>
@@ -281,17 +281,17 @@ export default function StoryDetailPage() {
           </div>
         </Card>
       ) : (
-        <Card className="bg-slate-800/50 border-slate-700 border-dashed p-6 mb-8">
+        <Card className="bg-[#1c2024] border-white/10 border-dashed p-6 mb-8">
           <div className="text-center">
-            <Sparkles className="w-8 h-8 text-slate-500 mx-auto mb-3" />
+            <Sparkles className="w-8 h-8 text-[#849589] mx-auto mb-3" />
             <h3 className="text-white font-medium mb-2">Generate a Story</h3>
-            <p className="text-slate-400 text-sm mb-4">
+            <p className="text-[#bacbbe] text-sm mb-4">
               Let AI create a short story using the vocabulary from your photos
             </p>
             <Button
               onClick={handleGenerateStory}
               disabled={generating || story.vocabularyCount === 0}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-[#76ffbb] hover:opacity-90"
             >
               {generating ? (
                 <>
@@ -314,9 +314,9 @@ export default function StoryDetailPage() {
         {story.photos.map((photo, index) => (
           <Card
             key={photo.id}
-            className="bg-slate-800/50 border-slate-700 overflow-hidden"
+            className="bg-[#1c2024] border-white/10 overflow-hidden"
           >
-            <div className="aspect-video bg-slate-700">
+            <div className="aspect-video bg-[#272a2e]">
               <img
                 src={photo.image_url}
                 alt={`Photo ${index + 1}`}
@@ -324,14 +324,14 @@ export default function StoryDetailPage() {
               />
             </div>
             {photo.caption && (
-              <div className="p-4 border-b border-slate-700/50">
-                <p className="text-slate-300">{photo.caption}</p>
+              <div className="p-4 border-b border-white/10/50">
+                <p className="text-[#e0e2e8]">{photo.caption}</p>
               </div>
             )}
             {/* Vocabulary for this photo */}
             {photo.vocabulary && photo.vocabulary.length > 0 && (
               <div className="p-4">
-                <h3 className="text-sm font-medium text-slate-400 mb-3">
+                <h3 className="text-sm font-medium text-[#bacbbe] mb-3">
                   Detected Words ({photo.vocabulary.length})
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -355,7 +355,7 @@ export default function StoryDetailPage() {
               </div>
             )}
             {(!photo.vocabulary || photo.vocabulary.length === 0) && (
-              <div className="p-4 text-sm text-slate-500">
+              <div className="p-4 text-sm text-[#849589]">
                 No words detected in this photo.
               </div>
             )}

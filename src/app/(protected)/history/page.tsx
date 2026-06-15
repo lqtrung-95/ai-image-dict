@@ -71,11 +71,11 @@ export default function HistoryPage() {
         <h1 className="text-2xl font-bold text-white mb-6">History</h1>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="bg-slate-800/50 border-slate-700 overflow-hidden">
-              <Skeleton className="aspect-video bg-slate-700" />
+            <Card key={i} className="bg-[#1c2024] border-white/10 overflow-hidden">
+              <Skeleton className="aspect-video bg-[#272a2e]" />
               <div className="p-4 space-y-2">
-                <Skeleton className="h-4 w-3/4 bg-slate-700" />
-                <Skeleton className="h-3 w-1/2 bg-slate-700" />
+                <Skeleton className="h-4 w-3/4 bg-[#272a2e]" />
+                <Skeleton className="h-3 w-1/2 bg-[#272a2e]" />
               </div>
             </Card>
           ))}
@@ -89,21 +89,21 @@ export default function HistoryPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">History</h1>
-          <p className="text-slate-400">{analyses.length} analyses</p>
+          <p className="text-[#bacbbe]">{analyses.length} analyses</p>
         </div>
       </div>
 
       {analyses.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <History className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <History className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">No history yet</h2>
-          <p className="text-slate-400 mb-6">
+          <p className="text-[#bacbbe] mb-6">
             Your analyzed photos will appear here
           </p>
           <Link href="/capture">
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button className="bg-[#76ffbb] hover:opacity-90">
               Capture Your First Photo
             </Button>
           </Link>
@@ -113,10 +113,10 @@ export default function HistoryPage() {
           {analyses.map((analysis) => (
             <Card
               key={analysis.id}
-              className="group bg-slate-800/50 border-slate-700 overflow-hidden hover:border-purple-500/50 transition-colors flex flex-col"
+              className="group bg-[#1c2024] border-white/10 overflow-hidden hover:border-[#76ffbb]/50 transition-colors flex flex-col"
             >
               {/* Fixed aspect ratio image container */}
-              <div className="relative aspect-[4/3] bg-slate-700 flex-shrink-0">
+              <div className="relative aspect-[4/3] bg-[#272a2e] flex-shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={analysis.image_url}
@@ -147,17 +147,17 @@ export default function HistoryPage() {
                   {analysis.scene_context?.description || 'Photo analysis'}
                 </p>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm text-slate-400">
+                  <span className="text-sm text-[#bacbbe]">
                     {formatDate(analysis.created_at)}
                   </span>
-                  <span className="text-sm text-purple-400 font-medium">
+                  <span className="text-sm text-[#76ffbb] font-medium">
                     {analysis.detected_objects?.length || 0} words
                   </span>
                 </div>
                 {/* Mobile: always visible action buttons */}
-                <div className="flex md:hidden items-center gap-2 mt-3 pt-3 border-t border-slate-700">
+                <div className="flex md:hidden items-center gap-2 mt-3 pt-3 border-t border-white/10">
                   <Link href={`/analysis/${analysis.id}`} className="flex-1">
-                    <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700">
+                    <Button size="sm" className="w-full bg-[#76ffbb] hover:opacity-90">
                       <Eye className="w-4 h-4 mr-1" />
                       View
                     </Button>

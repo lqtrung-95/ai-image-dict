@@ -78,8 +78,8 @@ export function WordOfDayCard() {
 
   if (loading) {
     return (
-      <Card className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-purple-500/30 p-6 mb-6 animate-pulse">
-        <div className="h-32 bg-purple-500/10 rounded-lg" />
+      <Card className="bg-gradient-to-br from-[#76ffbb]/20 to-pink-600/20 border-[#76ffbb]/30 p-6 mb-6 animate-pulse">
+        <div className="h-32 bg-[#76ffbb]/10 rounded-lg" />
       </Card>
     );
   }
@@ -97,7 +97,7 @@ export function WordOfDayCard() {
   return (
     <Card
       className={cn(
-        'bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-purple-500/30 p-6 mb-6',
+        'bg-gradient-to-br from-[#76ffbb]/20 to-pink-600/20 border-[#76ffbb]/30 p-6 mb-6',
         history?.was_saved && 'from-green-600/10 to-emerald-600/10 border-green-500/30'
       )}
     >
@@ -105,10 +105,10 @@ export function WordOfDayCard() {
         <div className="flex-1">
           {/* Header */}
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-5 h-5 text-purple-400" />
-            <span className="text-sm font-medium text-purple-300">Word of the Day</span>
-            <span className="text-slate-500">•</span>
-            <span className="text-sm text-slate-400 flex items-center gap-1">
+            <Sparkles className="w-5 h-5 text-[#76ffbb]" />
+            <span className="text-sm font-medium text-[#76ffbb]/80">Word of the Day</span>
+            <span className="text-[#849589]">•</span>
+            <span className="text-sm text-[#bacbbe] flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {today}
             </span>
@@ -122,25 +122,25 @@ export function WordOfDayCard() {
                 variant="ghost"
                 size="sm"
                 onClick={() => speak(word.word_zh)}
-                className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/20"
+                className="text-[#76ffbb] hover:text-[#76ffbb]/80 hover:bg-[#76ffbb]/10"
               >
                 <Volume2 className="w-5 h-5" />
               </Button>
             </div>
-            <p className="text-lg text-purple-300">{word.word_pinyin}</p>
-            <p className="text-slate-300">{word.word_en}</p>
+            <p className="text-lg text-[#76ffbb]/80">{word.word_pinyin}</p>
+            <p className="text-[#e0e2e8]">{word.word_en}</p>
           </div>
 
           {/* Example */}
           {word.example_sentence && (
-            <p className="text-sm text-slate-400 italic mb-4">
+            <p className="text-sm text-[#bacbbe] italic mb-4">
               &ldquo;{word.example_sentence}&rdquo;
             </p>
           )}
 
           {/* HSK Badge */}
           {word.hsk_level && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 mb-4">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#76ffbb]/10 text-[#76ffbb]/80 mb-4">
               HSK {word.hsk_level}
             </span>
           )}
@@ -152,7 +152,7 @@ export function WordOfDayCard() {
             <Button
               onClick={() => handleAction('save')}
               disabled={actionLoading}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-[#76ffbb] hover:opacity-90"
               size="sm"
             >
               <BookmarkCheck className="w-4 h-4 mr-1" />
@@ -163,7 +163,7 @@ export function WordOfDayCard() {
               disabled={actionLoading}
               variant="ghost"
               size="sm"
-              className="text-slate-500 hover:text-slate-400"
+              className="text-[#849589] hover:text-[#bacbbe]"
             >
               <BookmarkX className="w-4 h-4 mr-1" />
               Skip

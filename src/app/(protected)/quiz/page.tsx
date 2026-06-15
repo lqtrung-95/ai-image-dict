@@ -37,13 +37,13 @@ interface QuizStats {
 }
 
 const QUIZ_MODE_COLORS: Record<QuizColor, string> = {
-  purple: 'from-purple-500/20 to-purple-500/5 border-purple-500/30 hover:border-purple-500/50',
+  purple: 'from-[#76ffbb]/20 to-purple-500/5 border-[#76ffbb]/30 hover:border-[#76ffbb]/50',
   blue: 'from-blue-500/20 to-blue-500/5 border-blue-500/30 hover:border-blue-500/50',
   green: 'from-green-500/20 to-green-500/5 border-green-500/30 hover:border-green-500/50',
 };
 
 const QUIZ_ICON_COLORS: Record<QuizColor, string> = {
-  purple: 'text-purple-400',
+  purple: 'text-[#76ffbb]',
   blue: 'text-blue-400',
   green: 'text-green-400',
 };
@@ -163,7 +163,7 @@ export default function QuizPage() {
         <h1 className="text-2xl font-bold text-white mb-6">Quiz</h1>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-slate-800/50 rounded-xl animate-pulse" />
+            <div key={i} className="h-24 bg-[#1c2024] rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -175,16 +175,16 @@ export default function QuizPage() {
       <div className="container mx-auto px-4 py-6 max-w-lg">
         <h1 className="text-2xl font-bold text-white mb-6">Quiz</h1>
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <Brain className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <Brain className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">Need more words</h2>
-          <p className="text-slate-400 mb-6">
+          <p className="text-[#bacbbe] mb-6">
             Add at least 4 words to your vocabulary to start quizzing!
           </p>
           <Button
             onClick={() => router.push('/capture')}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-[#76ffbb] hover:opacity-90"
           >
             Capture Photo
           </Button>
@@ -202,14 +202,14 @@ export default function QuizPage() {
       <div className="container mx-auto px-4 py-6 max-w-lg">
         <h1 className="text-2xl font-bold text-white mb-6">Quiz Complete!</h1>
 
-        <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
+        <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
           <div className="text-6xl mb-4">{emoji}</div>
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
             <Trophy className="w-10 h-10 text-white" />
           </div>
 
           <h2 className="text-3xl font-bold text-white mb-2">{percentage}% Correct!</h2>
-          <p className="text-slate-400 mb-4">
+          <p className="text-[#bacbbe] mb-4">
             You answered {stats.correct} of {stats.total} correctly
           </p>
 
@@ -235,14 +235,14 @@ export default function QuizPage() {
             <Button
               onClick={handleRestart}
               variant="outline"
-              className="flex-1 border-slate-600 text-slate-200"
+              className="flex-1 border-white/10 text-[#e0e2e8]"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
             <Button
               onClick={() => setMode('select')}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-[#76ffbb] hover:opacity-90"
             >
               New Quiz
             </Button>
@@ -260,14 +260,14 @@ export default function QuizPage() {
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="text-slate-400 hover:text-white -ml-2 mb-4"
+          className="text-[#bacbbe] hover:text-[#e0e2e8] -ml-2 mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back
         </Button>
 
         <h1 className="text-2xl font-bold text-white mb-2">Choose Quiz Mode</h1>
-        <p className="text-slate-400 mb-6">Test your knowledge with {words.length} words</p>
+        <p className="text-[#bacbbe] mb-6">Test your knowledge with {words.length} words</p>
 
         <div className="space-y-4">
           {QUIZ_MODES.map((quizMode) => {
@@ -278,12 +278,12 @@ export default function QuizPage() {
                 className={`w-full p-5 rounded-xl bg-gradient-to-b border text-left transition-all ${QUIZ_MODE_COLORS[quizMode.color]}`}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-800/50 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-[#1c2024] flex items-center justify-center">
                     <quizMode.icon className={`w-6 h-6 ${QUIZ_ICON_COLORS[quizMode.color]}`} />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-white">{quizMode.title}</h3>
-                    <p className="text-sm text-slate-400">{quizMode.description}</p>
+                    <p className="text-sm text-[#bacbbe]">{quizMode.description}</p>
                   </div>
                 </div>
               </button>
@@ -301,7 +301,7 @@ export default function QuizPage() {
         variant="ghost"
         size="sm"
         onClick={handleBack}
-        className="text-slate-400 hover:text-white -ml-2 mb-4"
+        className="text-[#bacbbe] hover:text-[#e0e2e8] -ml-2 mb-4"
       >
         <ArrowLeft className="w-4 h-4 mr-1" />
         Back to modes

@@ -17,7 +17,7 @@ export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) 
   return (
     <div
       className={cn(
-        'animate-spin rounded-full border-2 border-slate-600 border-t-purple-500',
+        'animate-spin rounded-full border-2 border-white/10 border-t-purple-500',
         sizeClasses[size],
         className
       )}
@@ -33,14 +33,14 @@ export function LoadingPage({ message = 'Loading...' }: LoadingPageProps) {
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center">
       <LoadingSpinner size="lg" />
-      <p className="mt-4 text-slate-400">{message}</p>
+      <p className="mt-4 text-[#bacbbe]">{message}</p>
     </div>
   );
 }
 
 export function LoadingOverlay({ message = 'Processing...' }: LoadingPageProps) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#101417]/80 backdrop-blur-sm">
       <LoadingSpinner size="lg" />
       <p className="mt-4 text-white font-medium">{message}</p>
     </div>

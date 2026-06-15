@@ -55,7 +55,7 @@ const GOAL_CONFIGS: GoalConfig[] = [
     label: 'Practice Time',
     description: 'Minutes spent practicing',
     icon: Clock,
-    color: 'text-purple-400',
+    color: 'text-[#76ffbb]',
     defaultValue: 10,
     min: 5,
     max: 60,
@@ -153,7 +153,7 @@ export default function SettingsPage() {
         </h1>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-slate-800/50 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 bg-[#1c2024] rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -172,10 +172,10 @@ export default function SettingsPage() {
       {/* Daily Goals Section */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5 text-purple-400" />
+          <Target className="w-5 h-5 text-[#76ffbb]" />
           Daily Goals
         </h2>
-        <p className="text-slate-400 text-sm mb-4">
+        <p className="text-[#bacbbe] text-sm mb-4">
           Set daily learning targets to stay motivated and track your progress.
         </p>
 
@@ -193,29 +193,29 @@ export default function SettingsPage() {
               <Card
                 key={config.type}
                 className={cn(
-                  'bg-slate-800/50 border-slate-700 p-4 transition-all',
-                  isActive && 'border-purple-500/30 bg-slate-800/70'
+                  'bg-[#1c2024] border-white/10 p-4 transition-all',
+                  isActive && 'border-[#76ffbb]/30 bg-[#1c2024]/70'
                 )}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1">
-                    <div className={cn('p-2 rounded-lg bg-slate-700/50', config.color)}>
+                    <div className={cn('p-2 rounded-lg bg-[#272a2e]', config.color)}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-medium text-white">{config.label}</h3>
                         {isActive && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#76ffbb]/10 text-[#76ffbb]">
                             Active
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-slate-400">{config.description}</p>
+                      <p className="text-sm text-[#bacbbe]">{config.description}</p>
 
                       {isActive && (
                         <div className="mt-3 flex items-center gap-3">
-                          <label className="text-sm text-slate-400">Daily target:</label>
+                          <label className="text-sm text-[#bacbbe]">Daily target:</label>
                           <Input
                             type="number"
                             min={config.min}
@@ -230,9 +230,9 @@ export default function SettingsPage() {
                                 ),
                               }))
                             }
-                            className="w-20 h-8 bg-slate-700 border-slate-600 text-white text-center"
+                            className="w-20 h-8 bg-[#272a2e] border-white/10 text-white text-center"
                           />
-                          <span className="text-sm text-slate-500">
+                          <span className="text-sm text-[#849589]">
                             {config.type === 'practice_minutes' ? 'min' : 'items'}
                           </span>
                           {hasChanges && (
@@ -240,7 +240,7 @@ export default function SettingsPage() {
                               size="sm"
                               onClick={() => saveGoal(config.type)}
                               disabled={saving === config.type}
-                              className="bg-purple-600 hover:bg-purple-700 h-8"
+                              className="bg-[#76ffbb] hover:opacity-90 h-8"
                             >
                               {saving === config.type ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -266,10 +266,10 @@ export default function SettingsPage() {
       </section>
 
       {/* Info Card */}
-      <Card className="bg-slate-800/30 border-slate-700/50 p-4 mb-8">
-        <p className="text-sm text-slate-400">
+      <Card className="bg-[#1c2024]/50 border-white/10/50 p-4 mb-8">
+        <p className="text-sm text-[#bacbbe]">
           Daily goals reset at midnight. Track your progress on the{' '}
-          <a href="/progress" className="text-purple-400 hover:underline">
+          <a href="/progress" className="text-[#76ffbb] hover:underline">
             Progress page
           </a>
           .

@@ -90,13 +90,13 @@ export function TypePinyinQuiz({ words, onAnswer, onComplete }: TypePinyinQuizPr
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-white">Type Pinyin</h2>
-        <span className="text-slate-400">
+        <span className="text-[#bacbbe]">
           {currentIndex + 1} / {words.length}
         </span>
       </div>
 
       {/* Progress Bar */}
-      <div className="h-2 bg-slate-700 rounded-full mb-8 overflow-hidden">
+      <div className="h-2 bg-[#272a2e] rounded-full mb-8 overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-300"
           style={{ width: `${progress}%` }}
@@ -105,7 +105,7 @@ export function TypePinyinQuiz({ words, onAnswer, onComplete }: TypePinyinQuizPr
 
       {/* Question */}
       <div className="text-center mb-8">
-        <p className="text-slate-400 mb-4">Type the pinyin for this word</p>
+        <p className="text-[#bacbbe] mb-4">Type the pinyin for this word</p>
         <div className="flex items-center justify-center gap-3">
           <h1 className="text-6xl font-bold text-white">{currentWord.word_zh}</h1>
           <Button
@@ -114,13 +114,13 @@ export function TypePinyinQuiz({ words, onAnswer, onComplete }: TypePinyinQuizPr
             onClick={handleSpeak}
             className={cn(
               'h-10 w-10 rounded-full',
-              isPlaying ? 'text-green-400 bg-green-500/20' : 'text-slate-400 hover:text-white'
+              isPlaying ? 'text-green-400 bg-green-500/20' : 'text-[#bacbbe] hover:text-[#e0e2e8]'
             )}
           >
             <Volume2 className="w-5 h-5" />
           </Button>
         </div>
-        <p className="text-slate-500 text-sm mt-2">{currentWord.word_en}</p>
+        <p className="text-[#849589] text-sm mt-2">{currentWord.word_en}</p>
       </div>
 
       {/* Input Form */}
@@ -138,7 +138,7 @@ export function TypePinyinQuiz({ words, onAnswer, onComplete }: TypePinyinQuizPr
             autoCapitalize="off"
             spellCheck={false}
             className={cn(
-              'h-14 text-xl text-center bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-500',
+              'h-14 text-xl text-center bg-[#1c2024] border-white/10 text-white placeholder:text-[#849589]',
               isAnswered && isCorrect && 'border-green-500 bg-green-500/10',
               isAnswered && !isCorrect && 'border-red-500 bg-red-500/10'
             )}
@@ -160,7 +160,7 @@ export function TypePinyinQuiz({ words, onAnswer, onComplete }: TypePinyinQuizPr
               type="button"
               onClick={handleSkip}
               variant="outline"
-              className="flex-1 h-12 border-slate-600 text-slate-300"
+              className="flex-1 h-12 border-white/10 text-[#e0e2e8]"
             >
               Skip
             </Button>
@@ -191,10 +191,10 @@ export function TypePinyinQuiz({ words, onAnswer, onComplete }: TypePinyinQuizPr
           ) : (
             <>
               <p className="text-red-400 font-medium">Not quite</p>
-              <p className="text-slate-400 text-sm mt-1">
+              <p className="text-[#bacbbe] text-sm mt-1">
                 You typed: <span className="text-white">{userInput || '(skipped)'}</span>
               </p>
-              <p className="text-slate-400 text-sm">
+              <p className="text-[#bacbbe] text-sm">
                 Correct answer: <span className="text-green-400 font-medium">{currentWord.word_pinyin}</span>
               </p>
             </>
@@ -214,7 +214,7 @@ export function TypePinyinQuiz({ words, onAnswer, onComplete }: TypePinyinQuizPr
 
       {/* Hint */}
       {!isAnswered && (
-        <p className="text-center text-slate-500 text-sm">
+        <p className="text-center text-[#849589] text-sm">
           💡 Tone marks are optional (e.g., &quot;nihao&quot; or &quot;nǐ hǎo&quot;)
         </p>
       )}

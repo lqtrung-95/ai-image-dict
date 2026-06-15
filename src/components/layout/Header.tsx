@@ -63,7 +63,7 @@ export function Header() {
   const displayName = profile?.display_name || user?.email || 'User';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-700 bg-slate-900/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#101417]/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
@@ -77,21 +77,21 @@ export function Header() {
             {/* Add Photo - Primary Action */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white mr-2">
+                <Button className="bg-[#76ffbb] hover:opacity-90 text-white mr-2">
                   <Plus className="w-4 h-4 mr-1" />
                   Add
                   <ChevronDown className="w-3 h-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48 bg-slate-800 border-slate-700">
+              <DropdownMenuContent align="start" className="w-48 bg-[#1c2024] border-white/10">
                 <Link href="/capture">
-                  <DropdownMenuItem className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer">
+                  <DropdownMenuItem className="text-[#e0e2e8] focus:text-white focus:bg-[#272a2e] cursor-pointer">
                     <Camera className="w-4 h-4 mr-2" />
                     Take Photo
                   </DropdownMenuItem>
                 </Link>
                 <Link href="/upload">
-                  <DropdownMenuItem className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer">
+                  <DropdownMenuItem className="text-[#e0e2e8] focus:text-white focus:bg-[#272a2e] cursor-pointer">
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Image
                   </DropdownMenuItem>
@@ -101,25 +101,25 @@ export function Header() {
 
             {/* Main Nav Items */}
             <Link href="/vocabulary">
-              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+              <Button variant="ghost" className="text-[#e0e2e8] hover:text-[#e0e2e8] hover:bg-[#1c2024]">
                 <BookOpen className="w-4 h-4 mr-2" />
                 Vocabulary
               </Button>
             </Link>
             <Link href="/practice">
-              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+              <Button variant="ghost" className="text-[#e0e2e8] hover:text-[#e0e2e8] hover:bg-[#1c2024]">
                 <GraduationCap className="w-4 h-4 mr-2" />
                 Practice
               </Button>
             </Link>
             <Link href="/games">
-              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+              <Button variant="ghost" className="text-[#e0e2e8] hover:text-[#e0e2e8] hover:bg-[#1c2024]">
                 <Gamepad2 className="w-4 h-4 mr-2" />
                 Games
               </Button>
             </Link>
             <Link href="/progress">
-              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+              <Button variant="ghost" className="text-[#e0e2e8] hover:text-[#e0e2e8] hover:bg-[#1c2024]">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Progress
               </Button>
@@ -128,40 +128,40 @@ export function Header() {
             {/* Library Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                <Button variant="ghost" className="text-[#e0e2e8] hover:text-[#e0e2e8] hover:bg-[#1c2024]">
                   <Library className="w-4 h-4 mr-2" />
                   Library
                   <ChevronDown className="w-3 h-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-slate-800 border-slate-700">
+              <DropdownMenuContent align="end" className="w-48 bg-[#1c2024] border-white/10">
                 <Link href="/stories">
-                  <DropdownMenuItem className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer">
+                  <DropdownMenuItem className="text-[#e0e2e8] focus:text-white focus:bg-[#272a2e] cursor-pointer">
                     <BookMarked className="w-4 h-4 mr-2" />
                     Stories
                   </DropdownMenuItem>
                 </Link>
                 <Link href="/lists">
-                  <DropdownMenuItem className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer">
+                  <DropdownMenuItem className="text-[#e0e2e8] focus:text-white focus:bg-[#272a2e] cursor-pointer">
                     <List className="w-4 h-4 mr-2" />
                     My Lists
                   </DropdownMenuItem>
                 </Link>
                 <Link href="/courses">
-                  <DropdownMenuItem className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer">
+                  <DropdownMenuItem className="text-[#e0e2e8] focus:text-white focus:bg-[#272a2e] cursor-pointer">
                     <Users className="w-4 h-4 mr-2" />
                     Courses
                   </DropdownMenuItem>
                 </Link>
                 <Link href="/history">
-                  <DropdownMenuItem className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer">
+                  <DropdownMenuItem className="text-[#e0e2e8] focus:text-white focus:bg-[#272a2e] cursor-pointer">
                     <History className="w-4 h-4 mr-2" />
                     History
                   </DropdownMenuItem>
                 </Link>
-                <DropdownMenuSeparator className="bg-slate-700" />
+                <DropdownMenuSeparator className="bg-[#272a2e]" />
                 <Link href="/import">
-                  <DropdownMenuItem className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer">
+                  <DropdownMenuItem className="text-[#e0e2e8] focus:text-white focus:bg-[#272a2e] cursor-pointer">
                     <Import className="w-4 h-4 mr-2" />
                     Import Words
                   </DropdownMenuItem>
@@ -174,14 +174,14 @@ export function Header() {
         {/* Auth Section */}
         <div className="flex items-center gap-2">
           {loading ? (
-            <div className="w-8 h-8 rounded-full bg-slate-700 animate-pulse" />
+            <div className="w-8 h-8 rounded-full bg-[#272a2e] animate-pulse" />
           ) : user ? (
             <>
               {/* Mobile menu button */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden text-slate-300"
+                className="md:hidden text-[#e0e2e8]"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 <Menu className="w-5 h-5" />
@@ -193,22 +193,22 @@ export function Header() {
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={profile?.avatar_url || ''} alt={displayName} />
-                      <AvatarFallback className="bg-purple-600 text-white text-sm">
+                      <AvatarFallback className="bg-[#76ffbb] text-white text-sm">
                         {getInitials(displayName)}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700">
+                <DropdownMenuContent align="end" className="w-56 bg-[#1c2024] border-white/10">
                   <div className="px-2 py-1.5">
                     <p className="text-sm text-white font-medium truncate">{displayName}</p>
                     {profile?.display_name && (
-                      <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                      <p className="text-xs text-[#bacbbe] truncate">{user.email}</p>
                     )}
                   </div>
-                  <DropdownMenuSeparator className="bg-slate-700" />
+                  <DropdownMenuSeparator className="bg-[#272a2e]" />
                   <Link href="/settings">
-                    <DropdownMenuItem className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer">
+                    <DropdownMenuItem className="text-[#e0e2e8] focus:text-white focus:bg-[#272a2e] cursor-pointer">
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
                     </DropdownMenuItem>
@@ -226,12 +226,12 @@ export function Header() {
           ) : (
             <div className="flex gap-2">
               <Link href="/login">
-                <Button variant="ghost" className="text-slate-300 hover:text-white">
+                <Button variant="ghost" className="text-[#e0e2e8] hover:text-[#e0e2e8]">
                   Sign In
                 </Button>
               </Link>
               <Link href="/signup">
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Button className="bg-[#76ffbb] hover:opacity-90 text-white">
                   Get Started
                 </Button>
               </Link>
@@ -242,85 +242,85 @@ export function Header() {
 
       {/* Mobile Navigation */}
       {user && mobileMenuOpen && (
-        <nav className="md:hidden border-t border-slate-700 bg-slate-900 p-4">
+        <nav className="md:hidden border-t border-white/10 bg-[#101417] p-4">
           <div className="flex flex-col gap-2">
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-2 mb-2">
               <Link href="/capture" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                <Button className="w-full bg-[#76ffbb] hover:opacity-90 text-white">
                   <Camera className="w-4 h-4 mr-2" />
                   Take Photo
                 </Button>
               </Link>
               <Link href="/upload" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-800">
+                <Button variant="outline" className="w-full border-white/10 text-[#e0e2e8] hover:bg-[#1c2024]">
                   <Upload className="w-4 h-4 mr-2" />
                   Upload
                 </Button>
               </Link>
             </div>
 
-            <div className="border-t border-slate-700 my-2" />
+            <div className="border-t border-white/10 my-2" />
 
             {/* Main Nav */}
             <Link href="/vocabulary" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <BookOpen className="w-4 h-4 mr-2" />
                 Vocabulary
               </Button>
             </Link>
             <Link href="/practice" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <GraduationCap className="w-4 h-4 mr-2" />
                 Practice
               </Button>
             </Link>
             <Link href="/progress" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Progress
               </Button>
             </Link>
 
-            <div className="border-t border-slate-700 my-2" />
+            <div className="border-t border-white/10 my-2" />
 
             {/* Library Section */}
-            <p className="text-xs text-slate-500 px-3 py-1 uppercase tracking-wider">Library</p>
+            <p className="text-xs text-[#849589] px-3 py-1 uppercase tracking-wider">Library</p>
             <Link href="/stories" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <BookMarked className="w-4 h-4 mr-2" />
                 Stories
               </Button>
             </Link>
             <Link href="/lists" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <List className="w-4 h-4 mr-2" />
                 My Lists
               </Button>
             </Link>
             <Link href="/courses" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <Users className="w-4 h-4 mr-2" />
                 Courses
               </Button>
             </Link>
             <Link href="/history" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <History className="w-4 h-4 mr-2" />
                 History
               </Button>
             </Link>
             <Link href="/import" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <Import className="w-4 h-4 mr-2" />
                 Import Words
               </Button>
             </Link>
 
-            <div className="border-t border-slate-700 my-2" />
+            <div className="border-t border-white/10 my-2" />
 
             <Link href="/settings" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="ghost" className="w-full justify-start text-slate-300">
+              <Button variant="ghost" className="w-full justify-start text-[#e0e2e8]">
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </Button>

@@ -35,13 +35,13 @@ export function ImportSourceSelector({ onSubmit, loading }: ImportSourceSelector
   return (
     <div className="space-y-6">
       {/* Tab buttons */}
-      <div className="flex gap-2 p-1 bg-slate-800/50 rounded-lg">
+      <div className="flex gap-2 p-1 bg-[#1c2024] rounded-lg">
         <button
           onClick={() => setActiveTab('text')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md transition-colors ${
             activeTab === 'text'
-              ? 'bg-purple-600 text-white'
-              : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              ? 'bg-[#76ffbb] text-white'
+              : 'text-[#bacbbe] hover:text-[#e0e2e8] hover:bg-[#272a2e]'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -51,8 +51,8 @@ export function ImportSourceSelector({ onSubmit, loading }: ImportSourceSelector
           onClick={() => setActiveTab('url')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md transition-colors ${
             activeTab === 'url'
-              ? 'bg-purple-600 text-white'
-              : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              ? 'bg-[#76ffbb] text-white'
+              : 'text-[#bacbbe] hover:text-[#e0e2e8] hover:bg-[#272a2e]'
           }`}
         >
           <Globe className="w-4 h-4" />
@@ -64,15 +64,15 @@ export function ImportSourceSelector({ onSubmit, loading }: ImportSourceSelector
       <div className="space-y-4">
         {activeTab === 'text' && (
           <div>
-            <Label className="text-slate-200">Chinese Text</Label>
+            <Label className="text-[#e0e2e8]">Chinese Text</Label>
             <Textarea
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
               placeholder="Paste Chinese text here (at least 50 characters)...&#10;&#10;Tip: You can copy YouTube transcripts by clicking &quot;...more&quot; → &quot;Show transcript&quot; on any video."
-              className="mt-1 bg-slate-800/50 border-slate-700 text-white min-h-[200px] resize-none"
+              className="mt-1 bg-[#1c2024] border-white/10 text-white min-h-[200px] resize-none"
               disabled={loading}
             />
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[#bacbbe]">
               {textContent.length} / 50 characters minimum
             </p>
           </div>
@@ -80,15 +80,15 @@ export function ImportSourceSelector({ onSubmit, loading }: ImportSourceSelector
 
         {activeTab === 'url' && (
           <div>
-            <Label className="text-slate-200">Article URL</Label>
+            <Label className="text-[#e0e2e8]">Article URL</Label>
             <Input
               value={articleUrl}
               onChange={(e) => setArticleUrl(e.target.value)}
               placeholder="https://example.com/article"
-              className="mt-1 bg-slate-800/50 border-slate-700 text-white"
+              className="mt-1 bg-[#1c2024] border-white/10 text-white"
               disabled={loading}
             />
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[#bacbbe]">
               Paste a URL to any Chinese article or webpage
             </p>
           </div>
@@ -98,7 +98,7 @@ export function ImportSourceSelector({ onSubmit, loading }: ImportSourceSelector
       <Button
         onClick={handleSubmit}
         disabled={!isValid() || loading}
-        className="w-full bg-purple-600 hover:bg-purple-700"
+        className="w-full bg-[#76ffbb] hover:opacity-90"
       >
         {loading ? (
           <>

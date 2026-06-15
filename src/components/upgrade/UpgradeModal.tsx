@@ -56,11 +56,11 @@ export function UpgradeModal({ open, onClose, usage }: UpgradeModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-md bg-slate-900 border-slate-700">
+      <DialogContent className="sm:max-w-md bg-[#101417] border-white/10">
         <DialogHeader>
           <DialogTitle className="text-center">
             <div className="flex flex-col items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#76ffbb] to-pink-500 flex items-center justify-center">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <span className="text-2xl font-bold text-white">Daily Limit Reached</span>
@@ -72,16 +72,16 @@ export function UpgradeModal({ open, onClose, usage }: UpgradeModalProps) {
           {/* Usage indicator */}
           {usage && (
             <div className="text-center">
-              <p className="text-slate-400">
+              <p className="text-[#bacbbe]">
                 You&apos;ve used{' '}
                 <span className="text-white font-semibold">
                   {usage.current}/{usage.limit}
                 </span>{' '}
                 free analyses today
               </p>
-              <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="mt-2 h-2 bg-[#272a2e] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                  className="h-full bg-gradient-to-r from-[#76ffbb] to-pink-500 transition-all"
                   style={{ width: `${Math.min(100, (usage.current / usage.limit) * 100)}%` }}
                 />
               </div>
@@ -90,17 +90,17 @@ export function UpgradeModal({ open, onClose, usage }: UpgradeModalProps) {
 
           {/* Premium features */}
           <div className="space-y-3">
-            <p className="text-sm text-slate-400 text-center">
+            <p className="text-sm text-[#bacbbe] text-center">
               Upgrade to Premium for unlimited access:
             </p>
             <div className="grid gap-2">
               {PREMIUM_FEATURES.map((feature) => (
                 <div
                   key={feature.text}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-[#1c2024] border border-white/10"
                 >
-                  <feature.icon className="w-5 h-5 text-purple-400" />
-                  <span className="text-slate-200">{feature.text}</span>
+                  <feature.icon className="w-5 h-5 text-[#76ffbb]" />
+                  <span className="text-[#e0e2e8]">{feature.text}</span>
                 </div>
               ))}
             </div>
@@ -111,13 +111,13 @@ export function UpgradeModal({ open, onClose, usage }: UpgradeModalProps) {
             <div className="text-center p-4 rounded-lg bg-green-500/10 border border-green-500/30">
               <Check className="w-8 h-8 text-green-400 mx-auto mb-2" />
               <p className="text-green-400 font-medium">You&apos;re on the list!</p>
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-sm text-[#bacbbe] mt-1">
                 We&apos;ll email you when Premium is ready.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-slate-400 text-center">
+              <p className="text-sm text-[#bacbbe] text-center">
                 Premium is coming soon! Get notified:
               </p>
               <div className="flex gap-2">
@@ -126,12 +126,12 @@ export function UpgradeModal({ open, onClose, usage }: UpgradeModalProps) {
                   placeholder="your@email.com (optional)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                  className="bg-[#1c2024] border-white/10 text-white placeholder:text-[#849589]"
                 />
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 whitespace-nowrap"
+                  className="bg-gradient-to-r from-[#76ffbb] to-pink-600 hover:from-purple-700 hover:to-pink-700 whitespace-nowrap"
                 >
                   {isSubmitting ? 'Saving...' : 'Notify Me'}
                 </Button>
@@ -140,7 +140,7 @@ export function UpgradeModal({ open, onClose, usage }: UpgradeModalProps) {
           )}
 
           {/* Reset time hint */}
-          <p className="text-xs text-slate-500 text-center">
+          <p className="text-xs text-[#849589] text-center">
             Your free analyses reset at midnight UTC.
             <br />
             Come back tomorrow for {usage?.limit || 6} more!

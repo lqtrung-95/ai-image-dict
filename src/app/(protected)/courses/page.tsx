@@ -74,10 +74,10 @@ export default function CoursesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Community Courses</h1>
-          <p className="text-slate-400">Learn from curated vocabulary courses</p>
+          <p className="text-[#bacbbe]">Learn from curated vocabulary courses</p>
         </div>
         <Link href="/courses/create">
-          <Button className="bg-purple-600 hover:bg-purple-700">
+          <Button className="bg-[#76ffbb] hover:opacity-90">
             <Plus className="w-4 h-4 mr-2" />
             Create Course
           </Button>
@@ -87,35 +87,35 @@ export default function CoursesPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
         <form onSubmit={handleSearch} className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#bacbbe]" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search courses..."
-            className="pl-9 bg-slate-800/50 border-slate-700 text-white"
+            className="pl-9 bg-[#1c2024] border-white/10 text-white"
           />
         </form>
         <Select value={difficulty} onValueChange={(v) => { setDifficulty(v); setPage(1); }}>
-          <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 text-white">
+          <SelectTrigger className="w-[140px] bg-[#1c2024] border-white/10 text-white">
             <SelectValue placeholder="HSK Level" />
           </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700">
-            <SelectItem value="all" className="text-slate-300">All Levels</SelectItem>
+          <SelectContent className="bg-[#1c2024] border-white/10">
+            <SelectItem value="all" className="text-[#e0e2e8]">All Levels</SelectItem>
             {[1, 2, 3, 4, 5, 6].map((level) => (
-              <SelectItem key={level} value={level.toString()} className="text-slate-300">
+              <SelectItem key={level} value={level.toString()} className="text-[#e0e2e8]">
                 HSK {level}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={sort} onValueChange={(v) => { setSort(v); setPage(1); }}>
-          <SelectTrigger className="w-[130px] bg-slate-800/50 border-slate-700 text-white">
+          <SelectTrigger className="w-[130px] bg-[#1c2024] border-white/10 text-white">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-700">
-            <SelectItem value="newest" className="text-slate-300">Newest</SelectItem>
-            <SelectItem value="popular" className="text-slate-300">Popular</SelectItem>
-            <SelectItem value="rating" className="text-slate-300">Top Rated</SelectItem>
+          <SelectContent className="bg-[#1c2024] border-white/10">
+            <SelectItem value="newest" className="text-[#e0e2e8]">Newest</SelectItem>
+            <SelectItem value="popular" className="text-[#e0e2e8]">Popular</SelectItem>
+            <SelectItem value="rating" className="text-[#e0e2e8]">Top Rated</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -123,17 +123,17 @@ export default function CoursesPage() {
       {/* Course grid */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#76ffbb]" />
         </div>
       ) : courses.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <BookOpen className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">No courses found</h2>
-          <p className="text-slate-400 mb-6">Be the first to create a course!</p>
+          <p className="text-[#bacbbe] mb-6">Be the first to create a course!</p>
           <Link href="/courses/create">
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button className="bg-[#76ffbb] hover:opacity-90">
               <Plus className="w-4 h-4 mr-2" />
               Create Course
             </Button>
@@ -154,18 +154,18 @@ export default function CoursesPage() {
                 variant="ghost"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="text-slate-300"
+                className="text-[#e0e2e8]"
               >
                 Previous
               </Button>
-              <span className="text-slate-400">
+              <span className="text-[#bacbbe]">
                 Page {page} of {totalPages}
               </span>
               <Button
                 variant="ghost"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="text-slate-300"
+                className="text-[#e0e2e8]"
               >
                 Next
               </Button>

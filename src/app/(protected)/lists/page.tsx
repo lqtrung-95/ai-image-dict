@@ -73,7 +73,7 @@ export default function ListsPage() {
         <h1 className="text-2xl font-bold text-white mb-6">My Lists</h1>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="h-28 bg-slate-800/50 border-slate-700 animate-pulse" />
+            <Card key={i} className="h-28 bg-[#1c2024] border-white/10 animate-pulse" />
           ))}
         </div>
       </div>
@@ -85,43 +85,43 @@ export default function ListsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">My Lists</h1>
-          <p className="text-slate-400">{lists.length} vocabulary lists</p>
+          <p className="text-[#bacbbe]">{lists.length} vocabulary lists</p>
         </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button className="bg-[#76ffbb] hover:opacity-90">
               <Plus className="w-4 h-4 mr-2" />
               New List
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-slate-800 border-slate-700">
+          <DialogContent className="bg-[#1c2024] border-white/10">
             <DialogHeader>
               <DialogTitle className="text-white">Create Vocabulary List</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label className="text-slate-200">Name</Label>
+                <Label className="text-[#e0e2e8]">Name</Label>
                 <Input
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g., HSK 3 Words, Travel Phrases"
-                  className="bg-slate-700/50 border-slate-600 text-white mt-1"
+                  className="bg-[#272a2e] border-white/10 text-white mt-1"
                   maxLength={100}
                 />
               </div>
               <div>
-                <Label className="text-slate-200">Description (optional)</Label>
+                <Label className="text-[#e0e2e8]">Description (optional)</Label>
                 <Textarea
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   placeholder="What is this list for?"
-                  className="bg-slate-700/50 border-slate-600 text-white mt-1 resize-none"
+                  className="bg-[#272a2e] border-white/10 text-white mt-1 resize-none"
                   rows={2}
                 />
               </div>
               <div>
-                <Label className="text-slate-200">Color</Label>
+                <Label className="text-[#e0e2e8]">Color</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {COLORS.map((color) => (
                     <button
@@ -137,8 +137,8 @@ export default function ListsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-slate-200">Make Public</Label>
-                  <p className="text-xs text-slate-400">Others can view this list</p>
+                  <Label className="text-[#e0e2e8]">Make Public</Label>
+                  <p className="text-xs text-[#bacbbe]">Others can view this list</p>
                 </div>
                 <Switch
                   checked={isPublic}
@@ -148,7 +148,7 @@ export default function ListsPage() {
               <Button
                 onClick={handleCreate}
                 disabled={!newName.trim() || creating}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-[#76ffbb] hover:opacity-90"
               >
                 {creating ? (
                   <>
@@ -166,16 +166,16 @@ export default function ListsPage() {
 
       {lists.length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
-            <List className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
+            <List className="w-8 h-8 text-[#849589]" />
           </div>
           <h2 className="text-xl font-medium text-white mb-2">No lists yet</h2>
-          <p className="text-slate-400 mb-6">
+          <p className="text-[#bacbbe] mb-6">
             Create lists to organize your vocabulary with many-to-many grouping
           </p>
           <Button
             onClick={() => setIsCreateOpen(true)}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-[#76ffbb] hover:opacity-90"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Your First List

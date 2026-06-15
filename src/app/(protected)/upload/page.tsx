@@ -45,16 +45,16 @@ export default function UploadPage() {
 
       {/* Usage indicator */}
       {usage && pageStage === 'upload' && (
-        <div className="mb-4 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+        <div className="mb-4 p-3 rounded-lg bg-[#1c2024] border border-white/10">
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-slate-400">Daily analyses</span>
-            <span className="text-slate-300">
+            <span className="text-[#bacbbe]">Daily analyses</span>
+            <span className="text-[#e0e2e8]">
               {usage.remaining} of {usage.limit} remaining
             </span>
           </div>
-          <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-[#272a2e] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+              className="h-full bg-gradient-to-r from-[#76ffbb] to-pink-500 transition-all"
               style={{ width: `${((usage.limit - usage.remaining) / usage.limit) * 100}%` }}
             />
           </div>

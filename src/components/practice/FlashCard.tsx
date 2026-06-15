@@ -109,9 +109,9 @@ export function FlashCard({
           <div
             className={cn(
               'absolute inset-0 w-full h-full backface-hidden',
-              'bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl',
+              'bg-gradient-to-br from-[#76ffbb] to-purple-800 rounded-2xl',
               'flex flex-col items-center justify-center p-6',
-              'shadow-xl border border-purple-500/30'
+              'shadow-xl border border-[#76ffbb]/30'
             )}
           >
             <Button
@@ -120,7 +120,7 @@ export function FlashCard({
               onClick={handleSpeak}
               className={cn(
                 'absolute top-4 right-4 h-10 w-10 rounded-full',
-                isPlaying ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'
+                isPlaying ? 'text-white bg-white/20' : 'text-white/70 hover:text-[#e0e2e8] hover:bg-white/10'
               )}
             >
               <Volume2 className="w-5 h-5" />
@@ -134,9 +134,9 @@ export function FlashCard({
           <div
             className={cn(
               'absolute inset-0 w-full h-full backface-hidden rotate-y-180',
-              'bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl',
+              'bg-gradient-to-br from-slate-700 to-[#1c2024] rounded-2xl',
               'flex flex-col items-center justify-center p-6',
-              'shadow-xl border border-slate-600/30'
+              'shadow-xl border border-white/10/30'
             )}
           >
             <Button
@@ -145,7 +145,7 @@ export function FlashCard({
               onClick={handleSpeak}
               className={cn(
                 'absolute top-4 right-4 h-10 w-10 rounded-full',
-                isPlaying ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'
+                isPlaying ? 'text-white bg-white/20' : 'text-white/70 hover:text-[#e0e2e8] hover:bg-white/10'
               )}
             >
               <Volume2 className="w-5 h-5" />
@@ -163,14 +163,14 @@ export function FlashCard({
                   />
                 </div>
                 {formattedDate && (
-                  <span className="text-xs text-slate-400">{formattedDate}</span>
+                  <span className="text-xs text-[#bacbbe]">{formattedDate}</span>
                 )}
               </div>
             )}
 
             <h1 className="text-5xl font-bold text-white mb-2">{wordZh}</h1>
-            <p className="text-2xl text-purple-400 mb-2">{wordPinyin}</p>
-            <p className="text-xl text-slate-300">{wordEn}</p>
+            <p className="text-2xl text-[#76ffbb] mb-2">{wordPinyin}</p>
+            <p className="text-xl text-[#e0e2e8]">{wordEn}</p>
           </div>
         </div>
       </div>
@@ -209,7 +209,7 @@ export function FlashCard({
       )}
 
       {!isFlipped && (
-        <p className="text-center text-slate-500 mt-6">
+        <p className="text-center text-[#849589] mt-6">
           Tap the card to see the answer
         </p>
       )}

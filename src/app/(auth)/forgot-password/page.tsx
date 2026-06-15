@@ -35,20 +35,20 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-        <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+      <div className="">
+        <Card className="w-full max-w-md bg-[#1c2024] border-white/5">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-white">Check Your Email</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-[#bacbbe]">
               We&apos;ve sent a password reset link to <strong className="text-white">{email}</strong>
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-slate-400 mb-4">
+            <p className="text-[#bacbbe] mb-4">
               Click the link in the email to reset your password.
             </p>
             <Link href="/login">
-              <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-700">
+              <Button variant="outline" className="border-white/10 text-[#e0e2e8] hover:bg-[#272a2e]">
                 Back to Login
               </Button>
             </Link>
@@ -59,11 +59,11 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+    <div className="">
+      <Card className="w-full max-w-md bg-[#1c2024] border-white/5">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-white">Reset Password</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-[#bacbbe]">
             Enter your email and we&apos;ll send you a reset link
           </CardDescription>
         </CardHeader>
@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-200">
+              <Label htmlFor="email" className="text-[#e0e2e8]">
                 Email
               </Label>
               <Input
@@ -86,22 +86,22 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                className="bg-[#272a2e] border-white/10 text-white placeholder:text-[#bacbbe]"
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              className="w-full bg-[#76ffbb] hover:opacity-90 text-[#003822] font-semibold"
               disabled={loading}
             >
               {loading ? 'Sending...' : 'Send Reset Link'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-slate-400">
+          <div className="mt-6 text-center text-[#bacbbe]">
             Remember your password?{' '}
-            <Link href="/login" className="text-purple-400 hover:text-purple-300 font-medium">
+            <Link href="/login" className="text-[#76ffbb] hover:text-[#76ffbb]/80 font-medium">
               Sign in
             </Link>
           </div>

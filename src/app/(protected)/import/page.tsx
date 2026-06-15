@@ -112,17 +112,17 @@ export default function ImportPage() {
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-            <Import className="w-5 h-5 text-purple-400" />
+          <div className="w-10 h-10 rounded-xl bg-[#76ffbb]/10 flex items-center justify-center">
+            <Import className="w-5 h-5 text-[#76ffbb]" />
           </div>
           <h1 className="text-2xl font-bold text-white">Import Vocabulary</h1>
         </div>
-        <p className="text-slate-400">
+        <p className="text-[#bacbbe]">
           Extract Chinese vocabulary from YouTube videos, web articles, or text
         </p>
       </div>
 
-      <Card className="p-6 bg-slate-800/50 border-slate-700">
+      <Card className="p-6 bg-[#1c2024] border-white/10">
         {step === 'select' && (
           <ImportSourceSelector onSubmit={handleExtract} loading={loading} />
         )}
@@ -140,12 +140,12 @@ export default function ImportPage() {
       </Card>
 
       {/* Tips */}
-      <div className="mt-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50">
+      <div className="mt-6 p-4 bg-[#1c2024]/50 rounded-lg border border-white/10/50">
         <div className="flex items-start gap-3">
           <Sparkles className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
           <div>
             <h3 className="font-medium text-white mb-1">Tips for best results</h3>
-            <ul className="text-sm text-slate-400 space-y-1">
+            <ul className="text-sm text-[#bacbbe] space-y-1">
               <li>• YouTube videos with Chinese subtitles work best</li>
               <li>• For articles, choose content with natural Chinese text</li>
               <li>• Longer content yields more vocabulary words</li>

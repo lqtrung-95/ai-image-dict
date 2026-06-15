@@ -110,16 +110,16 @@ export function QuizGame() {
 
   if (loading) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-        <div className="h-8 w-48 bg-slate-700 rounded animate-pulse mx-auto" />
+      <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
+        <div className="h-8 w-48 bg-[#272a2e] rounded animate-pulse mx-auto" />
       </Card>
     );
   }
 
   if (vocabulary.length < 4) {
     return (
-      <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-        <p className="text-slate-400">
+      <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
+        <p className="text-[#bacbbe]">
           You need at least 4 words in your vocabulary to play. Start by capturing some photos!
         </p>
       </Card>
@@ -129,20 +129,20 @@ export function QuizGame() {
   if (gameComplete) {
     const percentage = Math.round((score / questions.length) * 100);
     return (
-      <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
+      <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
         <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-white mb-2">Quiz Complete!</h2>
-        <p className="text-4xl font-bold text-purple-400 mb-2">
+        <p className="text-4xl font-bold text-[#76ffbb] mb-2">
           {score}/{questions.length}
         </p>
-        <p className="text-slate-400 mb-6">
+        <p className="text-[#bacbbe] mb-6">
           {percentage >= 80
             ? 'Excellent work!'
             : percentage >= 60
               ? 'Good job! Keep practicing!'
               : 'Keep practicing to improve!'}
         </p>
-        <Button onClick={resetGame} className="bg-purple-600 hover:bg-purple-700">
+        <Button onClick={resetGame} className="bg-[#76ffbb] hover:opacity-90">
           <RefreshCw className="w-4 h-4 mr-2" />
           Play Again
         </Button>
@@ -157,7 +157,7 @@ export function QuizGame() {
     <div className="space-y-6">
       {/* Progress */}
       <div className="space-y-2">
-        <div className="flex justify-between text-sm text-slate-400">
+        <div className="flex justify-between text-sm text-[#bacbbe]">
           <span>
             Question {currentQuestion + 1} of {questions.length}
           </span>
@@ -167,10 +167,10 @@ export function QuizGame() {
       </div>
 
       {/* Question */}
-      <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-        <p className="text-sm text-slate-400 mb-4">What does this word mean?</p>
+      <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
+        <p className="text-sm text-[#bacbbe] mb-4">What does this word mean?</p>
         <h2 className="text-4xl font-bold text-white mb-2">{question.word.word_zh}</h2>
-        <p className="text-lg text-purple-300">{question.word.word_pinyin}</p>
+        <p className="text-lg text-[#76ffbb]/80">{question.word.word_pinyin}</p>
       </Card>
 
       {/* Options */}
@@ -183,7 +183,7 @@ export function QuizGame() {
             className={cn(
               'w-full p-4 rounded-xl text-left transition-all border-2',
               !answered &&
-                'bg-slate-800 border-slate-700 hover:border-purple-500 hover:bg-slate-700',
+                'bg-[#1c2024] border-white/10 hover:border-[#76ffbb] hover:bg-[#272a2e]',
               answered &&
                 index === question.correctIndex &&
                 'bg-green-600/20 border-green-500',
@@ -208,7 +208,7 @@ export function QuizGame() {
 
       {/* Next Button */}
       {answered && (
-        <Button onClick={nextQuestion} className="w-full bg-purple-600 hover:bg-purple-700">
+        <Button onClick={nextQuestion} className="w-full bg-[#76ffbb] hover:opacity-90">
           {currentQuestion < questions.length - 1 ? 'Next Question' : 'See Results'}
         </Button>
       )}
