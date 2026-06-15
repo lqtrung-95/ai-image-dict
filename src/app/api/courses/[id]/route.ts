@@ -41,6 +41,39 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .eq('course_id', id)
       .order('sort_order', { ascending: true });
 
+    // Annotate each word with the user's learning state by matching the course
+    // word's Chinese text against their personal deck. State drives the progress
+    // ring and per-word dots in the app.
+    //   new      → not in deck, or in deck but never reviewed
+    //   learning → reviewed at least once, not yet mastered
+    //   mastered → is_learned = true
+    let annotatedWords = (words || []).map((w) => ({ ...w, state: 'new' as const }));
+    let progress = { total: words?.length || 0, learned: 0, learning: 0, due: 0 };
+
+    if (user && words && words.length > 0) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const { data: deck } = await supabase
+        .from('vocabulary_items')
+        .select('word_zh, is_learned, last_reviewed_at, next_review_date')
+        .eq('user_id', user.id)
+        .in('word_zh', words.map((w) => w.word_zh));
+
+      const byZh = new Map((deck ?? []).map((d) => [d.word_zh, d]));
+      annotatedWords = words.map((w) => {
+        const d = byZh.get(w.word_zh);
+        let state: 'new' | 'learning' | 'mastered' = 'new';
+        if (d) {
+          if (d.is_learned) state = 'mastered';
+          else if (d.last_reviewed_at) state = 'learning';
+        }
+        if (state === 'mastered') progress.learned += 1;
+        else if (state === 'learning') progress.learning += 1;
+        const isDue = d && !d.is_learned && (!d.next_review_date || d.next_review_date <= todayStr);
+        if (isDue) progress.due += 1;
+        return { ...w, state };
+      });
+    }
+
     // Check if user is subscribed
     let subscription = null;
     if (user) {
@@ -83,7 +116,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         updatedAt: course.updated_at,
         isOwner: user?.id === course.creator_id,
       },
-      words: words || [],
+      words: annotatedWords,
+      progress,
       subscription,
       userRating,
     });

@@ -65,6 +65,40 @@ export async function GET(request: NextRequest) {
       userSubscriptions = new Set((subs || []).map(s => s.course_id));
     }
 
+    // Compute learning progress for the subscribed courses on this page so the
+    // list cards can show "learned / due" without opening each course. Done in
+    // two bulk queries (course words + matching deck rows) rather than per-course.
+    const progressByCourse = new Map<string, { total: number; learned: number; due: number }>();
+    const subscribedOnPage = (data || []).filter((c) => userSubscriptions.has(c.id)).map((c) => c.id);
+    if (user && subscribedOnPage.length > 0) {
+      const { data: courseWords } = await supabase
+        .from('course_vocabulary_items')
+        .select('course_id, word_zh')
+        .in('course_id', subscribedOnPage);
+
+      const allZh = [...new Set((courseWords ?? []).map((w) => w.word_zh))];
+      const todayStr = new Date().toISOString().split('T')[0];
+      const { data: deck } = allZh.length
+        ? await supabase
+            .from('vocabulary_items')
+            .select('word_zh, is_learned, next_review_date')
+            .eq('user_id', user.id)
+            .in('word_zh', allZh)
+        : { data: [] as { word_zh: string; is_learned: boolean; next_review_date: string | null }[] };
+
+      const byZh = new Map((deck ?? []).map((d) => [d.word_zh, d]));
+      for (const cw of courseWords ?? []) {
+        let p = progressByCourse.get(cw.course_id);
+        if (!p) { p = { total: 0, learned: 0, due: 0 }; progressByCourse.set(cw.course_id, p); }
+        p.total += 1;
+        const d = byZh.get(cw.word_zh);
+        if (d) {
+          if (d.is_learned) p.learned += 1;
+          else if (!d.next_review_date || d.next_review_date <= todayStr) p.due += 1;
+        }
+      }
+    }
+
     // Transform data
     const courses = (data || []).map(course => ({
       id: course.id,
@@ -81,6 +115,7 @@ export async function GET(request: NextRequest) {
       wordCount: course.course_vocabulary_items?.[0]?.count || 0,
       createdAt: course.created_at,
       isSubscribed: userSubscriptions.has(course.id),
+      progress: progressByCourse.get(course.id) || null,
     }));
 
     return NextResponse.json({

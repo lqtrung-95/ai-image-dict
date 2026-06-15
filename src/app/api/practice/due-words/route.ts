@@ -25,8 +25,24 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const listId = searchParams.get('list');
+    const courseId = searchParams.get('course');
     const limit = parseInt(searchParams.get('limit') || '50');
     const includeNew = searchParams.get('includeNew') !== 'false';
+
+    // Course filter: study only the words belonging to a given course. Course
+    // words link to the personal deck by Chinese text (see enrollment on
+    // subscribe), so we resolve the course's word_zh set and filter on it.
+    let courseZh: string[] | null = null;
+    if (courseId) {
+      const { data: courseWords } = await supabaseAdmin
+        .from('course_vocabulary_items')
+        .select('word_zh')
+        .eq('course_id', courseId);
+      courseZh = (courseWords ?? []).map((w) => w.word_zh);
+      if (courseZh.length === 0) {
+        return NextResponse.json({ items: [], dueCount: 0, newCount: 0, total: 0 });
+      }
+    }
 
     // Get today's date at midnight for comparison
     const today = new Date();
@@ -87,6 +103,11 @@ export async function GET(request: NextRequest) {
       query = query.in('id', vocabularyIds);
     }
 
+    // Filter by course word set if course filter is active
+    if (courseZh) {
+      query = query.in('word_zh', courseZh);
+    }
+
     const { data, error, count } = await query;
 
     console.log('[DueWords] Query result:', { dataLength: data?.length, count, error: error?.message, userId: user.id, todayStr, limit });
@@ -142,6 +163,11 @@ export async function GET(request: NextRequest) {
       // Apply list filter to new words too
       if (vocabularyIds.length > 0) {
         newQuery = newQuery.in('id', vocabularyIds);
+      }
+
+      // Apply course filter to new words too
+      if (courseZh) {
+        newQuery = newQuery.in('word_zh', courseZh);
       }
 
       const { data: newData } = await newQuery;
