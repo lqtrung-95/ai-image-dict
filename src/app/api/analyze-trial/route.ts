@@ -1,12 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeImage } from '@/lib/groq';
 import { extractBase64 } from '@/lib/utils';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+// Server-side cap on the unauthenticated, paid-AI trial endpoint. The mobile
+// client also enforces a 2-use trial, but that lives in AsyncStorage and is
+// trivially bypassed (reinstall / direct API call), so this protects cost.
+const TRIAL_IP_LIMIT = 10;
+const TRIAL_IP_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
 
 // POST /api/analyze-trial - Trial analysis for non-logged-in users
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const limit = rateLimit(`analyze-trial:${ip}`, TRIAL_IP_LIMIT, TRIAL_IP_WINDOW_MS);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Trial limit reached. Sign up to keep analyzing.', code: 'TRIAL_RATE_LIMITED' },
+        { status: 429, headers: { 'Retry-After': String(limit.retryAfterSeconds) } }
+      );
+    }
+
     const { image } = await request.json();
     if (!image) {
       return NextResponse.json({ error: 'Image required' }, { status: 400 });
