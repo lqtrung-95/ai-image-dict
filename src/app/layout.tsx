@@ -1,19 +1,20 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Manrope, JetBrains_Mono } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
-import { Header } from '@/components/layout/Header';
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
 import { OnlineStatusProvider } from '@/components/online-status-provider';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const manrope = Manrope({
+  variable: '--font-manrope',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains-mono',
   subsets: ['latin'],
+  weight: ['400', '500'],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ai-image-dictionary.vercel.app';
@@ -107,7 +108,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#7c3aed',
+  themeColor: '#76ffbb',
 };
 
 export default function RootLayout({
@@ -117,10 +118,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-900`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className={`${manrope.variable} ${jetbrainsMono.variable} font-[family-name:var(--font-manrope)] antialiased bg-[#101417] text-[#e0e2e8]`}>
         <OnlineStatusProvider>
-          <Header />
-          <main className="min-h-[calc(100vh-4rem)]">{children}</main>
+          {children}
           <Toaster richColors position="top-center" />
           <ServiceWorkerRegistration />
         </OnlineStatusProvider>

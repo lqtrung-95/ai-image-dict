@@ -1,9 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Prevent white flash on page load - set dark background immediately */
+/* Prevent white flash on page load */
 html {
-  background-color: #0f172a !important;
+  background-color: #101417 !important;
 }
 
 /* Exclude non-source directories from Tailwind content scanning */
@@ -59,73 +59,85 @@ html {
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* Midnight Ink design system — jade green on near-black */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  --radius: 0.5rem;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
+  /* Jade green primary */
+  --primary: #76ffbb;
+  --primary-foreground: #003822;
+
+  /* Dark surfaces */
+  --background: #101417;
+  --foreground: #e0e2e8;
+  --card: #1c2024;
+  --card-foreground: #e0e2e8;
+  --popover: #1c2024;
+  --popover-foreground: #e0e2e8;
+
+  --secondary: #454749;
+  --secondary-foreground: #e0e2e8;
+  --muted: #1c2024;
+  --muted-foreground: #bacbbe;
+  --accent: #272a2e;
+  --accent-foreground: #e0e2e8;
+  --destructive: #ffb4ab;
+  --border: rgba(255,255,255,0.07);
+  --input: rgba(255,255,255,0.1);
+  --ring: #76ffbb;
+
+  /* Surface tokens (match Stitch design exactly) */
+  --surface: #101417;
+  --surface-dim: #101417;
+  --surface-bright: #36393e;
+  --surface-container-lowest: #0b0f12;
+  --surface-container-low: #181c20;
+  --surface-container: #1c2024;
+  --surface-container-high: #272a2e;
+  --surface-container-highest: #323539;
+  --on-surface: #e0e2e8;
+  --on-surface-variant: #bacbbe;
+  --outline: #849589;
+  --outline-variant: #3b4a40;
+
+  /* Charts */
+  --chart-1: #76ffbb;
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+
+  /* Sidebar */
+  --sidebar: #181c20;
+  --sidebar-foreground: #e0e2e8;
+  --sidebar-primary: #76ffbb;
+  --sidebar-primary-foreground: #003822;
+  --sidebar-accent: #272a2e;
+  --sidebar-accent-foreground: #e0e2e8;
+  --sidebar-border: rgba(255,255,255,0.07);
+  --sidebar-ring: #76ffbb;
+}
+
+/* Force dark — no light mode variant needed */
+.dark {
+  --background: #101417;
+  --foreground: #e0e2e8;
+  --card: #1c2024;
+  --card-foreground: #e0e2e8;
+  --popover: #1c2024;
+  --popover-foreground: #e0e2e8;
+  --primary: #76ffbb;
+  --primary-foreground: #003822;
+  --secondary: #454749;
+  --secondary-foreground: #e0e2e8;
+  --muted: #1c2024;
+  --muted-foreground: #bacbbe;
+  --accent: #272a2e;
+  --accent-foreground: #e0e2e8;
+  --destructive: #ffb4ab;
+  --border: rgba(255,255,255,0.07);
+  --input: rgba(255,255,255,0.1);
+  --ring: #76ffbb;
 }
 
 @layer base {
@@ -135,6 +147,31 @@ html {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Midnight Ink utilities */
+.ghost-border {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.jade-glow:hover {
+  box-shadow: 0 0 15px rgba(118, 255, 187, 0.15);
+}
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #323539;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* 3D Flip Card Utilities */

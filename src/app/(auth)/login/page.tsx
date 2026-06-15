@@ -42,11 +42,10 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+    <Card className="w-full max-w-md bg-[#1c2024] border-white/5">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-white">Welcome Back</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-[#bacbbe]">
             Sign in to continue learning Chinese vocabulary
           </CardDescription>
         </CardHeader>
@@ -65,7 +64,7 @@ function LoginForm() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-200">
+              <Label htmlFor="email" className="text-[#e0e2e8]">
                 Email
               </Label>
               <Input
@@ -75,18 +74,18 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                className="bg-[#272a2e] border-white/10 text-[#e0e2e8] placeholder:text-[#849589]"
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-slate-200">
+                <Label htmlFor="password" className="text-[#e0e2e8]">
                   Password
                 </Label>
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-purple-400 hover:text-purple-300"
+                  className="text-sm text-[#76ffbb] hover:text-[#76ffbb]/80"
                 >
                   Forgot password?
                 </Link>
@@ -98,28 +97,27 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                className="bg-[#272a2e] border-white/10 text-[#e0e2e8] placeholder:text-[#849589]"
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              className="w-full bg-[#76ffbb] hover:opacity-90 text-[#003822] font-semibold"
               disabled={loading}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-slate-400">
+          <div className="mt-6 text-center text-[#bacbbe]">
             Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-purple-400 hover:text-purple-300 font-medium">
+            <Link href="/signup" className="text-[#76ffbb] hover:text-[#76ffbb]/80 font-medium">
               Sign up
             </Link>
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 }
 
@@ -127,8 +125,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-screen flex items-center justify-center bg-[#101417]">
+          <div className="w-8 h-8 border-2 border-[#76ffbb]/30 border-t-[#76ffbb] rounded-full animate-spin" />
         </div>
       }
     >
