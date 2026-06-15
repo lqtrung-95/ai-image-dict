@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 // Store listings and from inside the app. Plain, self-contained styling so it
 // renders correctly regardless of the app theme.
 const EFFECTIVE_DATE = 'June 15, 2026';
-const CONTACT_EMAIL = 'letrung95@gmail.com';
+const CONTACT_EMAIL = 'lqtrung.dev@gmail.com';
 
 export default function PrivacyPolicyPage() {
   return (
@@ -72,8 +72,9 @@ export default function PrivacyPolicyPage() {
           <strong>Supabase</strong> — authentication, database, and file storage.
         </li>
         <li>
-          <strong>AI analysis providers (e.g. Groq, Google AI)</strong> — process submitted
-          photos and text to generate vocabulary, translations, and example sentences.
+          <strong>OpenRouter</strong> — routes submitted photos and text to AI models
+          (such as Meta Llama and DeepSeek) to generate vocabulary, translations, and
+          example sentences.
         </li>
         <li>
           <strong>Google Text-to-Speech</strong> — generates audio pronunciation.

@@ -3,10 +3,8 @@
  * Extracts Chinese vocabulary from text content
  */
 
-import Groq from 'groq-sdk';
+import { aiClient, TEXT_MODEL } from '@/lib/ai-client';
 import { ExtractedWord } from '@/types';
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const EXTRACTION_PROMPT = `Extract Chinese vocabulary from the following text. Focus on useful nouns, verbs, adjectives, and common phrases.
 
@@ -45,8 +43,8 @@ export async function extractVocabulary(text: string): Promise<ExtractedWord[]> 
     : text;
 
   try {
-    const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+    const response = await aiClient.chat.completions.create({
+      model: TEXT_MODEL,
       messages: [
         {
           role: 'user',

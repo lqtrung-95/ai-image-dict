@@ -1,6 +1,4 @@
-import Groq from 'groq-sdk';
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { aiClient, TEXT_MODEL } from './ai-client';
 
 export interface NarrativeSentence {
   zh: string;
@@ -37,8 +35,8 @@ export async function generateStoryNarrative(
   const vocab = words.slice(0, 20);
   const vocabList = vocab.map((w) => `${w.zh} (${w.pinyin}, ${w.en})`).join('; ');
 
-  const response = await groq.chat.completions.create({
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+  const response = await aiClient.chat.completions.create({
+    model: TEXT_MODEL,
     messages: [
       {
         role: 'user',

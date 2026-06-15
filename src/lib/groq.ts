@@ -1,10 +1,8 @@
-import Groq from 'groq-sdk';
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { aiClient, VISION_MODEL, TEXT_MODEL } from './ai-client';
 
 export async function analyzeImage(base64Image: string) {
-  const response = await groq.chat.completions.create({
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+  const response = await aiClient.chat.completions.create({
+    model: VISION_MODEL,
     messages: [
       {
         role: 'user',
@@ -207,8 +205,8 @@ export async function generateStoryFromWords(
 ) {
   const wordList = words.map(w => `${w.zh} (${w.pinyin}) - ${w.en}`).join('\n');
 
-  const response = await groq.chat.completions.create({
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+  const response = await aiClient.chat.completions.create({
+    model: TEXT_MODEL,
     messages: [
       {
         role: 'user',
