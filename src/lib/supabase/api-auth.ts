@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
+import { createServiceClient } from './server';
 
 /**
  * Create Supabase client that supports both cookie-based auth (web) and Bearer token auth (mobile)
@@ -57,29 +58,12 @@ export async function getAuthUser(request?: NextRequest) {
 
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.replace('Bearer ', '');
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    // Verify the token by making a request to Supabase auth
-    const response = await fetch(
-      `${supabaseUrl}/auth/v1/user`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'apikey': anonKey!,
-        },
-      }
-    );
-
-    if (response.ok) {
-      const user = await response.json();
-      return { user, error: null };
-    } else {
-      const errorText = await response.text();
-      console.error('[getAuthUser] Token validation failed:', response.status, errorText);
-      return { user: null, error: new Error(`Invalid token: ${response.status}`) };
+    const { data: { user }, error } = await createServiceClient().auth.getUser(token);
+    if (error || !user) {
+      console.error('[getAuthUser] Token validation failed:', error?.message);
+      return { user: null, error: error ?? new Error('Invalid token') };
     }
+    return { user, error: null };
   }
 
   // For web requests, use the standard cookie-based auth

@@ -6,8 +6,15 @@
 
 import https from 'https';
 
-const SUPABASE_HOST = 'ajoppazfwadrmqfirhhn.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqb3BwYXpmd2Fkcm1xZmlyaGhuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzAyODQ2OSwiZXhwIjoyMDgyNjA0NDY5fQ.-FjdL26z6Tpg2YsnV_3ek9bOY5kcVHhxQft6oS11zH8';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SERVICE_KEY) {
+  console.error('Missing env vars. Run with: node --env-file=.env.local scripts/seed-public-courses.mjs');
+  process.exit(1);
+}
+
+const SUPABASE_HOST = new URL(SUPABASE_URL).hostname;
 
 function req(method, path, body, prefer = 'return=representation') {
   return new Promise((resolve, reject) => {
@@ -259,6 +266,87 @@ const COURSES = [
       { word_zh: '触类旁通', word_pinyin: 'chù lèi páng tōng', word_en: 'to master one and understand all', example_sentence: '学好方法，就能触类旁通。' },
     ],
   },
+  {
+    name: 'Kitchen & Food',
+    description: 'Everyday food and kitchen words you can practice by pointing your camera at your meal. Theme-grouped for fast, practical learning.',
+    difficulty_level: 1,
+    words: [
+      { word_zh: '水', word_pinyin: 'shuǐ', word_en: 'water', example_sentence: '请给我一杯水。' },
+      { word_zh: '茶', word_pinyin: 'chá', word_en: 'tea', example_sentence: '我喜欢喝茶。' },
+      { word_zh: '咖啡', word_pinyin: 'kāfēi', word_en: 'coffee', example_sentence: '早上我要喝咖啡。' },
+      { word_zh: '米饭', word_pinyin: 'mǐfàn', word_en: 'cooked rice', example_sentence: '我每天吃米饭。' },
+      { word_zh: '面条', word_pinyin: 'miàntiáo', word_en: 'noodles', example_sentence: '这碗面条很好吃。' },
+      { word_zh: '鸡蛋', word_pinyin: 'jīdàn', word_en: 'egg', example_sentence: '早餐我吃了两个鸡蛋。' },
+      { word_zh: '面包', word_pinyin: 'miànbāo', word_en: 'bread', example_sentence: '我买了一些面包。' },
+      { word_zh: '牛奶', word_pinyin: 'niúnǎi', word_en: 'milk', example_sentence: '孩子每天喝牛奶。' },
+      { word_zh: '水果', word_pinyin: 'shuǐguǒ', word_en: 'fruit', example_sentence: '多吃水果对身体好。' },
+      { word_zh: '苹果', word_pinyin: 'píngguǒ', word_en: 'apple', example_sentence: '桌子上有一个苹果。' },
+      { word_zh: '蔬菜', word_pinyin: 'shūcài', word_en: 'vegetable', example_sentence: '我喜欢吃新鲜蔬菜。' },
+      { word_zh: '肉', word_pinyin: 'ròu', word_en: 'meat', example_sentence: '这道菜里有很多肉。' },
+      { word_zh: '鱼', word_pinyin: 'yú', word_en: 'fish', example_sentence: '我们晚饭吃鱼。' },
+      { word_zh: '盘子', word_pinyin: 'pánzi', word_en: 'plate', example_sentence: '请把盘子放在桌上。' },
+      { word_zh: '碗', word_pinyin: 'wǎn', word_en: 'bowl', example_sentence: '我要一碗汤。' },
+      { word_zh: '杯子', word_pinyin: 'bēizi', word_en: 'cup; glass', example_sentence: '这个杯子是新的。' },
+      { word_zh: '筷子', word_pinyin: 'kuàizi', word_en: 'chopsticks', example_sentence: '他会用筷子吃饭。' },
+      { word_zh: '勺子', word_pinyin: 'sháozi', word_en: 'spoon', example_sentence: '用勺子喝汤。' },
+      { word_zh: '刀', word_pinyin: 'dāo', word_en: 'knife', example_sentence: '这把刀很锋利。' },
+      { word_zh: '糖', word_pinyin: 'táng', word_en: 'sugar; candy', example_sentence: '咖啡里我不放糖。' },
+    ],
+  },
+  {
+    name: 'Numbers & Time',
+    description: 'Count, tell the time, and talk about days and dates. The essential scaffolding for everyday Mandarin conversations.',
+    difficulty_level: 1,
+    words: [
+      { word_zh: '一', word_pinyin: 'yī', word_en: 'one', example_sentence: '我有一个问题。' },
+      { word_zh: '二', word_pinyin: 'èr', word_en: 'two', example_sentence: '我要二号。' },
+      { word_zh: '三', word_pinyin: 'sān', word_en: 'three', example_sentence: '他有三个孩子。' },
+      { word_zh: '四', word_pinyin: 'sì', word_en: 'four', example_sentence: '一年有四个季节。' },
+      { word_zh: '五', word_pinyin: 'wǔ', word_en: 'five', example_sentence: '我五点下班。' },
+      { word_zh: '六', word_pinyin: 'liù', word_en: 'six', example_sentence: '现在六点了。' },
+      { word_zh: '七', word_pinyin: 'qī', word_en: 'seven', example_sentence: '一个星期有七天。' },
+      { word_zh: '八', word_pinyin: 'bā', word_en: 'eight', example_sentence: '他八岁了。' },
+      { word_zh: '九', word_pinyin: 'jiǔ', word_en: 'nine', example_sentence: '商店九点开门。' },
+      { word_zh: '十', word_pinyin: 'shí', word_en: 'ten', example_sentence: '我有十块钱。' },
+      { word_zh: '百', word_pinyin: 'bǎi', word_en: 'hundred', example_sentence: '这本书一百页。' },
+      { word_zh: '今天', word_pinyin: 'jīntiān', word_en: 'today', example_sentence: '今天天气很好。' },
+      { word_zh: '明天', word_pinyin: 'míngtiān', word_en: 'tomorrow', example_sentence: '明天我们去公园。' },
+      { word_zh: '昨天', word_pinyin: 'zuótiān', word_en: 'yesterday', example_sentence: '昨天我很忙。' },
+      { word_zh: '星期', word_pinyin: 'xīngqī', word_en: 'week', example_sentence: '这个星期我有空。' },
+      { word_zh: '月', word_pinyin: 'yuè', word_en: 'month', example_sentence: '下个月我去旅行。' },
+      { word_zh: '年', word_pinyin: 'nián', word_en: 'year', example_sentence: '新年快乐！' },
+      { word_zh: '点', word_pinyin: 'diǎn', word_en: "o'clock", example_sentence: '现在三点了。' },
+      { word_zh: '分钟', word_pinyin: 'fēnzhōng', word_en: 'minute', example_sentence: '还有五分钟。' },
+      { word_zh: '小时', word_pinyin: 'xiǎoshí', word_en: 'hour', example_sentence: '我等了一个小时。' },
+    ],
+  },
+  {
+    name: 'Colors & Shapes',
+    description: 'Describe what you see — colors, shapes, and sizes. Pairs perfectly with the camera to label objects around you.',
+    difficulty_level: 1,
+    words: [
+      { word_zh: '红色', word_pinyin: 'hóngsè', word_en: 'red', example_sentence: '她穿着红色的裙子。' },
+      { word_zh: '黄色', word_pinyin: 'huángsè', word_en: 'yellow', example_sentence: '香蕉是黄色的。' },
+      { word_zh: '蓝色', word_pinyin: 'lánsè', word_en: 'blue', example_sentence: '天空是蓝色的。' },
+      { word_zh: '绿色', word_pinyin: 'lǜsè', word_en: 'green', example_sentence: '树叶是绿色的。' },
+      { word_zh: '黑色', word_pinyin: 'hēisè', word_en: 'black', example_sentence: '我喜欢黑色的衣服。' },
+      { word_zh: '白色', word_pinyin: 'báisè', word_en: 'white', example_sentence: '墙是白色的。' },
+      { word_zh: '紫色', word_pinyin: 'zǐsè', word_en: 'purple', example_sentence: '她的包是紫色的。' },
+      { word_zh: '橙色', word_pinyin: 'chéngsè', word_en: 'orange', example_sentence: '橙子是橙色的。' },
+      { word_zh: '粉色', word_pinyin: 'fěnsè', word_en: 'pink', example_sentence: '她喜欢粉色。' },
+      { word_zh: '灰色', word_pinyin: 'huīsè', word_en: 'gray', example_sentence: '天空是灰色的。' },
+      { word_zh: '颜色', word_pinyin: 'yánsè', word_en: 'color', example_sentence: '你喜欢什么颜色？' },
+      { word_zh: '圆', word_pinyin: 'yuán', word_en: 'round; circle', example_sentence: '月亮是圆的。' },
+      { word_zh: '方', word_pinyin: 'fāng', word_en: 'square', example_sentence: '这张桌子是方的。' },
+      { word_zh: '长', word_pinyin: 'cháng', word_en: 'long', example_sentence: '这条路很长。' },
+      { word_zh: '短', word_pinyin: 'duǎn', word_en: 'short', example_sentence: '他的头发很短。' },
+      { word_zh: '大', word_pinyin: 'dà', word_en: 'big; large', example_sentence: '这个房间很大。' },
+      { word_zh: '小', word_pinyin: 'xiǎo', word_en: 'small', example_sentence: '这只猫很小。' },
+      { word_zh: '高', word_pinyin: 'gāo', word_en: 'tall; high', example_sentence: '那座山很高。' },
+      { word_zh: '新', word_pinyin: 'xīn', word_en: 'new', example_sentence: '这是我的新手机。' },
+      { word_zh: '旧', word_pinyin: 'jiù', word_en: 'old; used', example_sentence: '这本书很旧了。' },
+    ],
+  },
 ];
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -267,6 +355,17 @@ async function main() {
   console.log('🌱 Seeding public HSK courses…\n');
 
   for (const course of COURSES) {
+    // Idempotency guard: skip courses that already exist (matched by name +
+    // system-owned creator_id IS NULL) so re-running never duplicates them.
+    const existing = await req('GET', `/vocabulary_courses?select=id&creator_id=is.null&name=eq.${encodeURIComponent(course.name)}`);
+    try {
+      const rows = JSON.parse(existing.body);
+      if (Array.isArray(rows) && rows.length > 0) {
+        console.log(`  ⏭️  Skipping existing course: "${course.name}"`);
+        continue;
+      }
+    } catch { /* fall through to insert */ }
+
     // 1. Insert course
     const cr = await req('POST', '/vocabulary_courses', {
       name: course.name,
@@ -316,7 +415,7 @@ async function main() {
     }
   }
 
-  console.log('\n🎉 Done! 6 public courses seeded (HSK 1–6), 30 words each.');
+  console.log('\n🎉 Done! Seeded 6 HSK courses + 3 thematic courses (Kitchen & Food, Numbers & Time, Colors & Shapes).');
 }
 
 main().catch((err) => { console.error('❌', err.message); process.exit(1); });

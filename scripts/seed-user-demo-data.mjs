@@ -6,8 +6,15 @@
 
 import https from 'https';
 
-const SUPABASE_HOST = 'ajoppazfwadrmqfirhhn.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqb3BwYXpmd2Fkcm1xZmlyaGhuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzAyODQ2OSwiZXhwIjoyMDgyNjA0NDY5fQ.-FjdL26z6Tpg2YsnV_3ek9bOY5kcVHhxQft6oS11zH8';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SERVICE_KEY) {
+  console.error('Missing env vars. Run with: node --env-file=.env.local scripts/seed-user-demo-data.mjs');
+  process.exit(1);
+}
+
+const SUPABASE_HOST = new URL(SUPABASE_URL).hostname;
 const USER_ID = 'eb397f53-d903-42ee-9634-d5fbe158afc0';
 
 function req(method, path, body, prefer = 'return=minimal') {
