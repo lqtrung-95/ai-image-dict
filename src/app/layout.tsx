@@ -22,38 +22,36 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ai-image-dictionary
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'AI Image Dictionary - Learn Chinese Through Photos',
-    template: '%s | AI词典',
+    default: 'Snap Mandarin — Learn Chinese Through Photos',
+    template: '%s | Snap Mandarin',
   },
   description:
-    'Capture photos and instantly learn Chinese vocabulary with AI-powered object detection. Get Chinese characters, pinyin pronunciation, and English translations for everything you photograph.',
+    'Snap a photo and instantly learn Chinese vocabulary with AI. Get characters, pinyin, and English translations for everything you capture — then reinforce with spaced-repetition flashcards.',
   keywords: [
-    'Chinese vocabulary',
     'learn Chinese',
-    'Chinese language learning',
-    'AI vocabulary',
-    'image recognition',
+    'Mandarin vocabulary',
     'Chinese flashcards',
+    'AI Chinese learning',
+    'photo vocabulary',
     'pinyin',
-    'Chinese characters',
+    'HSK vocabulary',
+    'spaced repetition',
     'language learning app',
-    'vocabulary builder',
-    'photo dictionary',
-    'visual learning',
+    'visual Chinese dictionary',
   ],
-  authors: [{ name: 'AI Image Dictionary' }],
-  creator: 'AI Image Dictionary',
-  publisher: 'AI Image Dictionary',
+  authors: [{ name: 'Snap Mandarin' }],
+  creator: 'Snap Mandarin',
+  publisher: 'Snap Mandarin',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'AI词典',
+    title: 'Snap Mandarin',
   },
   icons: {
     icon: [
-      { url: '/icons/icon-192.svg', type: 'image/svg+xml' },
       { url: '/icons/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icons/icon-512.png', type: 'image/png', sizes: '512x512' },
     ],
     shortcut: '/icons/icon-192.png',
     apple: [
@@ -64,24 +62,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: siteUrl,
-    siteName: 'AI Image Dictionary',
-    title: 'AI Image Dictionary - Learn Chinese Through Photos',
+    siteName: 'Snap Mandarin',
+    title: 'Snap Mandarin — Learn Chinese Through Photos',
     description:
-      'Capture photos and instantly learn Chinese vocabulary. AI-powered object detection with Chinese characters, pinyin, and translations.',
+      'Snap a photo and instantly learn Chinese vocabulary with AI. Characters, pinyin, translations — then practice with spaced-repetition flashcards.',
     images: [
       {
         url: 'https://trungle-storage.s3.ap-southeast-2.amazonaws.com/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'AI Image Dictionary - Learn Chinese Through Photos',
+        alt: 'Snap Mandarin — Learn Chinese Through Photos',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Image Dictionary - Learn Chinese Through Photos',
+    title: 'Snap Mandarin — Learn Chinese Through Photos',
     description:
-      'Capture photos and instantly learn Chinese vocabulary with AI. Get characters, pinyin, and translations.',
+      'Snap a photo and instantly learn Chinese vocabulary with AI. Characters, pinyin, and translations in seconds.',
     images: ['https://trungle-storage.s3.ap-southeast-2.amazonaws.com/og-image.png'],
   },
   robots: {
@@ -94,11 +92,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  verification: {
-    // Add your verification codes here when you have them
-    // google: 'your-google-verification-code',
-    // yandex: 'your-yandex-verification-code',
   },
   category: 'education',
 };

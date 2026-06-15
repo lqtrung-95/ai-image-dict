@@ -1,11 +1,11 @@
 {
-  "name": "AI Image Dictionary - Learn Chinese",
-  "short_name": "AI词典",
-  "description": "Learn Chinese vocabulary through photos with AI-powered object detection. Capture any photo and instantly learn Chinese words with pinyin.",
+  "name": "Snap Mandarin — Learn Chinese Through Photos",
+  "short_name": "Snap Mandarin",
+  "description": "Snap a photo and instantly learn Chinese vocabulary with AI. Characters, pinyin, and translations — then reinforce with spaced-repetition flashcards.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#7c3aed",
+  "background_color": "#101417",
+  "theme_color": "#76ffbb",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -38,4 +38,3 @@
   "dir": "ltr",
   "prefer_related_applications": false
 }
-
