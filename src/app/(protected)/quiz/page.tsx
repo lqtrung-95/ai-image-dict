@@ -37,7 +37,7 @@ interface QuizStats {
 }
 
 const QUIZ_MODE_COLORS: Record<QuizColor, string> = {
-  purple: 'from-[#76ffbb]/20 to-purple-500/5 border-[#76ffbb]/30 hover:border-[#76ffbb]/50',
+  purple: 'from-[#76ffbb]/20 to-[#76ffbb]/5 border-[#76ffbb]/30 hover:border-[#76ffbb]/50',
   blue: 'from-blue-500/20 to-blue-500/5 border-blue-500/30 hover:border-blue-500/50',
   green: 'from-green-500/20 to-green-500/5 border-green-500/30 hover:border-green-500/50',
 };

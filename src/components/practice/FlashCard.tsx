@@ -109,7 +109,7 @@ export function FlashCard({
           <div
             className={cn(
               'absolute inset-0 w-full h-full backface-hidden',
-              'bg-gradient-to-br from-[#76ffbb] to-purple-800 rounded-2xl',
+              'bg-gradient-to-br from-[#76ffbb]/20 to-[#76ffbb]/5 rounded-2xl border border-[#76ffbb]/20',
               'flex flex-col items-center justify-center p-6',
               'shadow-xl border border-[#76ffbb]/30'
             )}
@@ -126,17 +126,17 @@ export function FlashCard({
               <Volume2 className="w-5 h-5" />
             </Button>
 
-            <h1 className="text-7xl font-bold text-white mb-4">{wordZh}</h1>
-            <p className="text-white/60 text-sm">Tap to reveal</p>
+            <h1 className="text-7xl font-bold text-[#e0e2e8] mb-2">{wordZh}</h1>
+            <p className="text-[#849589] text-sm">Tap to reveal</p>
           </div>
 
           {/* Back - Pinyin & English with Photo Context */}
           <div
             className={cn(
               'absolute inset-0 w-full h-full backface-hidden rotate-y-180',
-              'bg-gradient-to-br from-slate-700 to-[#1c2024] rounded-2xl',
+              'bg-[#181c20] rounded-2xl border border-white/10',
               'flex flex-col items-center justify-center p-6',
-              'shadow-xl border border-white/10/30'
+              'shadow-xl'
             )}
           >
             <Button

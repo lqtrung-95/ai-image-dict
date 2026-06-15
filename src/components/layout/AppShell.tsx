@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { Search, Settings, LogOut } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { MobileSidebar } from './MobileSidebar';
 
@@ -61,13 +63,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Mobile: hamburger + logo */}
         <div className="flex items-center gap-3 md:hidden">
           <MobileSidebar />
-          <span className="font-bold text-[#76ffbb]">Snap Mandarin</span>
+          <Image src="/logo.png" alt="Snap Mandarin" width={28} height={28} className="rounded-lg" />
+          <span className="font-bold text-[#76ffbb] text-sm">Snap Mandarin</span>
         </div>
 
         {/* Desktop: search */}
         <div className="hidden md:flex items-center flex-1 max-w-md">
           <div className="relative w-full">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#bacbbe]" style={{ fontSize: 18 }}>search</span>
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#bacbbe]" />
             <input
               className="w-full bg-[#1c2024] border border-white/5 rounded-lg pl-9 pr-4 py-2 text-sm text-[#e0e2e8] placeholder:text-[#bacbbe] focus:outline-none focus:ring-1 focus:ring-[#76ffbb]/50"
               placeholder="Search vocabulary, characters..."
@@ -107,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="cursor-pointer focus:bg-[#272a2e] focus:text-[#e0e2e8]"
                 onClick={() => router.push('/settings')}
               >
-                <span className="material-symbols-outlined mr-2" style={{ fontSize: 16 }}>settings</span>
+                <Settings size={16} className="mr-2" />
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-white/5" />
@@ -115,7 +118,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="cursor-pointer text-red-400 focus:bg-red-900/20 focus:text-red-400"
                 onClick={signOut}
               >
-                <span className="material-symbols-outlined mr-2" style={{ fontSize: 16 }}>logout</span>
+                <LogOut size={16} className="mr-2" />
                 Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>

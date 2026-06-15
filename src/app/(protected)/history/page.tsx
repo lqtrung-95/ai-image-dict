@@ -127,7 +127,7 @@ export default function HistoryPage() {
                 {/* Desktop: show on hover */}
                 <div className="hidden md:flex absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                   <Link href={`/analysis/${analysis.id}`}>
-                    <Button size="sm" className="bg-white/90 text-slate-900 hover:bg-white">
+                    <Button size="sm" className="bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90">
                       <Eye className="w-4 h-4 mr-1" />
                       View
                     </Button>

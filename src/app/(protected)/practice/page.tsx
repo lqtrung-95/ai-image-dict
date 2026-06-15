@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Shuffle, RotateCcw, Trophy, BookOpen, Target, Flame, Calendar } from 'lucide-react';
+import { Shuffle, RotateCcw, Target, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
 import {
@@ -23,15 +23,15 @@ import {
 
 interface VocabularyItem {
   id: string;
-  word_zh: string;
-  word_pinyin: string;
-  word_en: string;
-  photo_url?: string | null;
-  photo_date?: string | null;
-  easiness_factor: number;
-  interval_days: number;
+  wordZh: string;
+  wordPinyin: string;
+  wordEn: string;
+  photoUrl?: string | null;
+  photoDate?: string | null;
+  easinessFactor: number;
+  intervalDays: number;
   repetitions: number;
-  correct_streak: number;
+  correctStreak: number;
 }
 
 interface VocabularyList {
@@ -95,7 +95,7 @@ export default function PracticePage() {
     }
   };
 
-  const fetchDueWords = useCallback(async (listId?: string) => {
+  const fetchDueWords = useCallback(async (listId?: string, signal?: AbortSignal) => {
     setLoading(true);
     setSessionComplete(false);
     setCurrentIndex(0);
@@ -107,7 +107,8 @@ export default function PracticePage() {
         params.set('list', listId);
       }
 
-      const response = await apiFetch(`/api/practice/due-words?${params}`);
+      const response = await apiFetch(`/api/practice/due-words?${params}`, { signal });
+      if (signal?.aborted) return;
       if (response.ok) {
         const data = await response.json();
         const shuffled = [...data.items].sort(() => Math.random() - 0.5);
@@ -116,9 +117,10 @@ export default function PracticePage() {
         setStats((prev) => ({ ...prev, total: shuffled.length }));
       }
     } catch (error) {
+      if ((error as { name?: string }).name === 'AbortError') return;
       console.error('Failed to fetch due words:', error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, []);
 
@@ -135,8 +137,10 @@ export default function PracticePage() {
   }, []);
 
   useEffect(() => {
-    fetchDueWords();
+    const controller = new AbortController();
+    fetchDueWords(undefined, controller.signal);
     fetchLists();
+    return () => controller.abort();
   }, [fetchDueWords, fetchLists]);
 
   const handleListChange = (value: string) => {
@@ -196,10 +200,10 @@ export default function PracticePage() {
   // Calculate interval previews for current word
   const currentSrsState: SrsState | null = currentWord
     ? {
-        easinessFactor: currentWord.easiness_factor || 2.5,
-        intervalDays: currentWord.interval_days || 0,
+        easinessFactor: currentWord.easinessFactor || 2.5,
+        intervalDays: currentWord.intervalDays || 0,
         repetitions: currentWord.repetitions || 0,
-        correctStreak: currentWord.correct_streak || 0,
+        correctStreak: currentWord.correctStreak || 0,
       }
     : null;
 
@@ -207,8 +211,8 @@ export default function PracticePage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-lg">
-        <h1 className="text-2xl font-bold text-white mb-6">Practice</h1>
+      <div className="p-6 max-w-lg mx-auto">
+        <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight mb-6">Practice</h1>
         <div className="h-72 bg-[#1c2024] rounded-2xl animate-pulse" />
       </div>
     );
@@ -216,14 +220,12 @@ export default function PracticePage() {
 
   if (words.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-lg">
-        <h1 className="text-2xl font-bold text-white mb-6">Practice</h1>
-        <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
-            <BookOpen className="w-8 h-8 text-[#849589]" />
-          </div>
-          <h2 className="text-xl font-medium text-white mb-2">No words due for review</h2>
-          <p className="text-[#bacbbe] mb-6">
+      <div className="p-6 max-w-lg mx-auto">
+        <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight mb-6">Practice</h1>
+        <div className="text-center py-16 bg-[#181c20] border border-white/5 rounded-2xl">
+          <span className="material-symbols-outlined text-5xl text-[#849589] mb-4 block">school</span>
+          <h2 className="text-xl font-semibold text-[#e0e2e8] mb-2">No words due for review</h2>
+          <p className="text-[#bacbbe] mb-6 max-w-xs mx-auto">
             {dueCount === 0
               ? 'Add some vocabulary by analyzing photos, or check back tomorrow!'
               : 'Great job! Come back later for more practice.'}
@@ -231,14 +233,14 @@ export default function PracticePage() {
           <div className="flex gap-3 justify-center">
             <Button
               onClick={() => router.push('/capture')}
-              className="bg-[#76ffbb] hover:opacity-90"
+              className="bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90"
             >
               Capture Photo
             </Button>
             <Button
               onClick={() => router.push('/progress')}
               variant="outline"
-              className="border-white/10"
+              className="border-white/10 text-[#e0e2e8]"
             >
               View Progress
             </Button>
@@ -254,44 +256,44 @@ export default function PracticePage() {
     const percentage = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
 
     return (
-      <div className="container mx-auto px-4 py-6 max-w-lg">
-        <h1 className="text-2xl font-bold text-white mb-6">Practice Complete!</h1>
+      <div className="p-6 max-w-lg mx-auto">
+        <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight mb-6">Session Complete</h1>
 
-        <Card className="bg-[#1c2024] border-white/10 p-8 text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-            <Trophy className="w-10 h-10 text-white" />
+        <div className="bg-[#181c20] border border-white/5 rounded-2xl p-8 text-center ghost-border">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#76ffbb]/10 border border-[#76ffbb]/20 flex items-center justify-center">
+            <span className="material-symbols-outlined text-[#76ffbb]" style={{ fontSize: 40 }}>emoji_events</span>
           </div>
 
-          <h2 className="text-3xl font-bold text-white mb-2">
-            {percentage}% Success!
+          <h2 className="text-4xl font-bold text-[#e0e2e8] mb-1">
+            {percentage}%
           </h2>
           <p className="text-[#bacbbe] mb-4">
-            You reviewed {totalAnswered} words
+            {correctCount} of {totalAnswered} words correct
           </p>
 
           {streak > 0 && (
-            <div className="inline-flex items-center gap-2 bg-orange-500/20 text-orange-400 px-4 py-2 rounded-full mb-6">
-              <Flame className="w-5 h-5" />
-              <span className="font-bold">{streak} day streak!</span>
+            <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 px-4 py-2 rounded-full mb-6">
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>local_fire_department</span>
+              <span className="font-semibold">{streak} day streak!</span>
             </div>
           )}
 
           <div className="grid grid-cols-4 gap-2 mb-8">
-            <div className="bg-red-500/10 rounded-xl p-3 border border-red-500/30">
+            <div className="bg-red-500/10 rounded-xl p-3 border border-red-500/20">
               <p className="text-2xl font-bold text-red-400">{stats.again}</p>
-              <p className="text-xs text-red-400/80">Again</p>
+              <p className="text-xs text-red-400/70 mt-0.5">Again</p>
             </div>
-            <div className="bg-orange-500/10 rounded-xl p-3 border border-orange-500/30">
+            <div className="bg-orange-500/10 rounded-xl p-3 border border-orange-500/20">
               <p className="text-2xl font-bold text-orange-400">{stats.hard}</p>
-              <p className="text-xs text-orange-400/80">Hard</p>
+              <p className="text-xs text-orange-400/70 mt-0.5">Hard</p>
             </div>
-            <div className="bg-green-500/10 rounded-xl p-3 border border-green-500/30">
-              <p className="text-2xl font-bold text-green-400">{stats.good}</p>
-              <p className="text-xs text-green-400/80">Good</p>
+            <div className="bg-[#76ffbb]/10 rounded-xl p-3 border border-[#76ffbb]/20">
+              <p className="text-2xl font-bold text-[#76ffbb]">{stats.good}</p>
+              <p className="text-xs text-[#76ffbb]/70 mt-0.5">Good</p>
             </div>
-            <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/30">
+            <div className="bg-blue-500/10 rounded-xl p-3 border border-blue-500/20">
               <p className="text-2xl font-bold text-blue-400">{stats.easy}</p>
-              <p className="text-xs text-blue-400/80">Easy</p>
+              <p className="text-xs text-blue-400/70 mt-0.5">Easy</p>
             </div>
           </div>
 
@@ -299,30 +301,30 @@ export default function PracticePage() {
             <Button
               onClick={handleRestart}
               variant="outline"
-              className="flex-1 border-white/10 text-[#e0e2e8]"
+              className="flex-1 border-white/10 text-[#e0e2e8] hover:bg-[#272a2e]"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Practice Again
             </Button>
             <Button
               onClick={() => router.push('/progress')}
-              className="flex-1 bg-[#76ffbb] hover:opacity-90"
+              className="flex-1 bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90"
             >
               View Progress
             </Button>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-lg">
+    <div className="p-6 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Practice</h1>
-          <p className="text-[#bacbbe]">
+          <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight">Practice</h1>
+          <p className="text-[#bacbbe] text-sm mt-0.5">
             {currentIndex + 1} of {words.length}
           </p>
         </div>
@@ -388,11 +390,11 @@ export default function PracticePage() {
       {/* Flashcard */}
       {currentWord && (
         <FlashCard
-          wordZh={currentWord.word_zh}
-          wordPinyin={currentWord.word_pinyin}
-          wordEn={currentWord.word_en}
-          photoUrl={currentWord.photo_url}
-          photoDate={currentWord.photo_date}
+          wordZh={currentWord.wordZh}
+          wordPinyin={currentWord.wordPinyin}
+          wordEn={currentWord.wordEn}
+          photoUrl={currentWord.photoUrl}
+          photoDate={currentWord.photoDate}
           intervalPreviews={intervalPreviews}
           onRate={handleRate}
         />

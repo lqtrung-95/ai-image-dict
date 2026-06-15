@@ -72,8 +72,8 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="">
-        <Card className="w-full max-w-md bg-[#1c2024] border-white/5">
+      <div className="w-full max-w-lg">
+        <Card className="w-full bg-[#1c2024] border-white/5">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-white">Check Your Email</CardTitle>
             <CardDescription className="text-[#bacbbe]">
@@ -98,8 +98,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="">
-      <Card className="w-full max-w-md bg-[#1c2024] border-white/5">
+    <div className="w-full max-w-lg">
+      <Card className="w-full bg-[#1c2024] border-white/5">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-white">Create Account</CardTitle>
           <CardDescription className="text-[#bacbbe]">

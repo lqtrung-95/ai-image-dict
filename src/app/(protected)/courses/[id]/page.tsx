@@ -199,7 +199,7 @@ export default function CourseDetailPage() {
             <Button
               onClick={handleSubscribe}
               disabled={subscribing}
-              className={subscription ? 'bg-slate-600 hover:bg-[#272a2e]' : 'bg-[#76ffbb] hover:opacity-90'}
+              className={subscription ? 'bg-[#272a2e] border border-white/10 text-[#bacbbe] hover:bg-[#272a2e]/80' : 'bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90'}
             >
               {subscribing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -226,7 +226,7 @@ export default function CourseDetailPage() {
             </div>
             <div className="h-2 bg-[#272a2e] rounded-full overflow-hidden">
               <div
-                className="h-full bg-purple-500 rounded-full transition-all"
+                className="h-full bg-[#76ffbb] rounded-full transition-all"
                 style={{ width: `${subscription.progress_percent}%` }}
               />
             </div>

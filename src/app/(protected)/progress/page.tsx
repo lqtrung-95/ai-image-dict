@@ -2,24 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Flame,
-  BookOpen,
-  GraduationCap,
-  TrendingUp,
-  Calendar,
-  Target,
-  RefreshCw,
-  Play,
-  Clock,
-  BarChart3,
-} from 'lucide-react';
+import { RefreshCw, Play } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
-import { DailyGoalProgressWidget } from '@/components/progress/daily-goal-progress-widget';
 import { ActivityHeatmap } from '@/components/dashboard/activity-heatmap';
-import { WordStateProgressBar } from '@/components/dashboard/word-state-progress-bar';
+import { HskMasteryDonut } from '@/components/stats/hsk-mastery-donut';
+import { VocabularyLineChart } from '@/components/stats/vocabulary-line-chart';
+import { TopStruggledWords } from '@/components/stats/top-struggled-words';
+import { UpcomingMilestones } from '@/components/stats/upcoming-milestones';
 
 interface Stats {
   currentStreak: number;
@@ -27,136 +17,118 @@ interface Stats {
   totalWords: number;
   learnedWords: number;
   totalPracticeSessions: number;
-  lastPracticeDate: string | null;
-  wordsPerDay: Array<{ date: string; count: number }>;
-  // SRS stats
+  totalPracticeHours: number;
+  srsAccuracy: number;
   dueToday: number;
   masteredThisWeek: number;
-  averageEaseFactor: number;
-  hskDistribution: Record<string, number>;
-  reviewForecast: Array<{ date: string; count: number }>;
+  hskMasteryByLevel: Record<string, { total: number; learned: number; pct: number }>;
+  wordsPerMonth: { month: string; count: number }[];
 }
 
-const HSK_COLORS: Record<string, string> = {
-  hsk1: 'bg-green-500',
-  hsk2: 'bg-emerald-500',
-  hsk3: 'bg-yellow-500',
-  hsk4: 'bg-orange-500',
-  hsk5: 'bg-red-500',
-  hsk6: 'bg-purple-500',
-  unclassified: 'bg-slate-500',
-};
+interface StruggledWord {
+  id: string;
+  wordZh: string;
+  wordPinyin: string;
+  wordEn: string;
+  hskLevel?: number | null;
+  accuracy: number;
+  attempts: number;
+}
 
-const HSK_LABELS: Record<string, string> = {
-  hsk1: 'HSK 1',
-  hsk2: 'HSK 2',
-  hsk3: 'HSK 3',
-  hsk4: 'HSK 4',
-  hsk5: 'HSK 5',
-  hsk6: 'HSK 6',
-  unclassified: 'Other',
-};
+interface Milestone {
+  label: string;
+  current: number;
+  target: number;
+  pct: number;
+  done: boolean;
+}
 
 export default function ProgressPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
+  const [activityData, setActivityData] = useState<{ date: string; wordsReviewed: number }[]>([]);
+  const [struggledWords, setStruggledWords] = useState<StruggledWord[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activityData, setActivityData] = useState<{ date: string; wordsReviewed: number }[]>([]);
-  const [detailedStats, setDetailedStats] = useState<{
-    wordsByState: { new: number; learning: number; reviewing: number; mastered: number };
-  } | null>(null);
 
-  const fetchStats = async () => {
+  const fetchAll = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [statsRes, activityRes, detailedRes] = await Promise.all([
+      const [statsRes, activityRes, struggledRes, milestonesRes] = await Promise.all([
         apiFetch('/api/stats'),
         apiFetch('/api/stats/activity?days=84'),
-        apiFetch('/api/stats/detailed'),
+        apiFetch('/api/stats/struggled-words'),
+        apiFetch('/api/stats/milestones'),
       ]);
 
       if (!statsRes.ok) throw new Error('Failed to fetch stats');
-      const data = await statsRes.json();
-      setStats(data);
+      setStats(await statsRes.json());
 
       if (activityRes.ok) {
-        const activityJson = await activityRes.json();
-        setActivityData(activityJson.activity || []);
+        const d = await activityRes.json();
+        setActivityData(d.activity || []);
       }
-
-      if (detailedRes.ok) {
-        const detailedJson = await detailedRes.json();
-        setDetailedStats(detailedJson);
+      if (struggledRes.ok) {
+        const d = await struggledRes.json();
+        setStruggledWords(d.words || []);
+      }
+      if (milestonesRes.ok) {
+        const d = await milestonesRes.json();
+        setMilestones(d.milestones || []);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load progress');
+      setError(err instanceof Error ? err.message : 'Failed to load stats');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <h1 className="text-2xl font-bold text-white mb-6">Progress</h1>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-[#1c2024] rounded-xl animate-pulse" />
-          ))}
+      <div className="p-6 max-w-[1440px] mx-auto">
+        <div className="h-8 w-48 bg-[#1c2024] rounded-lg animate-pulse mb-6" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-[#1c2024] rounded-xl animate-pulse" />)}
         </div>
-        <div className="h-64 bg-[#1c2024] rounded-xl animate-pulse" />
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="h-48 bg-[#1c2024] rounded-xl animate-pulse" />
+          <div className="h-48 bg-[#1c2024] rounded-xl animate-pulse" />
+        </div>
+        <div className="h-48 bg-[#1c2024] rounded-xl animate-pulse mb-6" />
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="h-48 bg-[#1c2024] rounded-xl animate-pulse" />
+          <div className="h-48 bg-[#1c2024] rounded-xl animate-pulse" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl text-center">
+      <div className="p-6 max-w-[1440px] mx-auto text-center py-20">
         <p className="text-red-400 mb-4">{error}</p>
-        <Button onClick={fetchStats}>
+        <Button onClick={fetchAll} variant="outline" className="border-white/10 text-[#e0e2e8]">
           <RefreshCw className="w-4 h-4 mr-2" /> Retry
         </Button>
       </div>
     );
   }
 
-  if (!stats) return null;
-
-  // Empty state - no vocabulary yet
-  if (stats.totalWords === 0) {
+  if (!stats || stats.totalWords === 0) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <h1 className="text-2xl font-bold text-white mb-6">Your Progress</h1>
-        <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1c2024] flex items-center justify-center">
-            <TrendingUp className="w-8 h-8 text-[#849589]" />
-          </div>
-          <h2 className="text-xl font-medium text-white mb-2">No progress yet</h2>
-          <p className="text-[#bacbbe] mb-6 max-w-md mx-auto">
-            Start building your vocabulary by analyzing photos. Your progress stats will appear here!
-          </p>
-          <div className="flex gap-3 justify-center">
-            <Button
-              onClick={() => router.push('/capture')}
-              className="bg-[#76ffbb] hover:opacity-90"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Capture Photo
-            </Button>
-            <Button
-              onClick={() => router.push('/upload')}
-              variant="outline"
-              className="border-white/10"
-            >
-              Upload Image
-            </Button>
-          </div>
+      <div className="p-6 max-w-[1440px] mx-auto">
+        <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight mb-6">Learning Statistics</h1>
+        <div className="text-center py-20 bg-[#181c20] border border-white/5 rounded-2xl">
+          <span className="material-symbols-outlined text-5xl text-[#849589] mb-4 block">trending_up</span>
+          <h2 className="text-xl font-semibold text-[#e0e2e8] mb-2">No stats yet</h2>
+          <p className="text-[#bacbbe] mb-6">Capture your first photo to start tracking progress.</p>
+          <Button onClick={() => router.push('/capture')} className="bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90">
+            <Play className="w-4 h-4 mr-2" /> Capture Photo
+          </Button>
         </div>
       </div>
     );
@@ -166,268 +138,97 @@ export default function ProgressPage() {
     ? Math.round((stats.learnedWords / stats.totalWords) * 100)
     : 0;
 
-  // Get max count for charts
-  const maxWordsPerDay = Math.max(...stats.wordsPerDay.map((d) => d.count), 1);
-  const maxForecast = Math.max(...stats.reviewForecast.map((d) => d.count), 1);
-
-  // Calculate total HSK words for percentage
-  const totalHskWords = Object.values(stats.hskDistribution).reduce((a, b) => a + b, 0);
-
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <h1 className="text-2xl font-bold text-white mb-6">Your Progress</h1>
-
-      {/* Due Today CTA */}
-      {stats.dueToday > 0 && (
-        <Card className="bg-gradient-to-r from-[#76ffbb]/20 to-pink-600/20 border-[#76ffbb]/30 p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#76ffbb]/10 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-[#76ffbb]" />
-              </div>
-              <div>
-                <p className="text-lg font-semibold text-white">
-                  {stats.dueToday} words due for review
-                </p>
-                <p className="text-sm text-[#76ffbb]/80/70">
-                  Keep your streak alive!
-                </p>
-              </div>
-            </div>
-            <Button
-              onClick={() => router.push('/practice')}
-              className="bg-[#76ffbb] hover:opacity-90"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Practice Now
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {/* Daily Goals Widget */}
-      <DailyGoalProgressWidget />
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {/* Current Streak */}
-        <Card className="bg-gradient-to-br from-orange-500/20 to-[#1c2024]/50 border-orange-500/30 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Flame className="w-5 h-5 text-orange-400" />
-            <span className="text-sm text-orange-400/70">Current Streak</span>
-          </div>
-          <p className="text-3xl font-bold text-orange-400">{stats.currentStreak}</p>
-          <p className="text-xs text-orange-400/50">Best: {stats.longestStreak} days</p>
-        </Card>
-
-        {/* Due Today */}
-        <Card className="bg-gradient-to-br from-[#76ffbb]/20 to-[#1c2024]/50 border-[#76ffbb]/30 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5 text-[#76ffbb]" />
-            <span className="text-sm text-[#76ffbb]/70">Due Today</span>
-          </div>
-          <p className="text-3xl font-bold text-[#76ffbb]">{stats.dueToday}</p>
-          <p className="text-xs text-[#76ffbb]/50">Words to review</p>
-        </Card>
-
-        {/* Total Words */}
-        <Card className="bg-gradient-to-br from-blue-500/20 to-[#1c2024]/50 border-blue-500/30 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <BookOpen className="w-5 h-5 text-blue-400" />
-            <span className="text-sm text-blue-400/70">Total Words</span>
-          </div>
-          <p className="text-3xl font-bold text-blue-400">{stats.totalWords}</p>
-          <p className="text-xs text-blue-400/50">In your vocabulary</p>
-        </Card>
-
-        {/* Mastered */}
-        <Card className="bg-gradient-to-br from-green-500/20 to-[#1c2024]/50 border-green-500/30 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <GraduationCap className="w-5 h-5 text-green-400" />
-            <span className="text-sm text-green-400/70">Mastered</span>
-          </div>
-          <p className="text-3xl font-bold text-green-400">{stats.learnedWords}</p>
-          <p className="text-xs text-green-400/50">
-            {masteryRate}% of total
-            {stats.masteredThisWeek > 0 && ` (+${stats.masteredThisWeek} this week)`}
-          </p>
-        </Card>
+    <div className="p-6 max-w-[1440px] mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight">Learning Statistics</h1>
+          <p className="text-[#bacbbe] mt-1 text-sm">Your Mandarin learning journey at a glance</p>
+        </div>
+        {stats.dueToday > 0 && (
+          <Button
+            onClick={() => router.push('/practice')}
+            className="bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90 gap-2"
+          >
+            <Play className="w-4 h-4" />
+            Practice Now · {stats.dueToday} due
+          </Button>
+        )}
       </div>
 
-      {/* Mastery Progress Bar */}
-      <Card className="bg-[#1c2024] border-white/10 p-6 mb-8">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard icon="history_edu" label="Characters" value={stats.totalWords} unit="" />
+        <StatCard icon="local_fire_department" label="Day Streak" value={stats.currentStreak} unit="Days" />
+        <StatCard icon="schedule" label="Practice Time" value={stats.totalPracticeHours} unit="Hours" />
+        <StatCard icon="target" label="SRS Accuracy" value={stats.srsAccuracy} unit="%" />
+      </div>
+
+      {/* Heatmap + HSK Mastery donut */}
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* ActivityHeatmap renders its own Card — no outer wrapper to avoid double-card */}
+        <div className="md:col-span-2">
+          {activityData.length > 0
+            ? <ActivityHeatmap activity={activityData} className="h-full" />
+            : (
+              <div className="bg-[#181c20] border border-white/5 rounded-xl p-6 h-full flex items-center justify-center">
+                <p className="text-[#849589] text-sm">No activity data yet</p>
+              </div>
+            )
+          }
+        </div>
+
+        <div className="bg-[#181c20] border border-white/5 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-[#e0e2e8] mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#76ffbb]" style={{ fontSize: 18 }}>donut_large</span>
+            HSK Mastery
+          </h2>
+          <HskMasteryDonut
+            masteryRate={masteryRate}
+            hskMasteryByLevel={stats.hskMasteryByLevel}
+          />
+        </div>
+      </div>
+
+      {/* Vocabulary Expansion line chart */}
+      <div className="bg-[#181c20] border border-white/5 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#76ffbb]" />
-            Mastery Progress
+          <h2 className="text-base font-semibold text-[#e0e2e8] flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#76ffbb]" style={{ fontSize: 18 }}>trending_up</span>
+            Vocabulary Expansion (12 Mo)
           </h2>
-          <span className="text-2xl font-bold text-[#76ffbb]">{masteryRate}%</span>
+          <span className="text-sm text-[#76ffbb] font-semibold">+{stats.masteredThisWeek} this week</span>
         </div>
-        <div className="h-4 bg-[#272a2e] rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-[#76ffbb] to-pink-500 transition-all duration-500"
-            style={{ width: `${masteryRate}%` }}
-          />
-        </div>
-        <div className="flex justify-between mt-2 text-sm text-[#bacbbe]">
-          <span>{stats.learnedWords} mastered</span>
-          <span>{stats.totalWords - stats.learnedWords} still learning</span>
-        </div>
-      </Card>
-
-      {/* Two Column Layout */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {/* HSK Distribution */}
-        <Card className="bg-[#1c2024] border-white/10 p-6">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-            <BarChart3 className="w-5 h-5 text-emerald-400" />
-            HSK Level Distribution
-          </h2>
-          {totalHskWords > 0 ? (
-            <div className="space-y-3">
-              {Object.entries(stats.hskDistribution).map(([level, count]) => {
-                if (count === 0) return null;
-                const percentage = Math.round((count / totalHskWords) * 100);
-                return (
-                  <div key={level}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-[#e0e2e8]">{HSK_LABELS[level]}</span>
-                      <span className="text-[#bacbbe]">
-                        {count} ({percentage}%)
-                      </span>
-                    </div>
-                    <div className="h-2 bg-[#272a2e] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${HSK_COLORS[level]} transition-all duration-500`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-[#849589] text-center py-8">
-              No HSK data yet. Words will be classified as you add them.
-            </p>
-          )}
-        </Card>
-
-        {/* Review Forecast */}
-        <Card className="bg-[#1c2024] border-white/10 p-6">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-            <Calendar className="w-5 h-5 text-cyan-400" />
-            Review Forecast (Next 7 Days)
-          </h2>
-          <div className="flex items-end justify-between gap-2 h-32">
-            {stats.reviewForecast.map((day, index) => {
-              const height = maxForecast > 0 ? (day.count / maxForecast) * 100 : 0;
-              const date = new Date(day.date);
-              const dayName = index === 0 ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short' });
-              const isToday = index === 0;
-
-              return (
-                <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-xs font-medium text-white">{day.count}</span>
-                  <div className="w-full flex flex-col-reverse" style={{ height: '80px' }}>
-                    <div
-                      className={`w-full rounded-t-md transition-all duration-500 ${
-                        isToday
-                          ? 'bg-gradient-to-t from-cyan-500 to-purple-500'
-                          : 'bg-cyan-500/60'
-                      }`}
-                      style={{ height: `${Math.max(height, 4)}%` }}
-                    />
-                  </div>
-                  <span className={`text-xs ${isToday ? 'text-cyan-400 font-medium' : 'text-[#849589]'}`}>
-                    {dayName}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+        <VocabularyLineChart wordsPerMonth={stats.wordsPerMonth} />
       </div>
 
-      {/* Activity Heatmap */}
-      {activityData.length > 0 && (
-        <div className="mb-8">
-          <ActivityHeatmap activity={activityData} />
+      {/* Struggled words + Milestones */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-[#181c20] border border-white/5 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-[#e0e2e8] mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#76ffbb]" style={{ fontSize: 18 }}>psychology_alt</span>
+            Top Struggled Words
+          </h2>
+          <TopStruggledWords words={struggledWords} />
         </div>
-      )}
 
-      {/* Word State Progress */}
-      {detailedStats && (
-        <div className="mb-8">
-          <WordStateProgressBar
-            wordsByState={detailedStats.wordsByState}
-            totalWords={stats?.totalWords || 0}
-          />
+        <div className="bg-[#181c20] border border-white/5 rounded-xl p-6">
+          <h2 className="text-base font-semibold text-[#e0e2e8] mb-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[#76ffbb]" style={{ fontSize: 18 }}>emoji_events</span>
+            Upcoming Milestones
+          </h2>
+          <UpcomingMilestones milestones={milestones} />
         </div>
-      )}
+      </div>
 
-      {/* Words Added Chart */}
-      <Card className="bg-[#1c2024] border-white/10 p-6 mb-8">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-6">
-          <Target className="w-5 h-5 text-blue-400" />
-          Words Added (Last 7 Days)
-        </h2>
-
-        <div className="flex items-end justify-between gap-2 h-40">
-          {stats.wordsPerDay.map((day, index) => {
-            const height = maxWordsPerDay > 0 ? (day.count / maxWordsPerDay) * 100 : 0;
-            const date = new Date(day.date);
-            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-            const isToday = day.date === new Date().toISOString().split('T')[0];
-
-            return (
-              <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                <span className="text-sm font-medium text-white">{day.count}</span>
-                <div className="w-full flex flex-col-reverse" style={{ height: '100px' }}>
-                  <div
-                    className={`w-full rounded-t-md transition-all duration-500 ${
-                      isToday
-                        ? 'bg-gradient-to-t from-[#76ffbb] to-pink-500'
-                        : 'bg-blue-500/60'
-                    }`}
-                    style={{ height: `${Math.max(height, 4)}%` }}
-                  />
-                </div>
-                <span className={`text-xs ${isToday ? 'text-[#76ffbb] font-medium' : 'text-[#849589]'}`}>
-                  {dayName}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
-
-      {/* Practice Sessions */}
-      <Card className="bg-[#1c2024] border-white/10 p-6 mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Target className="w-5 h-5 text-[#76ffbb]" />
-              Practice Sessions
-            </h2>
-            <p className="text-[#bacbbe] text-sm mt-1">
-              You&apos;ve completed {stats.totalPracticeSessions} practice sessions
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold text-[#76ffbb]">{stats.totalPracticeSessions}</p>
-            <p className="text-xs text-[#849589]">Total sessions</p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Motivational Message */}
+      {/* Streak motivational footer */}
       {stats.currentStreak > 0 && (
-        <div className="text-center p-6 rounded-xl bg-gradient-to-r from-orange-900/30 to-purple-900/30 border border-orange-500/20">
+        <div className="text-center p-6 rounded-xl bg-[#181c20] border border-[#76ffbb]/20">
           <p className="text-2xl mb-2">
             {stats.currentStreak >= 30 ? '🏆' : stats.currentStreak >= 7 ? '🎉' : '🔥'}
           </p>
-          <p className="text-lg text-white font-medium">
+          <p className="text-lg text-[#e0e2e8] font-medium">
             {stats.currentStreak === 1
               ? 'Great start! Keep practicing tomorrow!'
               : stats.currentStreak < 7
@@ -438,6 +239,23 @@ export default function ProgressPage() {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, unit }: { icon: string; label: string; value: number; unit: string }) {
+  return (
+    <div className="bg-[#181c20] border border-white/5 rounded-xl p-5 ghost-border jade-glow">
+      <div className="flex items-center gap-3 mb-3">
+        <span className="material-symbols-outlined text-[#76ffbb] p-2 bg-[#76ffbb]/10 rounded-lg" style={{ fontSize: 20 }}>
+          {icon}
+        </span>
+        <h4 className="text-sm font-medium text-[#e0e2e8]">{label}</h4>
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className="text-3xl font-bold text-[#e0e2e8]">{value}</span>
+        {unit && <span className="text-sm text-[#bacbbe]">{unit}</span>}
+      </div>
     </div>
   );
 }

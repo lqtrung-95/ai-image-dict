@@ -42,7 +42,7 @@ function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md bg-[#1c2024] border-white/5">
+    <Card className="w-full max-w-lg bg-[#1c2024] border-white/5">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-white">Welcome Back</CardTitle>
           <CardDescription className="text-[#bacbbe]">

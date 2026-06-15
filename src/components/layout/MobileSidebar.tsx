@@ -4,17 +4,23 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import {
+  LayoutDashboard, Camera, GraduationCap, BookOpen,
+  TrendingUp, Users, Puzzle, Settings, CameraIcon, X, Menu,
+  type LucideIcon,
+} from 'lucide-react';
 
-const NAV_ITEMS = [
-  { href: '/vocabulary', icon: 'dashboard', label: 'Dashboard' },
-  { href: '/capture', icon: 'photo_camera', label: 'Capture' },
-  { href: '/practice', icon: 'school', label: 'Practice' },
-  { href: '/stories', icon: 'auto_stories', label: 'Stories' },
-  { href: '/progress', icon: 'query_stats', label: 'Progress' },
-  { href: '/courses', icon: 'group', label: 'Community' },
-  { href: '/games', icon: 'extension', label: 'Games' },
-  { href: '/settings', icon: 'settings', label: 'Settings' },
-] as const;
+const NAV_ITEMS: { href: string; icon: LucideIcon; label: string }[] = [
+  { href: '/vocabulary', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/capture', icon: Camera, label: 'Capture' },
+  { href: '/practice', icon: GraduationCap, label: 'Practice' },
+  { href: '/stories', icon: BookOpen, label: 'Stories' },
+  { href: '/progress', icon: TrendingUp, label: 'Progress' },
+  { href: '/courses', icon: Users, label: 'Community' },
+  { href: '/games', icon: Puzzle, label: 'Games' },
+  { href: '/settings', icon: Settings, label: 'Settings' },
+];
 
 export function MobileSidebar() {
   const [open, setOpen] = useState(false);
@@ -32,7 +38,7 @@ export function MobileSidebar() {
         className="text-[#bacbbe] hover:text-[#e0e2e8] p-1"
         aria-label="Open menu"
       >
-        <span className="material-symbols-outlined" style={{ fontSize: 24 }}>menu</span>
+        <Menu size={24} />
       </button>
 
       {/* Backdrop */}
@@ -50,27 +56,30 @@ export function MobileSidebar() {
           open ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="px-6 mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-[#76ffbb]">Snap Mandarin</h1>
-            <p className="text-xs text-[#bacbbe] opacity-70 mt-0.5">AI Vocabulary</p>
+        <div className="px-5 mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Image src="/logo.png" alt="Snap Mandarin" width={32} height={32} className="rounded-xl flex-shrink-0" />
+            <div>
+              <h1 className="text-base font-bold text-[#76ffbb] leading-tight">Snap Mandarin</h1>
+              <p className="text-[10px] text-[#bacbbe] opacity-70">AI Vocabulary</p>
+            </div>
           </div>
           <button onClick={() => setOpen(false)} className="text-[#bacbbe]">
-            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>close</span>
+            <X size={20} />
           </button>
         </div>
 
         <div className="px-4 mb-6">
           <Link href="/capture" onClick={() => setOpen(false)}>
             <button className="w-full py-2.5 bg-[#76ffbb] text-[#003822] font-semibold rounded-lg flex items-center justify-center gap-2 text-sm">
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>add_a_photo</span>
+              <CameraIcon size={18} />
               New Capture
             </button>
           </Link>
         </div>
 
         <nav className="flex-1 flex flex-col gap-0.5 px-2">
-          {NAV_ITEMS.map(({ href, icon, label }) => (
+          {NAV_ITEMS.map(({ href, icon: Icon, label }) => (
             <Link
               key={href}
               href={href}
@@ -82,7 +91,7 @@ export function MobileSidebar() {
                   : 'text-[#bacbbe] hover:bg-[#272a2e] hover:text-[#e0e2e8]'
               )}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{icon}</span>
+              <Icon size={20} />
               <span>{label}</span>
             </Link>
           ))}

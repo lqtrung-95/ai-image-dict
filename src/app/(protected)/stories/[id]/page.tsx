@@ -234,7 +234,7 @@ export default function StoryDetailPage() {
 
       {/* Generated Story */}
       {story.generated_content?.storyZh ? (
-        <Card className="bg-gradient-to-br from-purple-900/30 to-[#1c2024]/50 border-[#76ffbb]/30 p-6 mb-8">
+        <Card className="bg-[#181c20] border border-[#76ffbb]/20 p-6 mb-8 ghost-border">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-5 h-5 text-[#76ffbb]" />
             <h2 className="text-lg font-semibold text-white">AI-Generated Story</h2>

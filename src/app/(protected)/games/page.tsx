@@ -14,7 +14,7 @@ export default function GamesPage() {
 
   if (gameMode === 'matching') {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="p-6 max-w-4xl mx-auto">
         <Button
           variant="ghost"
           className="mb-4 -ml-2 text-[#bacbbe]"
@@ -30,7 +30,7 @@ export default function GamesPage() {
 
   if (gameMode === 'quiz') {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="p-6 max-w-4xl mx-auto">
         <Button
           variant="ghost"
           className="mb-4 -ml-2 text-[#bacbbe]"
@@ -45,55 +45,44 @@ export default function GamesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#76ffbb]/10 flex items-center justify-center">
-          <Gamepad2 className="w-8 h-8 text-[#76ffbb]" />
-        </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Vocabulary Games</h1>
-        <p className="text-[#bacbbe]">Make learning fun with interactive games</p>
+    <div className="p-6 max-w-[1440px] mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight">Vocabulary Games</h1>
+        <p className="text-[#bacbbe] mt-1 text-sm">Make learning fun with interactive games</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card
-          className="bg-[#1c2024] border-white/10 p-6 hover:border-[#76ffbb]/50 transition-colors cursor-pointer"
+      <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+        <div
+          className="bg-[#181c20] border border-white/5 rounded-xl p-6 hover:border-[#76ffbb]/30 transition-all jade-glow ghost-border cursor-pointer group"
           onClick={() => setGameMode('matching')}
         >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
-              <Brain className="w-6 h-6 text-blue-400" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-white mb-1">Matching Game</h2>
-              <p className="text-sm text-[#bacbbe] mb-3">
-                Match Chinese characters with their English meanings. Test your recognition skills!
-              </p>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                Play Now
-              </Button>
-            </div>
+          <div className="w-12 h-12 rounded-xl bg-[#76ffbb]/10 border border-[#76ffbb]/20 flex items-center justify-center mb-4 group-hover:bg-[#76ffbb]/15 transition-colors">
+            <Brain className="w-6 h-6 text-[#76ffbb]" />
           </div>
-        </Card>
+          <h2 className="text-lg font-semibold text-[#e0e2e8] mb-1">Matching Game</h2>
+          <p className="text-sm text-[#bacbbe] mb-4">
+            Match Chinese characters with their English meanings. Test your recognition skills!
+          </p>
+          <Button size="sm" className="bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90">
+            Play Now
+          </Button>
+        </div>
 
-        <Card
-          className="bg-[#1c2024] border-white/10 p-6 hover:border-[#76ffbb]/50 transition-colors cursor-pointer"
+        <div
+          className="bg-[#181c20] border border-white/5 rounded-xl p-6 hover:border-[#76ffbb]/30 transition-all jade-glow ghost-border cursor-pointer group"
           onClick={() => setGameMode('quiz')}
         >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
-              <Target className="w-6 h-6 text-green-400" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-white mb-1">Quiz Mode</h2>
-              <p className="text-sm text-[#bacbbe] mb-3">
-                Multiple choice questions to test your vocabulary knowledge. How many can you get right?
-              </p>
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                Play Now
-              </Button>
-            </div>
+          <div className="w-12 h-12 rounded-xl bg-[#76ffbb]/10 border border-[#76ffbb]/20 flex items-center justify-center mb-4 group-hover:bg-[#76ffbb]/15 transition-colors">
+            <Target className="w-6 h-6 text-[#76ffbb]" />
           </div>
-        </Card>
+          <h2 className="text-lg font-semibold text-[#e0e2e8] mb-1">Quiz Mode</h2>
+          <p className="text-sm text-[#bacbbe] mb-4">
+            Multiple choice questions to test your vocabulary knowledge. How many can you get right?
+          </p>
+          <Button size="sm" className="bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90">
+            Play Now
+          </Button>
+        </div>
       </div>
     </div>
   );

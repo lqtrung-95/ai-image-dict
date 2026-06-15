@@ -36,6 +36,10 @@ export async function GET(request: NextRequest) {
       next7Days.push(date.toISOString().split('T')[0]);
     }
 
+    // 12 months ago for vocabulary expansion chart
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+
     // Fetch all data in parallel
     const [
       statsResult,
@@ -47,6 +51,10 @@ export async function GET(request: NextRequest) {
       hskDataResult,
       forecastResult,
       recentWordsResult,
+      practiceHoursResult,
+      accuracyResult,
+      twelveMonthWordsResult,
+      hskLearnedResult,
     ] = await Promise.all([
       // User stats
       supabaseAdmin.from('user_stats').select('*').eq('id', user.id).single(),
@@ -64,8 +72,16 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from('vocabulary_items').select('hsk_level').eq('user_id', user.id),
       // Review forecast - get all review dates for next 7 days in one query
       supabaseAdmin.from('vocabulary_items').select('next_review_date').eq('user_id', user.id).eq('is_learned', false).gte('next_review_date', todayStr).lte('next_review_date', next7Days[6]),
-      // Recent words for activity chart
+      // Recent words for activity chart (7 days)
       supabaseAdmin.from('vocabulary_items').select('created_at').eq('user_id', user.id).gte('created_at', sevenDaysAgo.toISOString()).order('created_at', { ascending: true }),
+      // Total practice hours from practice_sessions
+      supabaseAdmin.from('practice_sessions').select('duration_seconds').eq('user_id', user.id),
+      // SRS accuracy from word practice attempts
+      supabaseAdmin.from('word_practice_attempts').select('is_correct').eq('user_id', user.id),
+      // Words created per month for last 12 months
+      supabaseAdmin.from('vocabulary_items').select('created_at').eq('user_id', user.id).gte('created_at', twelveMonthsAgo.toISOString()).order('created_at', { ascending: true }),
+      // HSK level + is_learned for mastery by level
+      supabaseAdmin.from('vocabulary_items').select('hsk_level, is_learned').eq('user_id', user.id).not('hsk_level', 'is', null),
     ]);
 
     // Handle user stats - create if not exists
@@ -105,7 +121,7 @@ export async function GET(request: NextRequest) {
       count: forecastResult.data?.filter((item) => item.next_review_date === date).length || 0,
     }));
 
-    // Calculate words per day
+    // Calculate words per day (7 days)
     const wordsPerDay: Record<string, number> = {};
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
@@ -117,6 +133,44 @@ export async function GET(request: NextRequest) {
       if (wordsPerDay[key] !== undefined) {
         wordsPerDay[key]++;
       }
+    });
+
+    // Calculate total practice hours
+    const totalPracticeSeconds = (practiceHoursResult.data || []).reduce(
+      (sum, s) => sum + (s.duration_seconds || 0), 0
+    );
+    const totalPracticeHours = Math.round(totalPracticeSeconds / 3600 * 10) / 10;
+
+    // Calculate SRS accuracy
+    const attempts = accuracyResult.data || [];
+    const srsAccuracy = attempts.length > 0
+      ? Math.round((attempts.filter(a => a.is_correct).length / attempts.length) * 100)
+      : 0;
+
+    // Calculate words per month (12 months)
+    const wordsPerMonth: { month: string; count: number }[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() - i);
+      wordsPerMonth.push({ month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, count: 0 });
+    }
+    twelveMonthWordsResult.data?.forEach((word) => {
+      const month = word.created_at.substring(0, 7);
+      const entry = wordsPerMonth.find(m => m.month === month);
+      if (entry) entry.count++;
+    });
+
+    // Calculate HSK mastery by level
+    const hskMasteryByLevel: Record<string, { total: number; learned: number; pct: number }> = {};
+    (hskLearnedResult.data || []).forEach((item) => {
+      const key = `hsk${item.hsk_level}`;
+      if (!hskMasteryByLevel[key]) hskMasteryByLevel[key] = { total: 0, learned: 0, pct: 0 };
+      hskMasteryByLevel[key].total++;
+      if (item.is_learned) hskMasteryByLevel[key].learned++;
+    });
+    Object.values(hskMasteryByLevel).forEach(v => {
+      v.pct = v.total > 0 ? Math.round((v.learned / v.total) * 100) : 0;
     });
 
     // Check if streak is still valid
@@ -139,6 +193,10 @@ export async function GET(request: NextRequest) {
       averageEaseFactor: Math.round(averageEaseFactor * 100) / 100,
       hskDistribution,
       reviewForecast,
+      totalPracticeHours,
+      srsAccuracy,
+      wordsPerMonth,
+      hskMasteryByLevel,
     });
   } catch (error) {
     console.error('Stats error:', error);
