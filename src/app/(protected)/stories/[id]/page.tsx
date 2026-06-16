@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,9 @@ import { ChevronLeft, Trash2, ImageIcon, BookOpen, Volume2, VolumeX, Sparkles } 
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api-client';
+
+// Session-scoped TTS URL cache shared across story page renders
+const storyTtsCache = new Map<string, string>();
 
 interface VocabularyItem {
   id: string;
@@ -113,50 +116,52 @@ export default function StoryDetailPage() {
   };
 
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    window.speechSynthesis?.cancel();
+  };
 
   const playAudio = async (text: string, id: string = 'story') => {
     if (playingAudio === id) {
-      // Already playing, stop it
-      window.speechSynthesis.cancel();
+      stopAudio();
       setPlayingAudio(null);
       return;
     }
 
+    stopAudio();
     setPlayingAudio(id);
 
     try {
-      const response = await apiFetch('/api/tts', {
-        method: 'POST',
-        body: JSON.stringify({ text, lang: 'zh-CN' }),
-      });
+      // Check session cache first — avoids API call for already-fetched words
+      let audioUrl: string | null = storyTtsCache.get(text) ?? null;
 
-      if (response.ok) {
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
+      if (!audioUrl) {
+        const response = await apiFetch('/api/tts', {
+          method: 'POST',
+          body: JSON.stringify({ text, lang: 'zh-CN' }),
+        });
 
-        audio.onended = () => {
-          setPlayingAudio(null);
-          URL.revokeObjectURL(audioUrl);
-        };
+        if (!response.ok) { fallbackTTS(text); setPlayingAudio(null); return; }
 
-        audio.onerror = () => {
-          setPlayingAudio(null);
-          URL.revokeObjectURL(audioUrl);
-          // Fallback to browser TTS
-          fallbackTTS(text);
-        };
+        const data = await response.json();
+        if (data.fallback || !data.url) { fallbackTTS(text); setPlayingAudio(null); return; }
 
-        await audio.play();
-      } else if (response.status === 503) {
-        // TTS not configured, use fallback
-        fallbackTTS(text);
-        setPlayingAudio(null);
-      } else {
-        throw new Error('TTS failed');
+        audioUrl = data.url as string;
+          storyTtsCache.set(text, audioUrl);
       }
+
+      const audio = new Audio(audioUrl!);
+      audioRef.current = audio;
+      audio.onended = () => { audioRef.current = null; setPlayingAudio(null); };
+      audio.onerror = () => { audioRef.current = null; setPlayingAudio(null); fallbackTTS(text); };
+      await audio.play();
     } catch {
-      // Fallback to browser's native speech synthesis
       fallbackTTS(text);
       setPlayingAudio(null);
     }

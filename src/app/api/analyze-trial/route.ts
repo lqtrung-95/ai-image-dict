@@ -6,7 +6,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit';
 export const dynamic = 'force-dynamic';
 
 // Server-side cap on the unauthenticated, paid-AI trial endpoint. The mobile
-// client also enforces a 2-use trial, but that lives in AsyncStorage and is
+// client also enforces a 1-use trial, but that lives in AsyncStorage and is
 // trivially bypassed (reinstall / direct API call), so this protects cost.
 const TRIAL_IP_LIMIT = 10;
 const TRIAL_IP_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h

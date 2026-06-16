@@ -54,3 +54,4 @@ capacitor.config.local.ts
 CLAUDE.*
 supabase/.temp
 repomix-output.xml
+.env*.local

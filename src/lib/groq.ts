@@ -210,27 +210,34 @@ export async function generateStoryFromWords(
     messages: [
       {
         role: 'user',
-        content: `Create a short, engaging story in Chinese using these vocabulary words.
+        content: `You are a Chinese language teacher writing a short story to help learners remember vocabulary.
 
-Story Title: ${storyTitle}
+Story title: "${storyTitle}"
 
-Words to include:
+Vocabulary words to weave in:
 ${wordList}
 
-Write a coherent 3-5 sentence story in Chinese that naturally uses the words.
+Write a COHESIVE, FLOWING story in Chinese (5-8 sentences). The story must:
+- Read as a single continuous narrative — NOT as separate, disconnected sentences for each word
+- Have a clear setting, progression, and a natural ending
+- Use the vocabulary words naturally, as a skilled author would, so they feel essential to the story rather than bolted on
+- Be appropriate for intermediate Chinese learners (mostly HSK 3-4 level sentence structures)
+- Avoid listing words mechanically; instead, let the story carry them organically
 
-REQUIRED OUTPUT FORMAT - Return EXACTLY this JSON structure:
+BAD example (disconnected): "我看到一只猫。猫是黑色的。桌子在房间里。..."
+GOOD example (cohesive): "昨天傍晚，小明走在回家的路上，突然看到一只黑色的猫坐在路边的桌子旁边…"
+
+REQUIRED OUTPUT FORMAT — return EXACTLY this JSON, nothing else:
 {
-  "storyZh": "The Chinese story text here",
-  "storyPinyin": "The pinyin with tones here",
-  "storyEn": "The English translation here",
-  "usedWords": ["word1", "word2", "word3"]
+  "storyZh": "Complete Chinese story as a single string",
+  "storyPinyin": "Full pinyin with tone marks as a single string",
+  "storyEn": "Natural English translation as a single string",
+  "usedWords": ["list", "of", "Chinese", "words", "actually", "used"]
 }
 
 IMPORTANT:
-- storyZh must be a single string (not an array)
-- usedWords must be an array of strings (the Chinese words used)
-- All fields must be complete strings, no truncation`,
+- storyZh, storyPinyin, storyEn must each be a single string — no arrays, no truncation
+- usedWords is an array of the Chinese vocabulary words you incorporated`,
       },
     ],
     max_tokens: 2000,

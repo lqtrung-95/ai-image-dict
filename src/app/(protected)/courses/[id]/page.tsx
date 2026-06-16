@@ -258,7 +258,10 @@ export default function CourseDetailPage() {
               />
             </div>
             <div className="mt-3">
-              <Button className="bg-[#76ffbb] hover:opacity-90">
+              <Button
+                className="bg-[#76ffbb] hover:opacity-90"
+                onClick={() => router.push(`/practice?course=${courseId}&name=${encodeURIComponent(course.name)}`)}
+              >
                 <Play className="w-4 h-4 mr-2" />
                 Practice Words
               </Button>

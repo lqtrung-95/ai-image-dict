@@ -33,7 +33,7 @@ interface AnalysisData {
 
 type Mode = 'choose' | 'camera' | 'upload' | 'analyzing' | 'result' | 'error';
 
-const MAX_TRIALS_PER_DAY = 2;
+const MAX_TRIALS_PER_DAY = 1;
 
 // Helper to get today's date key
 const getTodayKey = () => new Date().toISOString().split('T')[0];
@@ -152,7 +152,7 @@ export default function TryPage() {
             You've used all {MAX_TRIALS_PER_DAY} free trials today! 🎉
           </h1>
           <p className="text-[#bacbbe] mb-6">
-            Come back tomorrow for more, or create a free account for unlimited analyses.
+            Come back tomorrow for more, or create a free account for 3 analyses per day.
           </p>
           <div className="space-y-3">
             <Button 

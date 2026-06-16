@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FlashCard } from '@/components/practice/FlashCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Shuffle, RotateCcw, Target, Calendar } from 'lucide-react';
+import { Shuffle, RotateCcw, Target, Calendar, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api-client';
 import {
@@ -48,8 +48,12 @@ interface PracticeStats {
   easy: number;
 }
 
-export default function PracticePage() {
+function PracticeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const courseId = searchParams.get('course');
+  const courseName = searchParams.get('name');
+
   const [words, setWords] = useState<VocabularyItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -105,6 +109,9 @@ export default function PracticePage() {
       const params = new URLSearchParams();
       if (listId && listId !== 'all') {
         params.set('list', listId);
+      }
+      if (courseId) {
+        params.set('course', courseId);
       }
 
       const response = await apiFetch(`/api/practice/due-words?${params}`, { signal });
@@ -221,14 +228,25 @@ export default function PracticePage() {
   if (words.length === 0) {
     return (
       <div className="p-6 max-w-lg mx-auto">
+        {courseId && (
+          <button
+            onClick={() => router.push(`/courses/${courseId}`)}
+            className="inline-flex items-center text-[#bacbbe] hover:text-[#e0e2e8] mb-4 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back to {courseName ?? 'Course'}
+          </button>
+        )}
         <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight mb-6">Practice</h1>
         <div className="text-center py-16 bg-[#181c20] border border-white/5 rounded-2xl">
           <span className="material-symbols-outlined text-5xl text-[#849589] mb-4 block">school</span>
           <h2 className="text-xl font-semibold text-[#e0e2e8] mb-2">No words due for review</h2>
           <p className="text-[#bacbbe] mb-6 max-w-xs mx-auto">
-            {dueCount === 0
-              ? 'Add some vocabulary by analyzing photos, or check back tomorrow!'
-              : 'Great job! Come back later for more practice.'}
+            {courseId
+              ? 'Subscribe to this course to add its words to your practice deck, then come back!'
+              : dueCount === 0
+                ? 'Add some vocabulary by analyzing photos, or check back tomorrow!'
+                : 'Great job! Come back later for more practice.'}
           </p>
           <div className="flex gap-3 justify-center">
             <Button
@@ -320,12 +338,23 @@ export default function PracticePage() {
 
   return (
     <div className="p-6 max-w-lg mx-auto">
+      {/* Back link when coming from a course */}
+      {courseId && (
+        <button
+          onClick={() => router.push(`/courses/${courseId}`)}
+          className="inline-flex items-center text-[#bacbbe] hover:text-[#e0e2e8] mb-4 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to {courseName ?? 'Course'}
+        </button>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-[#e0e2e8] tracking-tight">Practice</h1>
           <p className="text-[#bacbbe] text-sm mt-0.5">
-            {currentIndex + 1} of {words.length}
+            {courseName ? `${courseName} · ` : ''}{currentIndex + 1} of {words.length}
           </p>
         </div>
 
@@ -347,8 +376,8 @@ export default function PracticePage() {
         </div>
       </div>
 
-      {/* List Filter */}
-      <div className="mb-6">
+      {/* List Filter — hidden when scoped to a course */}
+      {!courseId && <div className="mb-6">
         <Select value={selectedList} onValueChange={handleListChange}>
           <SelectTrigger className="bg-[#1c2024] border-white/10 text-white">
             <SelectValue placeholder="All words" />
@@ -377,7 +406,7 @@ export default function PracticePage() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </div>}
 
       {/* Progress Bar */}
       <div className="h-2 bg-[#272a2e] rounded-full mb-6 overflow-hidden">
@@ -420,5 +449,13 @@ export default function PracticePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PracticePage() {
+  return (
+    <Suspense fallback={<div className="p-6 max-w-lg mx-auto"><div className="h-72 bg-[#1c2024] rounded-2xl animate-pulse" /></div>}>
+      <PracticeContent />
+    </Suspense>
   );
 }
