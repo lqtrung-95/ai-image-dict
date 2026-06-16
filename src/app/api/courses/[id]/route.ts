@@ -34,12 +34,33 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    // Get course words
-    const { data: words } = await supabase
+    // Pagination + search params for the word list
+    const wordsPage = Math.max(1, parseInt(request.nextUrl.searchParams.get('wordsPage') ?? '1'));
+    const wordsLimit = Math.min(100, Math.max(10, parseInt(request.nextUrl.searchParams.get('wordsLimit') ?? '50')));
+    const wordsSearch = (request.nextUrl.searchParams.get('wordsSearch') ?? '').trim().toLowerCase();
+    const wordsOffset = (wordsPage - 1) * wordsLimit;
+
+    // Get total word count (unfiltered) for progress tracking
+    const { count: totalWordCount } = await supabase
       .from('course_vocabulary_items')
-      .select('*')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', id);
+
+    // Build paginated + optionally searched word query
+    let wordQuery = supabase
+      .from('course_vocabulary_items')
+      .select('*', { count: 'exact' })
       .eq('course_id', id)
-      .order('sort_order', { ascending: true });
+      .order('sort_order', { ascending: true })
+      .range(wordsOffset, wordsOffset + wordsLimit - 1);
+
+    if (wordsSearch) {
+      wordQuery = wordQuery.or(
+        `word_zh.ilike.%${wordsSearch}%,word_pinyin.ilike.%${wordsSearch}%,word_en.ilike.%${wordsSearch}%`
+      );
+    }
+
+    const { data: words, count: filteredCount } = await wordQuery;
 
     // Annotate each word with the user's learning state by matching the course
     // word's Chinese text against their personal deck. State drives the progress
@@ -50,7 +71,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     let annotatedWords = (words || []).map((w) => ({ ...w, state: 'new' as const }));
     let progress = { total: words?.length || 0, learned: 0, learning: 0, due: 0 };
 
-    if (user && words && words.length > 0) {
+    if (user && words && words.length > 0 && !wordsSearch) {
       const todayStr = new Date().toISOString().split('T')[0];
       const { data: deck } = await supabase
         .from('vocabulary_items')
@@ -111,12 +132,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         subscriberCount: course.subscriber_count,
         ratingAvg: course.rating_avg,
         ratingCount: course.rating_count,
-        wordCount: words?.length || 0,
+        wordCount: totalWordCount || 0,
         createdAt: course.created_at,
         updatedAt: course.updated_at,
         isOwner: user?.id === course.creator_id,
       },
       words: annotatedWords,
+      wordsTotalCount: totalWordCount || 0,
+      wordsFilteredCount: filteredCount || 0,
+      wordsPage,
+      wordsTotalPages: Math.ceil((wordsSearch ? (filteredCount || 0) : (totalWordCount || 0)) / wordsLimit),
       progress,
       subscription,
       userRating,
