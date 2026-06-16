@@ -13,20 +13,35 @@ const CONTACT_EMAIL = 'lqtrung.dev@gmail.com';
 
 export default function PrivacyPolicyPage() {
   return (
-    <main
-      style={{
-        maxWidth: 760,
-        margin: '0 auto',
-        padding: '48px 24px 96px',
-        fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-        lineHeight: 1.65,
-        color: '#1a1a1a',
-        backgroundColor: '#ffffff',
-        minHeight: '100vh',
-      }}
-    >
+    <>
+      <style>{`
+        :root { color-scheme: light dark; }
+        body {
+          margin: 0;
+          background: #ffffff;
+          color: #1a1a1a;
+        }
+        @media (prefers-color-scheme: dark) {
+          body {
+            background: #111318;
+            color: #e0e2e8;
+          }
+          .muted { color: #8a9490 !important; }
+          a { color: #76ffbb; }
+        }
+      `}</style>
+      <main
+        style={{
+          maxWidth: 760,
+          margin: '0 auto',
+          padding: '48px 24px 96px',
+          fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+          lineHeight: 1.65,
+          minHeight: '100vh',
+        }}
+      >
       <h1 style={{ fontSize: 32, marginBottom: 4 }}>Privacy Policy</h1>
-      <p style={{ color: '#666', marginTop: 0 }}>Last updated: {EFFECTIVE_DATE}</p>
+      <p className="muted" style={{ color: '#666', marginTop: 0 }}>Last updated: {EFFECTIVE_DATE}</p>
 
       <p>
         Snap Mandarin (&quot;the app&quot;, &quot;we&quot;, &quot;us&quot;) helps you learn Chinese vocabulary
@@ -139,6 +154,7 @@ export default function PrivacyPolicyPage() {
         Questions about this policy or your data? Email{' '}
         <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
-    </main>
+      </main>
+    </>
   );
 }
