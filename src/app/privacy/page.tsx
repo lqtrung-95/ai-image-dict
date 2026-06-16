@@ -21,6 +21,8 @@ export default function PrivacyPolicyPage() {
         fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
         lineHeight: 1.65,
         color: '#1a1a1a',
+        backgroundColor: '#ffffff',
+        minHeight: '100vh',
       }}
     >
       <h1 style={{ fontSize: 32, marginBottom: 4 }}>Privacy Policy</h1>
