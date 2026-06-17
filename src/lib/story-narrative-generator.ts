@@ -6,9 +6,15 @@ export interface NarrativeSentence {
   en: string;
 }
 
+export interface CulturalNote {
+  term: string; // Chinese word/phrase the note is about
+  note: string; // 1-2 sentence cultural/historical insight in English
+}
+
 export interface StoryNarrative {
   sentences: NarrativeSentence[];
-  wordsUsed: string[]; // the vocabulary words woven into the narrative
+  wordsUsed: string[];
+  culturalNotes: CulturalNote[];
 }
 
 // Extract the first JSON object from a model response that may include
@@ -53,12 +59,16 @@ Rules:
   "sentences": [
     { "zh": "今天我在厨房做饭。", "pinyin": "Jīntiān wǒ zài chúfáng zuòfàn.", "en": "Today I am cooking in the kitchen." }
   ],
-  "wordsUsed": ["厨房", "做饭"]
+  "wordsUsed": ["厨房", "做饭"],
+  "culturalNotes": [
+    { "term": "厨房", "note": "In traditional Chinese homes, the kitchen was considered the domain of the Kitchen God (灶神), who would report the family's behavior to the Jade Emperor each year." }
+  ]
 }
-- "wordsUsed" lists which of the provided vocabulary words appear in the story.`,
+- "wordsUsed" lists which of the provided vocabulary words appear in the story.
+- "culturalNotes" adds 1–3 fascinating cultural, historical, or usage insights tied to specific words/phrases actually used in the story. Each note should reveal something a learner wouldn't find in a dictionary — cultural symbolism, historical origin, or common social context. SKIP if nothing genuinely interesting applies — do NOT invent trivia.`,
       },
     ],
-    max_tokens: 1500,
+    max_tokens: 2000,
     temperature: 0.7,
   });
 
@@ -74,5 +84,6 @@ Rules:
       (s: NarrativeSentence) => s && typeof s.zh === 'string' && s.zh.length > 0
     ),
     wordsUsed: Array.isArray(parsed.wordsUsed) ? parsed.wordsUsed : [],
+    culturalNotes: Array.isArray(parsed.culturalNotes) ? parsed.culturalNotes : [],
   };
 }

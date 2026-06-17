@@ -30,11 +30,17 @@ interface StoryPhoto {
   vocabulary: VocabularyItem[];
 }
 
+interface CulturalNote {
+  term: string;
+  note: string;
+}
+
 interface GeneratedContent {
   storyZh: string;
   storyPinyin: string;
   storyEn: string;
   usedWords: string[];
+  culturalNotes?: CulturalNote[];
 }
 
 interface Story {
@@ -260,6 +266,21 @@ export default function StoryDetailPage() {
             {story.generated_content.storyEn && (
               <div className="text-[#e0e2e8] text-sm border-t border-white/10 pt-3">
                 {story.generated_content.storyEn}
+              </div>
+            )}
+
+            {/* Cultural Notes */}
+            {(story.generated_content.culturalNotes ?? []).length > 0 && (
+              <div className="border border-[#76ffbb]/15 rounded-lg p-4 bg-[#101417]/30">
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#76ffbb]/60 mb-3">Cultural Notes</p>
+                <div className="space-y-3">
+                  {story.generated_content.culturalNotes!.map((n, i) => (
+                    <div key={i}>
+                      <span className="text-sm font-medium text-[#76ffbb]">{n.term}</span>
+                      <p className="text-sm text-[#bacbbe] mt-0.5 leading-relaxed">{n.note}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
