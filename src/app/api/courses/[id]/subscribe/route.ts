@@ -40,6 +40,7 @@ async function enrollCourseWords(
       word_en: w.word_en,
       example_sentence: w.example_sentence,
       hsk_level: w.hsk_level,
+      source: 'course',
     }));
 
   if (toInsert.length === 0) return 0;

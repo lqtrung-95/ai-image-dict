@@ -33,7 +33,7 @@ interface AnalysisResultProps {
   objects: DetectedObject[];
   exampleSentences?: Record<string, ExampleSentence>;
   hskLevels?: Record<string, number | null>;
-  onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string; listId?: string; exampleSentence?: string; hskLevel?: number | null }) => Promise<void>;
+  onSaveWord: (word: { wordZh: string; wordPinyin: string; wordEn: string; detectedObjectId: string; listId?: string; exampleSentence?: string; exampleSentencePinyin?: string; exampleSentenceEn?: string; hskLevel?: number | null }) => Promise<void>;
   onUploadAnother?: () => void;
 }
 
@@ -52,10 +52,10 @@ export function AnalysisResult({
   const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
   const [savingWord, setSavingWord] = useState<string | null>(null);
 
+  const getExample = (wordZh: string) => exampleSentences[wordZh] ?? null;
   const getExampleSentence = (wordZh: string): string | undefined => {
-    const example = exampleSentences[wordZh];
-    if (!example) return undefined;
-    return `${example.zh} (${example.pinyin}) - ${example.en}`;
+    const ex = getExample(wordZh);
+    return ex ? `${ex.zh} (${ex.pinyin}) - ${ex.en}` : undefined;
   };
 
   const getHskLevel = (wordZh: string, objectHskLevel?: number | null): number | null | undefined => {
@@ -74,7 +74,9 @@ export function AnalysisResult({
         wordEn: obj.label_en,
         detectedObjectId: obj.id,
         listId,
-        exampleSentence: getExampleSentence(obj.label_zh),
+        exampleSentence: getExample(obj.label_zh)?.zh,
+        exampleSentencePinyin: getExample(obj.label_zh)?.pinyin,
+        exampleSentenceEn: getExample(obj.label_zh)?.en,
         hskLevel: getHskLevel(obj.label_zh, obj.hsk_level),
       });
       setSavedWords((prev) => new Set([...prev, obj.id]));

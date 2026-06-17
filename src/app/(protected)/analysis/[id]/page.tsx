@@ -58,6 +58,8 @@ export default function AnalysisPage({ params }: { params: Promise<{ id: string 
     detectedObjectId: string;
     listId?: string;
     exampleSentence?: string;
+    exampleSentencePinyin?: string;
+    exampleSentenceEn?: string;
     hskLevel?: number | null;
   }) => {
     const response = await apiFetch('/api/vocabulary', {

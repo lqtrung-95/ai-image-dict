@@ -236,6 +236,8 @@ export async function POST(request: NextRequest) {
     let detectedObjectId: string | null = null;
     let listId: string | null = null;
     let exampleSentence: string | null = null;
+    let exampleSentencePinyin: string | null = null;
+    let exampleSentenceEn: string | null = null;
     let hskLevel: number | null = null;
 
     try {
@@ -258,6 +260,12 @@ export async function POST(request: NextRequest) {
       }
       if (body.exampleSentence) {
         exampleSentence = sanitizeString(body.exampleSentence, 500);
+      }
+      if (body.exampleSentencePinyin) {
+        exampleSentencePinyin = sanitizeString(body.exampleSentencePinyin, 800);
+      }
+      if (body.exampleSentenceEn) {
+        exampleSentenceEn = sanitizeString(body.exampleSentenceEn, 800);
       }
       hskLevel = validateHSKLevel(body.hskLevel);
     } catch (err) {
@@ -319,6 +327,8 @@ export async function POST(request: NextRequest) {
         word_en: wordEn,
         detected_object_id: detectedObjectId || null,
         example_sentence: exampleSentence || null,
+        example_sentence_pinyin: exampleSentencePinyin || null,
+        example_sentence_en: exampleSentenceEn || null,
         hsk_level: hskLevel && hskLevel >= 1 && hskLevel <= 6 ? hskLevel : null,
       })
       .select()

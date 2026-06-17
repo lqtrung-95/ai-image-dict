@@ -28,6 +28,9 @@ export async function GET(request: NextRequest) {
     const courseId = searchParams.get('course');
     const limit = parseInt(searchParams.get('limit') || '50');
     const includeNew = searchParams.get('includeNew') !== 'false';
+    // When no course filter is active, exclude course-sourced words so the main
+    // SRS deck only shows words the user captured from photos.
+    const excludeCourseWords = !courseId && !listId;
 
     // Course filter: study only the words belonging to a given course. Course
     // words link to the personal deck by Chinese text (see enrollment on
@@ -108,6 +111,11 @@ export async function GET(request: NextRequest) {
       query = query.in('word_zh', courseZh);
     }
 
+    // Main deck: exclude course-sourced words so captures and courses stay separate
+    if (excludeCourseWords) {
+      query = query.neq('source', 'course');
+    }
+
     const { data, error, count } = await query;
 
     console.log('[DueWords] Query result:', { dataLength: data?.length, count, error: error?.message, userId: user.id, todayStr, limit });
@@ -128,6 +136,8 @@ export async function GET(request: NextRequest) {
         wordPinyin: item.word_pinyin,
         wordEn: item.word_en,
         exampleSentence: item.example_sentence,
+        exampleSentencePinyin: item.example_sentence_pinyin,
+        exampleSentenceEn: item.example_sentence_en,
         isLearned: item.is_learned,
         createdAt: item.created_at,
         easinessFactor: item.easiness_factor,
@@ -170,6 +180,11 @@ export async function GET(request: NextRequest) {
         newQuery = newQuery.in('word_zh', courseZh);
       }
 
+      // Mirror main deck exclusion for new words
+      if (excludeCourseWords) {
+        newQuery = newQuery.neq('source', 'course');
+      }
+
       const { data: newData } = await newQuery;
 
       if (newData) {
@@ -180,6 +195,8 @@ export async function GET(request: NextRequest) {
           wordPinyin: item.word_pinyin,
           wordEn: item.word_en,
           exampleSentence: item.example_sentence,
+          exampleSentencePinyin: item.example_sentence_pinyin,
+          exampleSentenceEn: item.example_sentence_en,
           isLearned: item.is_learned,
           createdAt: item.created_at,
           easinessFactor: item.easiness_factor,
