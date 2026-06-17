@@ -71,6 +71,13 @@ export async function POST(
 
     const narrative = await generateStoryNarrative(story.title, words);
 
+    // Persist so the client can load it next visit without regenerating
+    await supabase
+      .from('photo_stories')
+      .update({ generated_content: narrative })
+      .eq('id', storyId)
+      .eq('user_id', user.id);
+
     return NextResponse.json({ narrative });
   } catch (error) {
     if (error instanceof ValidationError) {
