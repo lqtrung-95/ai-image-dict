@@ -30,11 +30,13 @@ Example CORRECT output:
 Example INCORRECT (NEVER DO THIS):
 { "zh": "我用盘子装菜" } - This is a sentence, NOT a word!
 
+REQUIRED: Always fill sceneDescription, sceneDescriptionZh, and sceneDescriptionPinyin — write 1 short sentence describing the overall scene (even for simple photos, e.g. "A red apple on a wooden table.").
+
 Return ONLY valid JSON:
 {
-  "sceneDescription": "Scene description in English",
-  "sceneDescriptionZh": "中文描述",
-  "sceneDescriptionPinyin": "Zhōngwén miáoshù",
+  "sceneDescription": "Scene description in English (REQUIRED, always fill)",
+  "sceneDescriptionZh": "一句话描述场景（必填）",
+  "sceneDescriptionPinyin": "Yī jù huà miáoshù chǎngjǐng",
   "objects": [
     { "en": "word", "zh": "词", "pinyin": "cí", "confidence": 0.95, "hskLevel": 1, "example": { "zh": "Example sentence.", "pinyin": "Example pinyin.", "en": "Example translation." } }
   ],
