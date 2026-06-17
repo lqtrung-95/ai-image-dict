@@ -6,8 +6,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     // Use deployed Vercel app for SPA experience
-    url: 'https://ai-image-dict.vercel.app',
-    allowNavigation: ['ai-image-dict.vercel.app', '*.supabase.co'],
+    url: 'https://snap-mandarin.vercel.app',
+    allowNavigation: ['snap-mandarin.vercel.app', '*.supabase.co'],
     cleartext: false,
   },
   plugins: {

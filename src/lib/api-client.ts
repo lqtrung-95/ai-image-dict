@@ -14,7 +14,7 @@ const isNative = () => {
 export const getApiBaseUrl = (): string => {
   if (isNative()) {
     // Native app uses production API
-    return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://ai-image-dict.vercel.app';
+    return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://snap-mandarin.vercel.app';
   }
   // Web uses relative paths
   return '';

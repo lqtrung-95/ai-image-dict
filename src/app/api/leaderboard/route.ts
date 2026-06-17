@@ -90,17 +90,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ board, myEntry, tab: 'weekly', weekStart: weekStart.toISOString() });
     }
 
-    // All-time: rank by total learned words
-    const { data: items, error: itemsErr } = await supabase
-      .from('vocabulary_items')
-      .select('user_id')
-      .eq('is_learned', true);
+    // All-time: rank by total XP from all practice attempts
+    const { data: attempts, error: itemsErr } = await supabase
+      .from('word_practice_attempts')
+      .select('user_id, is_correct');
 
     if (itemsErr) throw itemsErr;
 
     const countMap = new Map<string, number>();
-    for (const row of items ?? []) {
-      countMap.set(row.user_id, (countMap.get(row.user_id) ?? 0) + 1);
+    for (const row of attempts ?? []) {
+      const pts = row.is_correct ? XP_CORRECT : XP_INCORRECT;
+      countMap.set(row.user_id, (countMap.get(row.user_id) ?? 0) + pts);
     }
 
     const topUserIds = [...countMap.entries()]

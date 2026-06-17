@@ -10,7 +10,7 @@ interface ApiError {
 class ApiClient {
   private client: AxiosInstance;
 
-  constructor(baseUrl: string = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://ai-image-dict.vercel.app') {
+  constructor(baseUrl: string = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://snap-mandarin.vercel.app') {
     this.client = axios.create({
       baseURL: baseUrl,
       headers: {

@@ -9,7 +9,7 @@ export const IMAGE_COMPRESSION_QUALITY = 0.8;
 export const MAX_IMAGE_DIMENSION = 1024;
 
 // API base URL - uses environment variable for mobile
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://ai-image-dict.vercel.app';
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://snap-mandarin.vercel.app';
 
 // API endpoints
 export const API_ROUTES = {
