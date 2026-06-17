@@ -118,6 +118,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE /api/courses/[id]/subscribe - Unsubscribe from course
+// Pass ?removeWords=true to also delete the course's words from the user's library.
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id: courseId } = await params;
@@ -127,6 +128,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const removeWords = _request.nextUrl.searchParams.get('removeWords') === 'true';
     const supabase = createServiceClient();
 
     const { error } = await supabase
@@ -140,7 +142,28 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    let removedWords = 0;
+    if (removeWords) {
+      // Fetch the course's word list, then delete only words that were sourced
+      // from this course (source='course') to avoid removing manually saved words.
+      const { data: courseWords } = await supabase
+        .from('course_vocabulary_items')
+        .select('word_zh')
+        .eq('course_id', courseId);
+
+      const wordZhList = (courseWords ?? []).map((w) => w.word_zh);
+      if (wordZhList.length > 0) {
+        const { count } = await supabase
+          .from('vocabulary_items')
+          .delete({ count: 'exact' })
+          .eq('user_id', user.id)
+          .eq('source', 'course')
+          .in('word_zh', wordZhList);
+        removedWords = count ?? 0;
+      }
+    }
+
+    return NextResponse.json({ success: true, removedWords });
   } catch (error) {
     console.error('Unsubscribe error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
