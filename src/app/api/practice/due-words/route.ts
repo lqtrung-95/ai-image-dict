@@ -125,8 +125,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch due words' }, { status: 500 });
     }
 
+    // AI-personalized ordering: within due items, surface most-struggled words first.
+    // easiness_factor < 2.5 means the word has been consistently hard; null = new word.
+    // Words overdue by more days stay prioritized via next_review_date sort above,
+    // but among same-day-due words we promote low easiness_factor (harder words first).
+    const sortedData = (data || []).sort((a: any, b: any) => {
+      const aEf = a.easiness_factor ?? 2.5;
+      const bEf = b.easiness_factor ?? 2.5;
+      // If both are due (not null next_review_date), sort by easiness ascending
+      if (a.next_review_date && b.next_review_date && a.next_review_date === b.next_review_date) {
+        return aEf - bEf;
+      }
+      return 0; // preserve DB order otherwise (next_review_date ASC)
+    });
+
     // Map fields to camelCase for frontend
-    const items = (data || []).map((item: any) => {
+    const items = sortedData.map((item: any) => {
       const photoAnalysis = item.detected_object?.photo_analysis;
       console.log('[DueWords] Raw item:', { id: item.id, word: item.word_zh, detectedObject: item.detected_object, photoAnalysis: item.detected_object?.photo_analysis });
       const mapped = {
