@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
           correct_streak, last_reviewed_at, is_learned,
           course_vocabulary_items!inner(
             id, word_zh, word_pinyin, word_en, word_vi,
-            example_sentence, example_sentence_pinyin, example_sentence_en, hsk_level
+            example_sentence, hsk_level
           )
         `)
         .eq('user_id', user.id)
@@ -82,8 +82,6 @@ export async function GET(request: NextRequest) {
           wordPinyin: cvi.word_pinyin,
           wordEn: displayMeaning,
           exampleSentence: cvi.example_sentence,
-          exampleSentencePinyin: cvi.example_sentence_pinyin,
-          exampleSentenceEn: cvi.example_sentence_en,
           hskLevel: cvi.hsk_level,
           easinessFactor: row.easiness_factor,
           intervalDays: row.interval_days,
