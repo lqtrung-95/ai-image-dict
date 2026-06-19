@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     const courses = (data || []).map(course => ({
       id: course.id,
       creatorId: course.creator_id,
-      creatorName: course.profiles?.display_name || 'Anonymous',
+      creatorName: course.profiles?.display_name || null,
       name: (locale === 'vi' && course.name_vi) ? course.name_vi : course.name,
       description: (locale === 'vi' && course.description_vi) ? course.description_vi : course.description,
       coverImageUrl: course.cover_image_url,
