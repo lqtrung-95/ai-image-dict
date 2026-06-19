@@ -34,6 +34,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
+    const locale = request.nextUrl.searchParams.get('locale') || 'en';
+
     // Pagination + search params for the word list
     const wordsPage = Math.max(1, parseInt(request.nextUrl.searchParams.get('wordsPage') ?? '1'));
     const wordsLimit = Math.min(100, Math.max(10, parseInt(request.nextUrl.searchParams.get('wordsLimit') ?? '50')));
@@ -123,9 +125,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       course: {
         id: course.id,
         creatorId: course.creator_id,
-        creatorName: course.profiles?.display_name || 'Anonymous',
-        name: course.name,
-        description: course.description,
+        creatorName: course.profiles?.display_name || null,
+        name: (locale === 'vi' && course.name_vi) ? course.name_vi : course.name,
+        description: (locale === 'vi' && course.description_vi) ? course.description_vi : course.description,
         coverImageUrl: course.cover_image_url,
         difficultyLevel: course.difficulty_level,
         isPublished: course.is_published,
