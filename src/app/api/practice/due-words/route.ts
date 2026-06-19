@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const listId = searchParams.get('list');
     const courseId = searchParams.get('course');
+    const locale = searchParams.get('locale') || 'en';
     const limit = parseInt(searchParams.get('limit') || '50');
     const includeNew = searchParams.get('includeNew') !== 'false';
     // When no course filter is active, exclude course-sourced words so the main
@@ -36,14 +37,21 @@ export async function GET(request: NextRequest) {
     // words link to the personal deck by Chinese text (see enrollment on
     // subscribe), so we resolve the course's word_zh set and filter on it.
     let courseZh: string[] | null = null;
+    // Map word_zh → word_vi for VI locale overlay when practicing a course
+    let courseWordViMap: Map<string, string> = new Map();
     if (courseId) {
       const { data: courseWords } = await supabaseAdmin
         .from('course_vocabulary_items')
-        .select('word_zh')
+        .select('word_zh, word_vi')
         .eq('course_id', courseId);
       courseZh = (courseWords ?? []).map((w) => w.word_zh);
       if (courseZh.length === 0) {
         return NextResponse.json({ items: [], dueCount: 0, newCount: 0, total: 0 });
+      }
+      if (locale === 'vi') {
+        courseWordViMap = new Map(
+          (courseWords ?? []).filter((w) => w.word_vi).map((w) => [w.word_zh, w.word_vi!])
+        );
       }
     }
 
@@ -148,7 +156,7 @@ export async function GET(request: NextRequest) {
         userId: item.user_id,
         wordZh: item.word_zh,
         wordPinyin: item.word_pinyin,
-        wordEn: item.word_en,
+        wordEn: courseWordViMap.get(item.word_zh) ?? item.word_en,
         exampleSentence: item.example_sentence,
         exampleSentencePinyin: item.example_sentence_pinyin,
         exampleSentenceEn: item.example_sentence_en,
@@ -207,7 +215,7 @@ export async function GET(request: NextRequest) {
           userId: item.user_id,
           wordZh: item.word_zh,
           wordPinyin: item.word_pinyin,
-          wordEn: item.word_en,
+          wordEn: courseWordViMap.get(item.word_zh) ?? item.word_en,
           exampleSentence: item.example_sentence,
           exampleSentencePinyin: item.example_sentence_pinyin,
           exampleSentenceEn: item.example_sentence_en,
