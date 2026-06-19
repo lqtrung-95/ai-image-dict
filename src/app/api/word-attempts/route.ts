@@ -23,16 +23,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       vocabularyItemId,
+      courseProgressId, // set when practicing a course word; updates user_course_word_progress
       sessionId,
       quizMode,
       rating,
       responseTimeMs,
     } = body;
 
-    // Validate required fields
-    if (!vocabularyItemId || !rating) {
+    if ((!vocabularyItemId && !courseProgressId) || !rating) {
       return NextResponse.json(
-        { error: 'vocabularyItemId and rating are required' },
+        { error: 'vocabularyItemId or courseProgressId, and rating are required' },
         { status: 400 }
       );
     }
@@ -64,6 +64,59 @@ export async function POST(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
+    const isCorrect = rating >= 2;
+
+    // Course word attempt: update user_course_word_progress instead of vocabulary_items
+    if (courseProgressId) {
+      const { data: progressRows } = await supabaseAdmin
+        .from('user_course_word_progress')
+        .select('id, easiness_factor, interval_days, repetitions, correct_streak, user_id')
+        .eq('id', courseProgressId);
+
+      const progressRow = progressRows?.[0];
+      if (!progressRow) {
+        return NextResponse.json({ error: 'Course progress not found' }, { status: 404 });
+      }
+      if (progressRow.user_id !== user.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      }
+
+      const currentState: SrsState = {
+        easinessFactor: progressRow.easiness_factor || 2.5,
+        intervalDays: progressRow.interval_days || 0,
+        repetitions: progressRow.repetitions || 0,
+        correctStreak: progressRow.correct_streak || 0,
+      };
+      const newState = calculateNextReview(currentState, rating as SrsRating);
+
+      await supabaseAdmin
+        .from('user_course_word_progress')
+        .update({
+          easiness_factor: newState.easinessFactor,
+          interval_days: newState.intervalDays,
+          next_review_date: newState.nextReviewDate.toISOString().split('T')[0],
+          repetitions: newState.repetitions,
+          correct_streak: newState.correctStreak,
+          last_reviewed_at: new Date().toISOString(),
+          is_learned: newState.isLearned,
+        })
+        .eq('id', courseProgressId);
+
+      return NextResponse.json({
+        success: true,
+        newState: {
+          easinessFactor: newState.easinessFactor,
+          intervalDays: newState.intervalDays,
+          nextReviewDate: newState.nextReviewDate.toISOString().split('T')[0],
+          repetitions: newState.repetitions,
+          correctStreak: newState.correctStreak,
+          isLearned: newState.isLearned,
+        },
+        isCorrect,
+      });
+    }
+
+    // Personal library word attempt: update vocabulary_items
     const { data: vocabItems, error: fetchError } = await supabaseAdmin
       .from('vocabulary_items')
       .select('id, easiness_factor, interval_days, repetitions, correct_streak, user_id')
@@ -73,18 +126,13 @@ export async function POST(request: NextRequest) {
 
     if (fetchError || !vocabItem) {
       console.error('[WordAttempts] Vocab item not found:', vocabularyItemId, 'Error:', fetchError);
-      return NextResponse.json(
-        { error: 'Vocabulary item not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Vocabulary item not found' }, { status: 404 });
     }
 
-    // Verify user owns this vocabulary item
     if (vocabItem.user_id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Calculate new SRS state
     const currentState: SrsState = {
       easinessFactor: vocabItem.easiness_factor || 2.5,
       intervalDays: vocabItem.interval_days || 0,
@@ -93,9 +141,7 @@ export async function POST(request: NextRequest) {
     };
 
     const newState = calculateNextReview(currentState, rating as SrsRating);
-    const isCorrect = rating >= 2; // Hard, Good, Easy are considered correct
 
-    // Record the attempt using admin client
     const { error: attemptError } = await supabaseAdmin
       .from('word_practice_attempts')
       .insert({
@@ -110,13 +156,9 @@ export async function POST(request: NextRequest) {
 
     if (attemptError) {
       console.error('Attempt insert error:', attemptError);
-      return NextResponse.json(
-        { error: 'Failed to record attempt' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to record attempt' }, { status: 500 });
     }
 
-    // Update vocabulary item with new SRS state using admin client
     const { error: updateError } = await supabaseAdmin
       .from('vocabulary_items')
       .update({
@@ -132,10 +174,7 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Vocabulary update error:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update vocabulary item' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to update vocabulary item' }, { status: 500 });
     }
 
     return NextResponse.json({

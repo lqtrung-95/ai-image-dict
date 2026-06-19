@@ -29,38 +29,81 @@ export async function GET(request: NextRequest) {
     const locale = searchParams.get('locale') || 'en';
     const limit = parseInt(searchParams.get('limit') || '50');
     const includeNew = searchParams.get('includeNew') !== 'false';
-    // When no course filter is active, exclude course-sourced words so the main
-    // SRS deck only shows words the user captured from photos.
-    const excludeCourseWords = !courseId && !listId;
+    // Exclude legacy course-sourced words from the main personal practice deck
+    const excludeCourseWords = !listId;
 
-    // Course filter: study only the words belonging to a given course. Course
-    // words link to the personal deck by Chinese text (see enrollment on
-    // subscribe), so we resolve the course's word_zh set and filter on it.
-    let courseZh: string[] | null = null;
-    // Map word_zh → word_vi for VI locale overlay when practicing a course
-    let courseWordViMap: Map<string, string> = new Map();
-    if (courseId) {
-      const { data: courseWords } = await supabaseAdmin
-        .from('course_vocabulary_items')
-        .select('word_zh, word_vi')
-        .eq('course_id', courseId);
-      courseZh = (courseWords ?? []).map((w) => w.word_zh);
-      if (courseZh.length === 0) {
-        return NextResponse.json({ items: [], dueCount: 0, newCount: 0, total: 0 });
-      }
-      if (locale === 'vi') {
-        courseWordViMap = new Map(
-          (courseWords ?? []).filter((w) => w.word_vi).map((w) => [w.word_zh, w.word_vi!])
-        );
-      }
-    }
-
-    // Get today's date at midnight for comparison
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayStr = today.toISOString().split('T')[0];
 
-    // If filtering by list, query via junction table first
+    // Course practice: query user_course_word_progress joined with course_vocabulary_items.
+    // Course words are fully separate from the personal library (vocabulary_items).
+    if (courseId) {
+      const { data: progressRows, error: progressError } = await supabaseAdmin
+        .from('user_course_word_progress')
+        .select(`
+          id, easiness_factor, interval_days, next_review_date, repetitions,
+          correct_streak, last_reviewed_at, is_learned,
+          course_vocabulary_items!inner(
+            id, word_zh, word_pinyin, word_en, word_vi,
+            example_sentence, example_sentence_pinyin, example_sentence_en, hsk_level
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .eq('is_learned', false)
+        .or(`next_review_date.is.null,next_review_date.lte.${todayStr}`)
+        .order('next_review_date', { ascending: true })
+        .limit(limit);
+
+      if (progressError) {
+        console.error('Course due-words error:', progressError);
+        return NextResponse.json({ error: 'Failed to fetch course words' }, { status: 500 });
+      }
+
+      const rows = (progressRows ?? []) as any[];
+
+      const sorted = rows.sort((a: any, b: any) => {
+        const aEf = a.easiness_factor ?? 2.5;
+        const bEf = b.easiness_factor ?? 2.5;
+        if (a.next_review_date && b.next_review_date && a.next_review_date === b.next_review_date) {
+          return aEf - bEf;
+        }
+        return 0;
+      });
+
+      const items = sorted.map((row: any) => {
+        const cvi = row.course_vocabulary_items;
+        const displayMeaning = (locale === 'vi' && cvi.word_vi) ? cvi.word_vi : cvi.word_en;
+        return {
+          id: row.id, // user_course_word_progress.id — used by word-attempts as courseProgressId
+          courseProgressId: row.id,
+          wordZh: cvi.word_zh,
+          wordPinyin: cvi.word_pinyin,
+          wordEn: displayMeaning,
+          exampleSentence: cvi.example_sentence,
+          exampleSentencePinyin: cvi.example_sentence_pinyin,
+          exampleSentenceEn: cvi.example_sentence_en,
+          hskLevel: cvi.hsk_level,
+          easinessFactor: row.easiness_factor,
+          intervalDays: row.interval_days,
+          nextReviewDate: row.next_review_date,
+          repetitions: row.repetitions,
+          correctStreak: row.correct_streak,
+          lastReviewedAt: row.last_reviewed_at,
+          photoUrl: null,
+        };
+      });
+
+      return NextResponse.json({
+        items,
+        dueCount: items.length,
+        newCount: 0,
+        total: items.length,
+      });
+    }
+
+    // Personal library practice (non-course): query vocabulary_items
     let vocabularyIds: string[] = [];
     if (listId && listId !== 'all') {
       const { data: listItems, error: listError } = await supabaseAdmin
@@ -75,22 +118,11 @@ export async function GET(request: NextRequest) {
 
       vocabularyIds = (listItems || []).map((item) => item.vocabulary_item_id);
 
-      // If list is empty, return early
       if (vocabularyIds.length === 0) {
-        return NextResponse.json({
-          items: [],
-          dueCount: 0,
-          newCount: 0,
-          total: 0,
-        });
+        return NextResponse.json({ items: [], dueCount: 0, newCount: 0, total: 0 });
       }
     }
 
-    // Build query for due words
-    // Include words where:
-    // 1. next_review_date is null (new words never reviewed)
-    // 2. next_review_date <= today (due for review)
-    // Use !left modifier to make it a LEFT JOIN (won't filter words without photos)
     let query = supabaseAdmin
       .from('vocabulary_items')
       .select(
@@ -109,54 +141,39 @@ export async function GET(request: NextRequest) {
       .order('next_review_date', { ascending: true })
       .limit(limit);
 
-    // Filter by vocabulary IDs if list filter is active
     if (vocabularyIds.length > 0) {
       query = query.in('id', vocabularyIds);
     }
 
-    // Filter by course word set if course filter is active
-    if (courseZh) {
-      query = query.in('word_zh', courseZh);
-    }
-
-    // Main deck: exclude course-sourced words so captures and courses stay separate
+    // Exclude course-sourced words (legacy entries from old enrollment flow)
     if (excludeCourseWords) {
       query = query.neq('source', 'course');
     }
 
     const { data, error, count } = await query;
 
-    console.log('[DueWords] Query result:', { dataLength: data?.length, count, error: error?.message, userId: user.id, todayStr, limit });
-
     if (error) {
       console.error('Due words fetch error:', error);
       return NextResponse.json({ error: 'Failed to fetch due words' }, { status: 500 });
     }
 
-    // AI-personalized ordering: within due items, surface most-struggled words first.
-    // easiness_factor < 2.5 means the word has been consistently hard; null = new word.
-    // Words overdue by more days stay prioritized via next_review_date sort above,
-    // but among same-day-due words we promote low easiness_factor (harder words first).
     const sortedData = (data || []).sort((a: any, b: any) => {
       const aEf = a.easiness_factor ?? 2.5;
       const bEf = b.easiness_factor ?? 2.5;
-      // If both are due (not null next_review_date), sort by easiness ascending
       if (a.next_review_date && b.next_review_date && a.next_review_date === b.next_review_date) {
         return aEf - bEf;
       }
-      return 0; // preserve DB order otherwise (next_review_date ASC)
+      return 0;
     });
 
-    // Map fields to camelCase for frontend
     const items = sortedData.map((item: any) => {
       const photoAnalysis = item.detected_object?.photo_analysis;
-      console.log('[DueWords] Raw item:', { id: item.id, word: item.word_zh, detectedObject: item.detected_object, photoAnalysis: item.detected_object?.photo_analysis });
-      const mapped = {
+      return {
         id: item.id,
         userId: item.user_id,
         wordZh: item.word_zh,
         wordPinyin: item.word_pinyin,
-        wordEn: courseWordViMap.get(item.word_zh) ?? item.word_en,
+        wordEn: item.word_en,
         exampleSentence: item.example_sentence,
         exampleSentencePinyin: item.example_sentence_pinyin,
         exampleSentenceEn: item.example_sentence_en,
@@ -173,11 +190,8 @@ export async function GET(request: NextRequest) {
         photoDate: photoAnalysis?.created_at || null,
         analysisId: photoAnalysis?.id || item.detected_object?.analysis_id || null,
       };
-      console.log('[DueWords] Mapped item:', { id: mapped.id, word: mapped.wordZh, photoUrl: mapped.photoUrl });
-      return mapped;
     });
 
-    // Optionally fetch new words (never reviewed) if includeNew is true
     let newWords: any[] = [];
     if (includeNew && items.length < limit) {
       const remainingLimit = limit - items.length;
@@ -192,17 +206,9 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: false })
         .limit(remainingLimit);
 
-      // Apply list filter to new words too
       if (vocabularyIds.length > 0) {
         newQuery = newQuery.in('id', vocabularyIds);
       }
-
-      // Apply course filter to new words too
-      if (courseZh) {
-        newQuery = newQuery.in('word_zh', courseZh);
-      }
-
-      // Mirror main deck exclusion for new words
       if (excludeCourseWords) {
         newQuery = newQuery.neq('source', 'course');
       }
@@ -215,7 +221,7 @@ export async function GET(request: NextRequest) {
           userId: item.user_id,
           wordZh: item.word_zh,
           wordPinyin: item.word_pinyin,
-          wordEn: courseWordViMap.get(item.word_zh) ?? item.word_en,
+          wordEn: item.word_en,
           exampleSentence: item.example_sentence,
           exampleSentencePinyin: item.example_sentence_pinyin,
           exampleSentenceEn: item.example_sentence_en,

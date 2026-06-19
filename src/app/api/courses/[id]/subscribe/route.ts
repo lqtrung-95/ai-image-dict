@@ -9,48 +9,38 @@ interface RouteParams {
 }
 
 /**
- * Insert a course's vocabulary into the user's personal deck, skipping any word
- * (by Chinese text) they already have. Returns how many new words were added.
+ * Create per-user SRS progress rows for every word in the course.
+ * Course words are tracked in user_course_word_progress — they are never
+ * copied into the user's personal vocabulary_items library.
  */
-async function enrollCourseWords(
+async function initializeCourseProgress(
   supabase: ReturnType<typeof createServiceClient>,
   userId: string,
   courseId: string
 ): Promise<number> {
   const { data: courseWords } = await supabase
     .from('course_vocabulary_items')
-    .select('word_zh, word_pinyin, word_en, example_sentence, hsk_level')
+    .select('id')
     .eq('course_id', courseId);
 
   if (!courseWords || courseWords.length === 0) return 0;
 
-  const { data: existing } = await supabase
-    .from('vocabulary_items')
-    .select('word_zh')
-    .eq('user_id', userId)
-    .in('word_zh', courseWords.map((w) => w.word_zh));
+  const rows = courseWords.map((w) => ({
+    user_id: userId,
+    course_vocabulary_item_id: w.id,
+    course_id: courseId,
+  }));
 
-  const have = new Set((existing ?? []).map((w) => w.word_zh));
-  const toInsert = courseWords
-    .filter((w) => !have.has(w.word_zh))
-    .map((w) => ({
-      user_id: userId,
-      word_zh: w.word_zh,
-      word_pinyin: w.word_pinyin,
-      word_en: w.word_en,
-      example_sentence: w.example_sentence,
-      hsk_level: w.hsk_level,
-      source: 'course',
-    }));
+  // Ignore conflicts — user may have partial progress from a prior subscription
+  const { error } = await supabase
+    .from('user_course_word_progress')
+    .upsert(rows, { onConflict: 'user_id,course_vocabulary_item_id', ignoreDuplicates: true });
 
-  if (toInsert.length === 0) return 0;
-
-  const { error } = await supabase.from('vocabulary_items').insert(toInsert);
   if (error) {
-    console.error('Course enrollment insert error:', error);
+    console.error('Course progress init error:', error);
     return 0;
   }
-  return toInsert.length;
+  return rows.length;
 }
 
 // POST /api/courses/[id]/subscribe - Subscribe to course
@@ -65,7 +55,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
 
     const supabase = createServiceClient();
 
-    // Verify course exists and is published
     const { data: course } = await supabase
       .from('vocabulary_courses')
       .select('id, is_published')
@@ -76,7 +65,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
 
-    // Check if already subscribed
     const { data: existing } = await supabase
       .from('course_subscriptions')
       .select('id')
@@ -88,7 +76,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Already subscribed' }, { status: 409 });
     }
 
-    // Create subscription
     const { data, error } = await supabase
       .from('course_subscriptions')
       .insert({
@@ -105,12 +92,9 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 });
     }
 
-    // Enroll: copy the course's words into the user's personal SRS deck so they
-    // become studyable. Words the user already has (matched by Chinese text) are
-    // skipped so existing review progress is never overwritten or duplicated.
-    const enrolled = await enrollCourseWords(supabase, user.id, courseId);
+    const initialized = await initializeCourseProgress(supabase, user.id, courseId);
 
-    return NextResponse.json({ ...data, enrolledWords: enrolled }, { status: 201 });
+    return NextResponse.json({ ...data, enrolledWords: initialized }, { status: 201 });
   } catch (error) {
     console.error('Subscribe error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -118,7 +102,6 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
 }
 
 // DELETE /api/courses/[id]/subscribe - Unsubscribe from course
-// Pass ?removeWords=true to also delete the course's words from the user's library.
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id: courseId } = await params;
@@ -128,7 +111,6 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const removeWords = _request.nextUrl.searchParams.get('removeWords') === 'true';
     const supabase = createServiceClient();
 
     const { error } = await supabase
@@ -142,25 +124,30 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });
     }
 
-    let removedWords = 0;
-    if (removeWords) {
-      // Fetch the course's word list, then delete only words that were sourced
-      // from this course (source='course') to avoid removing manually saved words.
-      const { data: courseWords } = await supabase
-        .from('course_vocabulary_items')
-        .select('word_zh')
-        .eq('course_id', courseId);
+    // Delete SRS progress rows for this course
+    await supabase
+      .from('user_course_word_progress')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('course_id', courseId);
 
-      const wordZhList = (courseWords ?? []).map((w) => w.word_zh);
-      if (wordZhList.length > 0) {
-        const { count } = await supabase
-          .from('vocabulary_items')
-          .delete({ count: 'exact' })
-          .eq('user_id', user.id)
-          .eq('source', 'course')
-          .in('word_zh', wordZhList);
-        removedWords = count ?? 0;
-      }
+    // Clean up legacy vocabulary_items that were copied on enrollment (source='course')
+    // This handles users who enrolled before the separated-progress architecture.
+    const { data: courseWords } = await supabase
+      .from('course_vocabulary_items')
+      .select('word_zh')
+      .eq('course_id', courseId);
+
+    let removedWords = 0;
+    const wordZhList = (courseWords ?? []).map((w) => w.word_zh);
+    if (wordZhList.length > 0) {
+      const { count } = await supabase
+        .from('vocabulary_items')
+        .delete({ count: 'exact' })
+        .eq('user_id', user.id)
+        .eq('source', 'course')
+        .in('word_zh', wordZhList);
+      removedWords = count ?? 0;
     }
 
     return NextResponse.json({ success: true, removedWords });
