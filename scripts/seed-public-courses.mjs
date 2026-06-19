@@ -1,38 +1,304 @@
 /**
- * Seeds HSK 1-6 public courses + vocabulary words into vocabulary_courses
- * and course_vocabulary_items tables in production Supabase.
- * Run: node scripts/seed-public-courses.mjs
+ * Seeds bilingual public courses:
+ *   - HSK 1–6 from MandarinBean New HSK PDFs
+ *   - Thematic courses (Numbers & Time, Colors & Shapes, Kitchen & Food)
+ *     with hardcoded bilingual word lists (no PDFs required)
+ *
+ * Required for real DB writes:
+ *   NEXT_PUBLIC_SUPABASE_URL
+ *   SUPABASE_SERVICE_ROLE_KEY
+ *
+ * Optional:
+ *   HSK1_PDF_PATH … HSK6_PDF_PATH
+ *   PDFTOTEXT_BIN, EXPORT_JSON_PATH, TRANSLATION_CACHE_PATH, DRY_RUN=1
+ *   TRANSLATION_PROVIDER=groq|openrouter|local
+ *   GROQ_TEXT_MODEL, OPENROUTER_TEXT_MODEL
+ *   SEED_LEVELS=1,2,3,4,5,6          (comma-separated HSK levels; default all)
+ *   SEED_THEMATIC=1                   (also seed thematic courses; default 0)
  */
 
+import fs from 'fs';
 import https from 'https';
+import path from 'path';
+import { execFileSync } from 'child_process';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ENV = process['env'];
+const HOME_DIR = ENV['HOME'] || '/Users/lequoctrung';
+const SUPABASE_URL = ENV['NEXT_PUBLIC_SUPABASE_URL'];
+const SERVICE_KEY = ENV['SUPABASE_SERVICE_ROLE_KEY'];
+const GROQ_API_KEY = ENV['GROQ_API_KEY'];
+const OPENROUTER_API_KEY = ENV['OPENROUTER_API_KEY'];
+const PDFTOTEXT_BIN = ENV['PDFTOTEXT_BIN'] || 'pdftotext';
+const GROQ_TEXT_MODEL = ENV['GROQ_TEXT_MODEL'] || 'llama-3.3-70b-versatile';
+const OPENROUTER_TEXT_MODEL = ENV['OPENROUTER_TEXT_MODEL'] || 'deepseek/deepseek-chat';
+const DRY_RUN = ENV['DRY_RUN'] === '1' || ENV['DRY_RUN'] === 'true';
+const EXPORT_JSON_PATH = ENV['EXPORT_JSON_PATH'];
+const TRANSLATION_CACHE_PATH = ENV['TRANSLATION_CACHE_PATH'] || path.join('/tmp', 'hsk-vietnamese-translations-cache.json');
+const REPLACE_HSK_WORDS = ENV['REPLACE_HSK_WORDS'] !== '0';
+const USE_OPENROUTER_TRANSLATION = ENV['USE_OPENROUTER_TRANSLATION'] === '1' || ENV['USE_OPENROUTER_TRANSLATION'] === 'true';
+const TRANSLATION_PROVIDER = ENV['TRANSLATION_PROVIDER']
+  || (USE_OPENROUTER_TRANSLATION ? 'openrouter' : (GROQ_API_KEY ? 'groq' : 'local'));
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error('Missing env vars. Run with: node --env-file=.env.local scripts/seed-public-courses.mjs');
+const PDF_PATHS = {
+  1: ENV['HSK1_PDF_PATH'] || path.join(HOME_DIR, 'Downloads/New-HSK-Vocabulary-Level-1.pdf'),
+  2: ENV['HSK2_PDF_PATH'] || path.join(HOME_DIR, 'Downloads/New-HSK-Vocabulary-Level-2.pdf'),
+  3: ENV['HSK3_PDF_PATH'] || path.join(HOME_DIR, 'Downloads/New-HSK-Vocabulary-Level-3.pdf'),
+  4: ENV['HSK4_PDF_PATH'] || path.join(HOME_DIR, 'Downloads/New-HSK-Vocabulary-Level-4.pdf'),
+  5: ENV['HSK5_PDF_PATH'] || path.join(HOME_DIR, 'Downloads/New-HSK-Vocabulary-Level-5.pdf'),
+  6: ENV['HSK6_PDF_PATH'] || path.join(HOME_DIR, 'Downloads/New-HSK-Vocabulary-Level-6.pdf'),
+};
+
+const COURSE_META = {
+  1: {
+    name: 'HSK 1',
+    name_vi: 'HSK 1',
+    description: 'New HSK Level 1 vocabulary for beginner Mandarin learners.',
+    description_vi: 'Từ vựng New HSK cấp 1 cho người mới học tiếng Trung.',
+  },
+  2: {
+    name: 'HSK 2',
+    name_vi: 'HSK 2',
+    description: 'New HSK Level 2 vocabulary for elementary Mandarin learners.',
+    description_vi: 'Từ vựng New HSK cấp 2 cho người học tiếng Trung sơ cấp.',
+  },
+  3: {
+    name: 'HSK 3',
+    name_vi: 'HSK 3',
+    description: 'New HSK Level 3 vocabulary for lower-intermediate Mandarin learners.',
+    description_vi: 'Từ vựng New HSK cấp 3 cho người học tiếng Trung tiền trung cấp.',
+  },
+  4: {
+    name: 'HSK 4',
+    name_vi: 'HSK 4',
+    description: 'New HSK Level 4 vocabulary for intermediate Mandarin learners.',
+    description_vi: 'Từ vựng New HSK cấp 4 cho người học tiếng Trung trung cấp.',
+  },
+  5: {
+    name: 'HSK 5',
+    name_vi: 'HSK 5',
+    description: 'New HSK Level 5 vocabulary for upper-intermediate Mandarin learners.',
+    description_vi: 'Từ vựng New HSK cấp 5 cho người học tiếng Trung trung cao cấp.',
+  },
+  6: {
+    name: 'HSK 6',
+    name_vi: 'HSK 6',
+    description: 'New HSK Level 6 vocabulary for advanced Mandarin learners.',
+    description_vi: 'Từ vựng New HSK cấp 6 cho người học tiếng Trung nâng cao.',
+  },
+};
+
+const EXPECTED_COUNTS = { 1: 300, 2: 200, 3: 500, 4: 1000, 5: 1300, 6: 2500 };
+
+// ---------------------------------------------------------------------------
+// Thematic courses — no PDFs; words are hardcoded with bilingual content.
+// ---------------------------------------------------------------------------
+const THEMATIC_COURSES = [
+  {
+    name: 'Numbers & Time',
+    name_vi: 'Số & Thời gian',
+    description: 'Essential numbers and time expressions for everyday Mandarin conversations.',
+    description_vi: 'Số đếm và cách diễn đạt thời gian thiết yếu trong giao tiếp hàng ngày.',
+    difficulty_level: 1,
+    words: [
+      { word_zh: '零', word_pinyin: 'líng', word_en: 'zero', word_vi: 'không; số không' },
+      { word_zh: '一', word_pinyin: 'yī', word_en: 'one', word_vi: 'một' },
+      { word_zh: '二', word_pinyin: 'èr', word_en: 'two', word_vi: 'hai' },
+      { word_zh: '三', word_pinyin: 'sān', word_en: 'three', word_vi: 'ba' },
+      { word_zh: '四', word_pinyin: 'sì', word_en: 'four', word_vi: 'bốn' },
+      { word_zh: '五', word_pinyin: 'wǔ', word_en: 'five', word_vi: 'năm' },
+      { word_zh: '六', word_pinyin: 'liù', word_en: 'six', word_vi: 'sáu' },
+      { word_zh: '七', word_pinyin: 'qī', word_en: 'seven', word_vi: 'bảy' },
+      { word_zh: '八', word_pinyin: 'bā', word_en: 'eight', word_vi: 'tám' },
+      { word_zh: '九', word_pinyin: 'jiǔ', word_en: 'nine', word_vi: 'chín' },
+      { word_zh: '十', word_pinyin: 'shí', word_en: 'ten', word_vi: 'mười' },
+      { word_zh: '百', word_pinyin: 'bǎi', word_en: 'hundred', word_vi: 'một trăm' },
+      { word_zh: '千', word_pinyin: 'qiān', word_en: 'thousand', word_vi: 'một nghìn' },
+      { word_zh: '万', word_pinyin: 'wàn', word_en: 'ten thousand', word_vi: 'mười nghìn' },
+      { word_zh: '亿', word_pinyin: 'yì', word_en: 'hundred million', word_vi: 'một trăm triệu' },
+      { word_zh: '半', word_pinyin: 'bàn', word_en: 'half', word_vi: 'nửa; một nửa' },
+      { word_zh: '第一', word_pinyin: 'dì yī', word_en: 'first', word_vi: 'thứ nhất' },
+      { word_zh: '第二', word_pinyin: 'dì èr', word_en: 'second', word_vi: 'thứ hai' },
+      { word_zh: '第三', word_pinyin: 'dì sān', word_en: 'third', word_vi: 'thứ ba' },
+      { word_zh: '年', word_pinyin: 'nián', word_en: 'year', word_vi: 'năm' },
+      { word_zh: '月', word_pinyin: 'yuè', word_en: 'month', word_vi: 'tháng' },
+      { word_zh: '日', word_pinyin: 'rì', word_en: 'day (of month)', word_vi: 'ngày' },
+      { word_zh: '号', word_pinyin: 'hào', word_en: 'day (spoken date)', word_vi: 'ngày (nói)' },
+      { word_zh: '星期', word_pinyin: 'xīngqī', word_en: 'week; weekday', word_vi: 'tuần; ngày trong tuần' },
+      { word_zh: '周', word_pinyin: 'zhōu', word_en: 'week', word_vi: 'tuần' },
+      { word_zh: '时', word_pinyin: 'shí', word_en: "o'clock; hour", word_vi: 'giờ; tiếng' },
+      { word_zh: '分', word_pinyin: 'fēn', word_en: 'minute', word_vi: 'phút' },
+      { word_zh: '秒', word_pinyin: 'miǎo', word_en: 'second', word_vi: 'giây' },
+      { word_zh: '小时', word_pinyin: 'xiǎoshí', word_en: 'hour', word_vi: 'tiếng đồng hồ' },
+      { word_zh: '分钟', word_pinyin: 'fēnzhōng', word_en: 'minute', word_vi: 'phút' },
+      { word_zh: '今天', word_pinyin: 'jīntiān', word_en: 'today', word_vi: 'hôm nay' },
+      { word_zh: '明天', word_pinyin: 'míngtiān', word_en: 'tomorrow', word_vi: 'ngày mai' },
+      { word_zh: '昨天', word_pinyin: 'zuótiān', word_en: 'yesterday', word_vi: 'hôm qua' },
+      { word_zh: '后天', word_pinyin: 'hòutiān', word_en: 'day after tomorrow', word_vi: 'ngày kia' },
+      { word_zh: '前天', word_pinyin: 'qiántiān', word_en: 'day before yesterday', word_vi: 'hôm kia' },
+      { word_zh: '早上', word_pinyin: 'zǎoshang', word_en: 'early morning', word_vi: 'buổi sáng sớm' },
+      { word_zh: '上午', word_pinyin: 'shàngwǔ', word_en: 'morning (a.m.)', word_vi: 'buổi sáng' },
+      { word_zh: '中午', word_pinyin: 'zhōngwǔ', word_en: 'noon', word_vi: 'buổi trưa' },
+      { word_zh: '下午', word_pinyin: 'xiàwǔ', word_en: 'afternoon', word_vi: 'buổi chiều' },
+      { word_zh: '晚上', word_pinyin: 'wǎnshang', word_en: 'evening; night', word_vi: 'buổi tối' },
+      { word_zh: '夜晚', word_pinyin: 'yèwǎn', word_en: 'night', word_vi: 'ban đêm' },
+      { word_zh: '现在', word_pinyin: 'xiànzài', word_en: 'now', word_vi: 'bây giờ; hiện tại' },
+      { word_zh: '以前', word_pinyin: 'yǐqián', word_en: 'before; in the past', word_vi: 'trước đây; trước kia' },
+      { word_zh: '以后', word_pinyin: 'yǐhòu', word_en: 'after; in the future', word_vi: 'sau này; sau đó' },
+      { word_zh: '刚才', word_pinyin: 'gāngcái', word_en: 'just now; a moment ago', word_vi: 'vừa xong; vừa rồi' },
+      { word_zh: '马上', word_pinyin: 'mǎshàng', word_en: 'immediately; right away', word_vi: 'ngay lập tức; ngay bây giờ' },
+      { word_zh: '春天', word_pinyin: 'chūntiān', word_en: 'spring', word_vi: 'mùa xuân' },
+      { word_zh: '夏天', word_pinyin: 'xiàtiān', word_en: 'summer', word_vi: 'mùa hè' },
+      { word_zh: '秋天', word_pinyin: 'qiūtiān', word_en: 'autumn; fall', word_vi: 'mùa thu' },
+      { word_zh: '冬天', word_pinyin: 'dōngtiān', word_en: 'winter', word_vi: 'mùa đông' },
+    ],
+  },
+  {
+    name: 'Colors & Shapes',
+    name_vi: 'Màu sắc & Hình dạng',
+    description: 'Learn Chinese colors and geometric shapes with vivid vocabulary.',
+    description_vi: 'Học màu sắc và các hình học trong tiếng Trung một cách sinh động.',
+    difficulty_level: 1,
+    words: [
+      { word_zh: '颜色', word_pinyin: 'yánsè', word_en: 'color; colour', word_vi: 'màu sắc' },
+      { word_zh: '红色', word_pinyin: 'hóngsè', word_en: 'red', word_vi: 'màu đỏ' },
+      { word_zh: '橙色', word_pinyin: 'chéngsè', word_en: 'orange', word_vi: 'màu cam' },
+      { word_zh: '黄色', word_pinyin: 'huángsè', word_en: 'yellow', word_vi: 'màu vàng' },
+      { word_zh: '绿色', word_pinyin: 'lǜsè', word_en: 'green', word_vi: 'màu xanh lá' },
+      { word_zh: '蓝色', word_pinyin: 'lánsè', word_en: 'blue', word_vi: 'màu xanh lam' },
+      { word_zh: '紫色', word_pinyin: 'zǐsè', word_en: 'purple; violet', word_vi: 'màu tím' },
+      { word_zh: '白色', word_pinyin: 'báisè', word_en: 'white', word_vi: 'màu trắng' },
+      { word_zh: '黑色', word_pinyin: 'hēisè', word_en: 'black', word_vi: 'màu đen' },
+      { word_zh: '灰色', word_pinyin: 'huīsè', word_en: 'grey; gray', word_vi: 'màu xám' },
+      { word_zh: '粉色', word_pinyin: 'fěnsè', word_en: 'pink', word_vi: 'màu hồng' },
+      { word_zh: '棕色', word_pinyin: 'zōngsè', word_en: 'brown', word_vi: 'màu nâu' },
+      { word_zh: '金色', word_pinyin: 'jīnsè', word_en: 'gold; golden', word_vi: 'màu vàng kim' },
+      { word_zh: '银色', word_pinyin: 'yínsè', word_en: 'silver', word_vi: 'màu bạc' },
+      { word_zh: '深', word_pinyin: 'shēn', word_en: 'deep; dark (color)', word_vi: 'đậm; tối (màu)' },
+      { word_zh: '浅', word_pinyin: 'qiǎn', word_en: 'light; pale (color)', word_vi: 'nhạt; sáng (màu)' },
+      { word_zh: '亮', word_pinyin: 'liàng', word_en: 'bright; shiny', word_vi: 'sáng; bóng' },
+      { word_zh: '形状', word_pinyin: 'xíngzhuàng', word_en: 'shape; form', word_vi: 'hình dạng' },
+      { word_zh: '圆形', word_pinyin: 'yuánxíng', word_en: 'circle', word_vi: 'hình tròn' },
+      { word_zh: '正方形', word_pinyin: 'zhèngfāngxíng', word_en: 'square', word_vi: 'hình vuông' },
+      { word_zh: '长方形', word_pinyin: 'chángfāngxíng', word_en: 'rectangle', word_vi: 'hình chữ nhật' },
+      { word_zh: '三角形', word_pinyin: 'sānjiǎoxíng', word_en: 'triangle', word_vi: 'hình tam giác' },
+      { word_zh: '椭圆形', word_pinyin: 'tuǒyuánxíng', word_en: 'oval; ellipse', word_vi: 'hình bầu dục' },
+      { word_zh: '菱形', word_pinyin: 'língxíng', word_en: 'diamond; rhombus', word_vi: 'hình thoi' },
+      { word_zh: '五角形', word_pinyin: 'wǔjiǎoxíng', word_en: 'pentagon', word_vi: 'hình ngũ giác' },
+      { word_zh: '六边形', word_pinyin: 'liùbiānxíng', word_en: 'hexagon', word_vi: 'hình lục giác' },
+      { word_zh: '星形', word_pinyin: 'xīngxíng', word_en: 'star shape', word_vi: 'hình ngôi sao' },
+      { word_zh: '心形', word_pinyin: 'xīnxíng', word_en: 'heart shape', word_vi: 'hình trái tim' },
+      { word_zh: '大', word_pinyin: 'dà', word_en: 'big; large', word_vi: 'lớn; to' },
+      { word_zh: '小', word_pinyin: 'xiǎo', word_en: 'small; little', word_vi: 'nhỏ; bé' },
+      { word_zh: '长', word_pinyin: 'cháng', word_en: 'long', word_vi: 'dài' },
+      { word_zh: '短', word_pinyin: 'duǎn', word_en: 'short; brief', word_vi: 'ngắn' },
+      { word_zh: '高', word_pinyin: 'gāo', word_en: 'tall; high', word_vi: 'cao' },
+      { word_zh: '低', word_pinyin: 'dī', word_en: 'low; short (height)', word_vi: 'thấp' },
+      { word_zh: '宽', word_pinyin: 'kuān', word_en: 'wide; broad', word_vi: 'rộng' },
+      { word_zh: '窄', word_pinyin: 'zhǎi', word_en: 'narrow', word_vi: 'hẹp' },
+      { word_zh: '厚', word_pinyin: 'hòu', word_en: 'thick', word_vi: 'dày' },
+      { word_zh: '薄', word_pinyin: 'báo', word_en: 'thin; slim', word_vi: 'mỏng' },
+    ],
+  },
+  {
+    name: 'Kitchen & Food',
+    name_vi: 'Bếp & Thức ăn',
+    description: 'Essential food and kitchen vocabulary for everyday life in China.',
+    description_vi: 'Từ vựng thức ăn và nhà bếp thiết yếu cho cuộc sống hàng ngày.',
+    difficulty_level: 1,
+    words: [
+      { word_zh: '厨房', word_pinyin: 'chúfáng', word_en: 'kitchen', word_vi: 'nhà bếp; bếp' },
+      { word_zh: '餐厅', word_pinyin: 'cāntīng', word_en: 'restaurant; dining room', word_vi: 'nhà hàng; phòng ăn' },
+      { word_zh: '锅', word_pinyin: 'guō', word_en: 'pot; wok', word_vi: 'nồi; chảo' },
+      { word_zh: '碗', word_pinyin: 'wǎn', word_en: 'bowl', word_vi: 'bát; chén' },
+      { word_zh: '盘子', word_pinyin: 'pánzi', word_en: 'plate; dish', word_vi: 'đĩa' },
+      { word_zh: '筷子', word_pinyin: 'kuàizi', word_en: 'chopsticks', word_vi: 'đũa' },
+      { word_zh: '勺子', word_pinyin: 'sháozi', word_en: 'spoon; ladle', word_vi: 'thìa; muỗng' },
+      { word_zh: '刀', word_pinyin: 'dāo', word_en: 'knife', word_vi: 'dao' },
+      { word_zh: '叉子', word_pinyin: 'chāzi', word_en: 'fork', word_vi: 'nĩa' },
+      { word_zh: '菜板', word_pinyin: 'càibǎn', word_en: 'chopping board', word_vi: 'thớt' },
+      { word_zh: '冰箱', word_pinyin: 'bīngxiāng', word_en: 'refrigerator; fridge', word_vi: 'tủ lạnh' },
+      { word_zh: '微波炉', word_pinyin: 'wēibōlú', word_en: 'microwave oven', word_vi: 'lò vi sóng' },
+      { word_zh: '烤箱', word_pinyin: 'kǎoxiāng', word_en: 'oven', word_vi: 'lò nướng' },
+      { word_zh: '炉子', word_pinyin: 'lúzi', word_en: 'stove; cooker', word_vi: 'bếp lò' },
+      { word_zh: '杯子', word_pinyin: 'bēizi', word_en: 'cup; glass', word_vi: 'cốc; ly' },
+      { word_zh: '水', word_pinyin: 'shuǐ', word_en: 'water', word_vi: 'nước' },
+      { word_zh: '米饭', word_pinyin: 'mǐfàn', word_en: 'cooked rice', word_vi: 'cơm' },
+      { word_zh: '面条', word_pinyin: 'miàntiáo', word_en: 'noodles', word_vi: 'mì; bún' },
+      { word_zh: '包子', word_pinyin: 'bāozi', word_en: 'steamed stuffed bun', word_vi: 'bánh bao' },
+      { word_zh: '饺子', word_pinyin: 'jiǎozi', word_en: 'dumpling', word_vi: 'sủi cảo; bánh vằn thắn' },
+      { word_zh: '馒头', word_pinyin: 'mántou', word_en: 'steamed bread', word_vi: 'bánh bao không nhân' },
+      { word_zh: '汤', word_pinyin: 'tāng', word_en: 'soup; broth', word_vi: 'súp; canh' },
+      { word_zh: '菜', word_pinyin: 'cài', word_en: 'vegetable; dish', word_vi: 'rau; món ăn' },
+      { word_zh: '肉', word_pinyin: 'ròu', word_en: 'meat', word_vi: 'thịt' },
+      { word_zh: '鸡肉', word_pinyin: 'jīròu', word_en: 'chicken (meat)', word_vi: 'thịt gà' },
+      { word_zh: '猪肉', word_pinyin: 'zhūròu', word_en: 'pork', word_vi: 'thịt lợn; thịt heo' },
+      { word_zh: '牛肉', word_pinyin: 'niúròu', word_en: 'beef', word_vi: 'thịt bò' },
+      { word_zh: '羊肉', word_pinyin: 'yángròu', word_en: 'mutton; lamb', word_vi: 'thịt cừu; thịt dê' },
+      { word_zh: '鱼', word_pinyin: 'yú', word_en: 'fish', word_vi: 'cá' },
+      { word_zh: '虾', word_pinyin: 'xiā', word_en: 'shrimp; prawn', word_vi: 'tôm' },
+      { word_zh: '鸡蛋', word_pinyin: 'jīdàn', word_en: 'egg', word_vi: 'trứng gà' },
+      { word_zh: '豆腐', word_pinyin: 'dòufu', word_en: 'tofu; bean curd', word_vi: 'đậu phụ' },
+      { word_zh: '蔬菜', word_pinyin: 'shūcài', word_en: 'vegetables', word_vi: 'rau củ' },
+      { word_zh: '水果', word_pinyin: 'shuǐguǒ', word_en: 'fruit', word_vi: 'trái cây; hoa quả' },
+      { word_zh: '苹果', word_pinyin: 'píngguǒ', word_en: 'apple', word_vi: 'táo' },
+      { word_zh: '香蕉', word_pinyin: 'xiāngjiāo', word_en: 'banana', word_vi: 'chuối' },
+      { word_zh: '橙子', word_pinyin: 'chéngzi', word_en: 'orange', word_vi: 'cam' },
+      { word_zh: '葡萄', word_pinyin: 'pútao', word_en: 'grape', word_vi: 'nho' },
+      { word_zh: '西瓜', word_pinyin: 'xīguā', word_en: 'watermelon', word_vi: 'dưa hấu' },
+      { word_zh: '草莓', word_pinyin: 'cǎoméi', word_en: 'strawberry', word_vi: 'dâu tây' },
+      { word_zh: '油', word_pinyin: 'yóu', word_en: 'oil', word_vi: 'dầu ăn' },
+      { word_zh: '盐', word_pinyin: 'yán', word_en: 'salt', word_vi: 'muối' },
+      { word_zh: '糖', word_pinyin: 'táng', word_en: 'sugar; candy', word_vi: 'đường; kẹo' },
+      { word_zh: '醋', word_pinyin: 'cù', word_en: 'vinegar', word_vi: 'giấm' },
+      { word_zh: '酱油', word_pinyin: 'jiàngyóu', word_en: 'soy sauce', word_vi: 'nước tương' },
+      { word_zh: '辣椒', word_pinyin: 'làjiāo', word_en: 'chilli pepper', word_vi: 'ớt' },
+      { word_zh: '大蒜', word_pinyin: 'dàsuàn', word_en: 'garlic', word_vi: 'tỏi' },
+      { word_zh: '姜', word_pinyin: 'jiāng', word_en: 'ginger', word_vi: 'gừng' },
+      { word_zh: '煮', word_pinyin: 'zhǔ', word_en: 'to boil; to cook', word_vi: 'luộc; nấu' },
+      { word_zh: '炒', word_pinyin: 'chǎo', word_en: 'to stir-fry', word_vi: 'xào' },
+      { word_zh: '烤', word_pinyin: 'kǎo', word_en: 'to roast; to grill; to bake', word_vi: 'nướng' },
+      { word_zh: '蒸', word_pinyin: 'zhēng', word_en: 'to steam', word_vi: 'hấp' },
+      { word_zh: '炸', word_pinyin: 'zhá', word_en: 'to deep-fry', word_vi: 'chiên ngập dầu' },
+      { word_zh: '切', word_pinyin: 'qiē', word_en: 'to cut; to slice', word_vi: 'cắt; thái' },
+      { word_zh: '好吃', word_pinyin: 'hǎochī', word_en: 'delicious; tasty', word_vi: 'ngon; ngon miệng' },
+      { word_zh: '甜', word_pinyin: 'tián', word_en: 'sweet', word_vi: 'ngọt' },
+      { word_zh: '咸', word_pinyin: 'xián', word_en: 'salty', word_vi: 'mặn' },
+      { word_zh: '辣', word_pinyin: 'là', word_en: 'spicy; hot', word_vi: 'cay' },
+      { word_zh: '酸', word_pinyin: 'suān', word_en: 'sour', word_vi: 'chua' },
+      { word_zh: '苦', word_pinyin: 'kǔ', word_en: 'bitter', word_vi: 'đắng' },
+    ],
+  },
+];
+
+if (!DRY_RUN && !EXPORT_JSON_PATH && (!SUPABASE_URL || !SERVICE_KEY)) {
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
   process.exit(1);
 }
 
-const SUPABASE_HOST = new URL(SUPABASE_URL).hostname;
+const SUPABASE_HOST = SUPABASE_URL ? new URL(SUPABASE_URL).hostname : '';
 
-function req(method, path, body, prefer = 'return=representation') {
+function wordKey(word) {
+  return `${word.word_zh}|${word.word_pinyin}`;
+}
+
+function req(method, requestPath, body, prefer = 'return=representation') {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
-    const opts = {
-      hostname: SUPABASE_HOST, port: 443,
-      path: '/rest/v1' + path, method,
+    const r = https.request({
+      hostname: SUPABASE_HOST,
+      port: 443,
+      path: `/rest/v1${requestPath}`,
+      method,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
         apikey: SERVICE_KEY,
         Prefer: prefer,
         ...(data ? { 'Content-Length': Buffer.byteLength(data) } : {}),
       },
-    };
-    const r = https.request(opts, (res) => {
+    }, (res) => {
       let buf = '';
-      res.on('data', (c) => { buf += c; });
+      res.on('data', (chunk) => { buf += chunk; });
       res.on('end', () => resolve({ status: res.statusCode, body: buf }));
     });
     r.on('error', reject);
@@ -41,381 +307,769 @@ function req(method, path, body, prefer = 'return=representation') {
   });
 }
 
-// ─── Course definitions ───────────────────────────────────────────────────────
+function readTextFromPdf(pdfPath) {
+  if (!fs.existsSync(pdfPath)) throw new Error(`PDF not found: ${pdfPath}`);
+  return execFileSync(PDFTOTEXT_BIN, ['-layout', pdfPath, '-'], {
+    encoding: 'utf8',
+    maxBuffer: 128 * 1024 * 1024,
+  });
+}
 
-const COURSES = [
-  {
-    name: 'HSK 1 — Absolute Beginner',
-    description: 'Master 150 essential words for daily greetings, numbers, family, and basic needs. The perfect starting point for Mandarin learners.',
-    difficulty_level: 1,
-    words: [
-      { word_zh: '你', word_pinyin: 'nǐ', word_en: 'you', example_sentence: '你好吗？' },
-      { word_zh: '好', word_pinyin: 'hǎo', word_en: 'good; well', example_sentence: '今天天气很好。' },
-      { word_zh: '我', word_pinyin: 'wǒ', word_en: 'I; me', example_sentence: '我是学生。' },
-      { word_zh: '是', word_pinyin: 'shì', word_en: 'to be; am/is/are', example_sentence: '他是老师。' },
-      { word_zh: '不', word_pinyin: 'bù', word_en: 'not; no', example_sentence: '我不喜欢喝酒。' },
-      { word_zh: '的', word_pinyin: 'de', word_en: 'possessive particle', example_sentence: '这是我的书。' },
-      { word_zh: '他', word_pinyin: 'tā', word_en: 'he; him', example_sentence: '他是我的朋友。' },
-      { word_zh: '她', word_pinyin: 'tā', word_en: 'she; her', example_sentence: '她很漂亮。' },
-      { word_zh: '在', word_pinyin: 'zài', word_en: 'at; in; on', example_sentence: '他在图书馆学习。' },
-      { word_zh: '人', word_pinyin: 'rén', word_en: 'person; people', example_sentence: '这里有很多人。' },
-      { word_zh: '大', word_pinyin: 'dà', word_en: 'big; large', example_sentence: '这个城市很大。' },
-      { word_zh: '这', word_pinyin: 'zhè', word_en: 'this', example_sentence: '这是什么？' },
-      { word_zh: '学', word_pinyin: 'xué', word_en: 'to study; to learn', example_sentence: '我在学中文。' },
-      { word_zh: '什么', word_pinyin: 'shénme', word_en: 'what', example_sentence: '你叫什么名字？' },
-      { word_zh: '一', word_pinyin: 'yī', word_en: 'one', example_sentence: '我有一个姐姐。' },
-      { word_zh: '来', word_pinyin: 'lái', word_en: 'to come', example_sentence: '他明天来这里。' },
-      { word_zh: '上', word_pinyin: 'shàng', word_en: 'up; above; on', example_sentence: '书在桌子上。' },
-      { word_zh: '国', word_pinyin: 'guó', word_en: 'country; nation', example_sentence: '中国是一个大国。' },
-      { word_zh: '到', word_pinyin: 'dào', word_en: 'to arrive; to reach', example_sentence: '我到家了。' },
-      { word_zh: '出', word_pinyin: 'chū', word_en: 'to go out; out', example_sentence: '请出去！' },
-      { word_zh: '说', word_pinyin: 'shuō', word_en: 'to say; to speak', example_sentence: '他说中文说得很好。' },
-      { word_zh: '时', word_pinyin: 'shí', word_en: 'time; hour', example_sentence: '现在几时了？' },
-      { word_zh: '没有', word_pinyin: 'méiyǒu', word_en: "don't have; there isn't", example_sentence: '我没有钱。' },
-      { word_zh: '会', word_pinyin: 'huì', word_en: 'can; will; to know how', example_sentence: '我会说英语。' },
-      { word_zh: '工作', word_pinyin: 'gōngzuò', word_en: 'to work; work; job', example_sentence: '我在医院工作。' },
-      { word_zh: '朋友', word_pinyin: 'péngyǒu', word_en: 'friend', example_sentence: '他是我的好朋友。' },
-      { word_zh: '吃饭', word_pinyin: 'chīfàn', word_en: 'to eat a meal', example_sentence: '我们去吃饭吧。' },
-      { word_zh: '学生', word_pinyin: 'xuéshēng', word_en: 'student', example_sentence: '她是大学生。' },
-      { word_zh: '老师', word_pinyin: 'lǎoshī', word_en: 'teacher', example_sentence: '我的老师很耐心。' },
-      { word_zh: '中国', word_pinyin: 'zhōngguó', word_en: 'China', example_sentence: '我想去中国旅行。' },
-    ],
-  },
-  {
-    name: 'HSK 2 — Elementary',
-    description: 'Build fluency with 300 words covering daily routines, family, shopping, time expressions, and simple conversations.',
-    difficulty_level: 2,
-    words: [
-      { word_zh: '因为', word_pinyin: 'yīnwèi', word_en: 'because', example_sentence: '因为下雨，我没有出去。' },
-      { word_zh: '所以', word_pinyin: 'suǒyǐ', word_en: 'therefore; so', example_sentence: '我累了，所以早点睡。' },
-      { word_zh: '但是', word_pinyin: 'dànshì', word_en: 'but; however', example_sentence: '他很聪明，但是不努力。' },
-      { word_zh: '已经', word_pinyin: 'yǐjīng', word_en: 'already', example_sentence: '我已经吃饭了。' },
-      { word_zh: '可能', word_pinyin: 'kěnéng', word_en: 'maybe; possibly', example_sentence: '明天可能会下雨。' },
-      { word_zh: '准备', word_pinyin: 'zhǔnbèi', word_en: 'to prepare; ready', example_sentence: '我已经准备好了。' },
-      { word_zh: '觉得', word_pinyin: 'juéde', word_en: 'to feel; to think', example_sentence: '我觉得这道菜很好吃。' },
-      { word_zh: '告诉', word_pinyin: 'gàosù', word_en: 'to tell', example_sentence: '请告诉我你的地址。' },
-      { word_zh: '希望', word_pinyin: 'xīwàng', word_en: 'to hope; hope', example_sentence: '我希望你身体健康。' },
-      { word_zh: '开始', word_pinyin: 'kāishǐ', word_en: 'to start; beginning', example_sentence: '课程明天开始。' },
-      { word_zh: '帮助', word_pinyin: 'bāngzhù', word_en: 'to help; help', example_sentence: '谢谢你帮助我。' },
-      { word_zh: '问题', word_pinyin: 'wèntí', word_en: 'question; problem', example_sentence: '我有一个问题。' },
-      { word_zh: '时间', word_pinyin: 'shíjiān', word_en: 'time', example_sentence: '我没有时间。' },
-      { word_zh: '非常', word_pinyin: 'fēicháng', word_en: 'very; extremely', example_sentence: '他非常聪明。' },
-      { word_zh: '公司', word_pinyin: 'gōngsī', word_en: 'company; firm', example_sentence: '我在这家公司工作了三年。' },
-      { word_zh: '生日', word_pinyin: 'shēngrì', word_en: 'birthday', example_sentence: '今天是我的生日。' },
-      { word_zh: '快乐', word_pinyin: 'kuàilè', word_en: 'happy; joyful', example_sentence: '祝你生日快乐！' },
-      { word_zh: '身体', word_pinyin: 'shēntǐ', word_en: 'body; health', example_sentence: '你要注意身体。' },
-      { word_zh: '知道', word_pinyin: 'zhīdào', word_en: 'to know', example_sentence: '我不知道他去哪里了。' },
-      { word_zh: '认为', word_pinyin: 'rènwéi', word_en: 'to think; to believe', example_sentence: '我认为这个方法很好。' },
-      { word_zh: '一起', word_pinyin: 'yìqǐ', word_en: 'together', example_sentence: '我们一起去吃饭吧。' },
-      { word_zh: '高兴', word_pinyin: 'gāoxìng', word_en: 'happy; glad', example_sentence: '见到你我很高兴。' },
-      { word_zh: '漂亮', word_pinyin: 'piàoliang', word_en: 'beautiful; pretty', example_sentence: '这件衣服很漂亮。' },
-      { word_zh: '认识', word_pinyin: 'rènshi', word_en: 'to know; to recognize', example_sentence: '很高兴认识你。' },
-      { word_zh: '喜欢', word_pinyin: 'xǐhuān', word_en: 'to like', example_sentence: '我喜欢学中文。' },
-      { word_zh: '明白', word_pinyin: 'míngbai', word_en: 'to understand; clear', example_sentence: '我明白你的意思了。' },
-      { word_zh: '机会', word_pinyin: 'jīhuì', word_en: 'opportunity; chance', example_sentence: '这是一个好机会。' },
-      { word_zh: '方法', word_pinyin: 'fāngfǎ', word_en: 'method; way', example_sentence: '这个方法很有效。' },
-      { word_zh: '以后', word_pinyin: 'yǐhòu', word_en: 'after; afterwards', example_sentence: '以后我们常联系。' },
-      { word_zh: '以前', word_pinyin: 'yǐqián', word_en: 'before; previously', example_sentence: '以前我住在上海。' },
-    ],
-  },
-  {
-    name: 'HSK 3 — Intermediate',
-    description: 'Expand to 600 words to discuss society, culture, education, environment, and express opinions with nuance.',
-    difficulty_level: 3,
-    words: [
-      { word_zh: '环境', word_pinyin: 'huánjìng', word_en: 'environment; surroundings', example_sentence: '保护环境是我们的责任。' },
-      { word_zh: '经验', word_pinyin: 'jīngyàn', word_en: 'experience', example_sentence: '他有丰富的工作经验。' },
-      { word_zh: '决定', word_pinyin: 'juédìng', word_en: 'to decide; decision', example_sentence: '我决定去中国留学。' },
-      { word_zh: '选择', word_pinyin: 'xuǎnzé', word_en: 'to choose; choice', example_sentence: '这是一个艰难的选择。' },
-      { word_zh: '关系', word_pinyin: 'guānxì', word_en: 'relationship; connection', example_sentence: '我们的关系很好。' },
-      { word_zh: '解决', word_pinyin: 'jiějué', word_en: 'to solve; to resolve', example_sentence: '我们需要解决这个问题。' },
-      { word_zh: '发展', word_pinyin: 'fāzhǎn', word_en: 'to develop; development', example_sentence: '城市发展越来越快。' },
-      { word_zh: '影响', word_pinyin: 'yǐngxiǎng', word_en: 'to influence; influence', example_sentence: '天气对心情有影响。' },
-      { word_zh: '感谢', word_pinyin: 'gǎnxiè', word_en: 'to be grateful; thanks', example_sentence: '我非常感谢你的帮助。' },
-      { word_zh: '成功', word_pinyin: 'chénggōng', word_en: 'to succeed; success', example_sentence: '努力工作是成功的关键。' },
-      { word_zh: '社会', word_pinyin: 'shèhuì', word_en: 'society', example_sentence: '我们都是社会的一员。' },
-      { word_zh: '文化', word_pinyin: 'wénhuà', word_en: 'culture', example_sentence: '中国文化历史悠久。' },
-      { word_zh: '教育', word_pinyin: 'jiàoyù', word_en: 'education', example_sentence: '教育是国家发展的根本。' },
-      { word_zh: '健康', word_pinyin: 'jiànkāng', word_en: 'health; healthy', example_sentence: '多运动对健康很有好处。' },
-      { word_zh: '努力', word_pinyin: 'nǔlì', word_en: 'to work hard; effort', example_sentence: '他学习非常努力。' },
-      { word_zh: '态度', word_pinyin: 'tàidu', word_en: 'attitude; manner', example_sentence: '他对工作的态度很认真。' },
-      { word_zh: '情况', word_pinyin: 'qíngkuàng', word_en: 'situation; condition', example_sentence: '请介绍一下情况。' },
-      { word_zh: '质量', word_pinyin: 'zhìliàng', word_en: 'quality', example_sentence: '这个产品质量很高。' },
-      { word_zh: '增加', word_pinyin: 'zēngjiā', word_en: 'to increase; to add', example_sentence: '收入每年都在增加。' },
-      { word_zh: '表示', word_pinyin: 'biǎoshì', word_en: 'to express; to indicate', example_sentence: '他表示很愿意帮忙。' },
-      { word_zh: '完成', word_pinyin: 'wánchéng', word_en: 'to complete; to finish', example_sentence: '我终于完成了任务。' },
-      { word_zh: '负责', word_pinyin: 'fùzé', word_en: 'responsible; to be in charge', example_sentence: '他负责这个项目。' },
-      { word_zh: '研究', word_pinyin: 'yánjiū', word_en: 'to research; research', example_sentence: '他在研究中国历史。' },
-      { word_zh: '提高', word_pinyin: 'tígāo', word_en: 'to improve; to raise', example_sentence: '我想提高我的中文水平。' },
-      { word_zh: '重要', word_pinyin: 'zhòngyào', word_en: 'important', example_sentence: '这是一个重要的问题。' },
-      { word_zh: '发现', word_pinyin: 'fāxiàn', word_en: 'to discover; to find', example_sentence: '我发现了一个有趣的现象。' },
-      { word_zh: '考虑', word_pinyin: 'kǎolǜ', word_en: 'to consider; to think about', example_sentence: '我需要好好考虑一下。' },
-      { word_zh: '联系', word_pinyin: 'liánxì', word_en: 'to contact; connection', example_sentence: '我们要保持联系。' },
-      { word_zh: '继续', word_pinyin: 'jìxù', word_en: 'to continue', example_sentence: '请继续说。' },
-      { word_zh: '产生', word_pinyin: 'chǎnshēng', word_en: 'to produce; to generate', example_sentence: '这件事产生了很大的影响。' },
-    ],
-  },
-  {
-    name: 'HSK 4 — Upper Intermediate',
-    description: 'Master 1,200 words to express complex opinions on science, technology, politics, and abstract concepts with confidence.',
-    difficulty_level: 4,
-    words: [
-      { word_zh: '传统', word_pinyin: 'chuántǒng', word_en: 'tradition; traditional', example_sentence: '春节是中国最重要的传统节日。' },
-      { word_zh: '政府', word_pinyin: 'zhèngfǔ', word_en: 'government', example_sentence: '政府正在制定新的经济政策。' },
-      { word_zh: '经济', word_pinyin: 'jīngjì', word_en: 'economy; economics', example_sentence: '全球经济正在逐步恢复。' },
-      { word_zh: '技术', word_pinyin: 'jìshù', word_en: 'technology; technique', example_sentence: '现代技术改变了我们的生活。' },
-      { word_zh: '科学', word_pinyin: 'kēxué', word_en: 'science', example_sentence: '科学的发展推动了社会进步。' },
-      { word_zh: '历史', word_pinyin: 'lìshǐ', word_en: 'history', example_sentence: '了解历史有助于我们理解现在。' },
-      { word_zh: '自然', word_pinyin: 'zìrán', word_en: 'nature; natural', example_sentence: '我们应该爱护大自然。' },
-      { word_zh: '文明', word_pinyin: 'wénmíng', word_en: 'civilization; civilized', example_sentence: '中华文明有五千年的历史。' },
-      { word_zh: '民主', word_pinyin: 'mínzhǔ', word_en: 'democracy; democratic', example_sentence: '民主是现代政治的基础。' },
-      { word_zh: '改革', word_pinyin: 'gǎigé', word_en: 'reform; to reform', example_sentence: '经济改革带来了很大变化。' },
-      { word_zh: '竞争', word_pinyin: 'jìngzhēng', word_en: 'competition; to compete', example_sentence: '市场竞争越来越激烈。' },
-      { word_zh: '资源', word_pinyin: 'zīyuán', word_en: 'resource; resources', example_sentence: '我们要合理利用自然资源。' },
-      { word_zh: '矛盾', word_pinyin: 'máodùn', word_en: 'contradiction; conflict', example_sentence: '这两个观点存在矛盾。' },
-      { word_zh: '现象', word_pinyin: 'xiànxiàng', word_en: 'phenomenon', example_sentence: '这是一个普遍的社会现象。' },
-      { word_zh: '原则', word_pinyin: 'yuánzé', word_en: 'principle', example_sentence: '我们要坚持公平的原则。' },
-      { word_zh: '实现', word_pinyin: 'shíxiàn', word_en: 'to realize; to achieve', example_sentence: '我实现了我的梦想。' },
-      { word_zh: '积累', word_pinyin: 'jīlěi', word_en: 'to accumulate; accumulation', example_sentence: '知识需要长期积累。' },
-      { word_zh: '承担', word_pinyin: 'chéngdān', word_en: 'to undertake; to bear', example_sentence: '你要承担后果。' },
-      { word_zh: '促进', word_pinyin: 'cùjìn', word_en: 'to promote; to accelerate', example_sentence: '贸易促进了经济发展。' },
-      { word_zh: '维护', word_pinyin: 'wéihù', word_en: 'to maintain; to defend', example_sentence: '我们要维护社会稳定。' },
-      { word_zh: '逐渐', word_pinyin: 'zhújiàn', word_en: 'gradually', example_sentence: '他的病情逐渐好转。' },
-      { word_zh: '客观', word_pinyin: 'kèguān', word_en: 'objective; unbiased', example_sentence: '我们要客观地分析问题。' },
-      { word_zh: '主观', word_pinyin: 'zhǔguān', word_en: 'subjective', example_sentence: '这只是他的主观看法。' },
-      { word_zh: '普遍', word_pinyin: 'pǔbiàn', word_en: 'universal; widespread', example_sentence: '这是一种普遍的观点。' },
-      { word_zh: '具体', word_pinyin: 'jùtǐ', word_en: 'specific; concrete', example_sentence: '请说明具体情况。' },
-      { word_zh: '复杂', word_pinyin: 'fùzá', word_en: 'complex; complicated', example_sentence: '这个问题非常复杂。' },
-      { word_zh: '简单', word_pinyin: 'jiǎndān', word_en: 'simple; easy', example_sentence: '这道题很简单。' },
-      { word_zh: '消费', word_pinyin: 'xiāofèi', word_en: 'to consume; consumption', example_sentence: '消费水平不断提高。' },
-      { word_zh: '投资', word_pinyin: 'tóuzī', word_en: 'to invest; investment', example_sentence: '教育投资是最值得的。' },
-      { word_zh: '创新', word_pinyin: 'chuàngxīn', word_en: 'innovation; to innovate', example_sentence: '创新是发展的动力。' },
-    ],
-  },
-  {
-    name: 'HSK 5 — Advanced',
-    description: 'Command 2,500 words for academic reading, formal writing, and nuanced discussion of philosophy, law, and literature.',
-    difficulty_level: 5,
-    words: [
-      { word_zh: '哲学', word_pinyin: 'zhéxué', word_en: 'philosophy', example_sentence: '哲学探讨生命的意义。' },
-      { word_zh: '辩证', word_pinyin: 'biànzhèng', word_en: 'dialectical', example_sentence: '我们要辩证地看待问题。' },
-      { word_zh: '抽象', word_pinyin: 'chōuxiàng', word_en: 'abstract', example_sentence: '这个概念非常抽象。' },
-      { word_zh: '本质', word_pinyin: 'běnzhì', word_en: 'essence; nature', example_sentence: '我们要看清事物的本质。' },
-      { word_zh: '规律', word_pinyin: 'guīlǜ', word_en: 'law; rule; pattern', example_sentence: '这是自然界的规律。' },
-      { word_zh: '逻辑', word_pinyin: 'luójí', word_en: 'logic', example_sentence: '他的推理很有逻辑。' },
-      { word_zh: '辩论', word_pinyin: 'biànlùn', word_en: 'debate; to debate', example_sentence: '他们就这个问题展开了辩论。' },
-      { word_zh: '论证', word_pinyin: 'lùnzhèng', word_en: 'to argue; to prove', example_sentence: '他的论证很有说服力。' },
-      { word_zh: '假设', word_pinyin: 'jiǎshè', word_en: 'hypothesis; to assume', example_sentence: '这只是一个假设。' },
-      { word_zh: '推断', word_pinyin: 'tuīduàn', word_en: 'to deduce; inference', example_sentence: '根据证据可以推断结论。' },
-      { word_zh: '阐述', word_pinyin: 'chǎnshù', word_en: 'to expound; to elaborate', example_sentence: '请详细阐述你的观点。' },
-      { word_zh: '批判', word_pinyin: 'pīpàn', word_en: 'to criticize; criticism', example_sentence: '他对这种现象进行了批判。' },
-      { word_zh: '综合', word_pinyin: 'zōnghé', word_en: 'comprehensive; synthesis', example_sentence: '我们要进行综合分析。' },
-      { word_zh: '归纳', word_pinyin: 'guīnà', word_en: 'to induct; induction', example_sentence: '通过归纳，我们得出结论。' },
-      { word_zh: '演绎', word_pinyin: 'yǎnyì', word_en: 'deduction; to deduce', example_sentence: '演绎法是从一般到特殊的推理。' },
-      { word_zh: '理性', word_pinyin: 'lǐxìng', word_en: 'reason; rational', example_sentence: '我们要理性地看待这件事。' },
-      { word_zh: '感性', word_pinyin: 'gǎnxìng', word_en: 'emotional; perceptual', example_sentence: '她是一个感性的人。' },
-      { word_zh: '价值观', word_pinyin: 'jiàzhíguān', word_en: 'values; value system', example_sentence: '每个人都有自己的价值观。' },
-      { word_zh: '世界观', word_pinyin: 'shìjièguān', word_en: 'worldview', example_sentence: '教育影响一个人的世界观。' },
-      { word_zh: '人生观', word_pinyin: 'rénshēngguān', word_en: 'outlook on life', example_sentence: '他的人生观很积极。' },
-      { word_zh: '契约', word_pinyin: 'qìyuē', word_en: 'contract; covenant', example_sentence: '社会契约是法律的基础。' },
-      { word_zh: '权力', word_pinyin: 'quánlì', word_en: 'power; authority', example_sentence: '权力应该受到监督。' },
-      { word_zh: '权利', word_pinyin: 'quánlì', word_en: 'right; rights', example_sentence: '每个人都有受教育的权利。' },
-      { word_zh: '义务', word_pinyin: 'yìwù', word_en: 'obligation; duty', example_sentence: '纳税是公民的义务。' },
-      { word_zh: '道德', word_pinyin: 'dàodé', word_en: 'morality; ethics', example_sentence: '道德是社会的基石。' },
-      { word_zh: '伦理', word_pinyin: 'lúnlǐ', word_en: 'ethics; morals', example_sentence: '医学伦理非常重要。' },
-      { word_zh: '公正', word_pinyin: 'gōngzhèng', word_en: 'just; fair', example_sentence: '法律应该是公正的。' },
-      { word_zh: '平等', word_pinyin: 'píngděng', word_en: 'equal; equality', example_sentence: '人人生而平等。' },
-      { word_zh: '自由', word_pinyin: 'zìyóu', word_en: 'freedom; liberty', example_sentence: '自由不是没有界限的。' },
-      { word_zh: '责任', word_pinyin: 'zérèn', word_en: 'responsibility; duty', example_sentence: '我们要承担自己的责任。' },
-    ],
-  },
-  {
-    name: 'HSK 6 — Mastery',
-    description: 'Achieve native-level fluency with 5,000+ words for academic prose, formal debate, literary analysis, and professional communication.',
-    difficulty_level: 6,
-    words: [
-      { word_zh: '博弈', word_pinyin: 'bóyì', word_en: 'game theory; contest', example_sentence: '国际关系就像一场博弈。' },
-      { word_zh: '范畴', word_pinyin: 'fànchóu', word_en: 'category; domain', example_sentence: '这属于哲学的范畴。' },
-      { word_zh: '悖论', word_pinyin: 'bèilùn', word_en: 'paradox', example_sentence: '这是一个经典的悖论。' },
-      { word_zh: '诠释', word_pinyin: 'quánshì', word_en: 'to interpret; interpretation', example_sentence: '他对这首诗做了独特的诠释。' },
-      { word_zh: '隐喻', word_pinyin: 'yǐnyù', word_en: 'metaphor', example_sentence: '这是一个关于人生的隐喻。' },
-      { word_zh: '意识形态', word_pinyin: 'yìshí xíngtài', word_en: 'ideology', example_sentence: '不同的意识形态影响政策方向。' },
-      { word_zh: '辩证法', word_pinyin: 'biànzhèngfǎ', word_en: 'dialectics', example_sentence: '辩证法要求我们全面地看问题。' },
-      { word_zh: '认识论', word_pinyin: 'rènshílùn', word_en: 'epistemology', example_sentence: '认识论研究知识的本质和来源。' },
-      { word_zh: '存在主义', word_pinyin: 'cúnzài zhǔyì', word_en: 'existentialism', example_sentence: '存在主义强调个人的自由和选择。' },
-      { word_zh: '后现代主义', word_pinyin: 'hòu xiàndài zhǔyì', word_en: 'postmodernism', example_sentence: '后现代主义质疑传统的权威和真理。' },
-      { word_zh: '辩驳', word_pinyin: 'biànbó', word_en: 'to refute; to argue against', example_sentence: '他有力地辩驳了对方的观点。' },
-      { word_zh: '阐释', word_pinyin: 'chǎnshì', word_en: 'to expound; to elucidate', example_sentence: '学者们对此进行了深入阐释。' },
-      { word_zh: '斡旋', word_pinyin: 'wòxuán', word_en: 'to mediate; mediation', example_sentence: '外交官进行了积极的斡旋。' },
-      { word_zh: '折衷', word_pinyin: 'zhézhōng', word_en: 'compromise; eclectic', example_sentence: '双方达成了折衷的方案。' },
-      { word_zh: '渗透', word_pinyin: 'shèntòu', word_en: 'to permeate; to infiltrate', example_sentence: '文化已渗透到生活的各个方面。' },
-      { word_zh: '颠覆', word_pinyin: 'diānfù', word_en: 'to subvert; to overturn', example_sentence: '这个发现颠覆了传统观念。' },
-      { word_zh: '演变', word_pinyin: 'yǎnbiàn', word_en: 'to evolve; evolution', example_sentence: '语言随着时代的演变而变化。' },
-      { word_zh: '蕴含', word_pinyin: 'yùnhán', word_en: 'to imply; to embody', example_sentence: '这句话蕴含了深刻的哲理。' },
-      { word_zh: '凸显', word_pinyin: 'tūxiǎn', word_en: 'to highlight; to show prominently', example_sentence: '这件事凸显了教育的重要性。' },
-      { word_zh: '契合', word_pinyin: 'qìhé', word_en: 'to fit; to match', example_sentence: '他的想法与我的理念契合。' },
-      { word_zh: '践行', word_pinyin: 'jiànxíng', word_en: 'to practice; to put into action', example_sentence: '我们要践行自己的承诺。' },
-      { word_zh: '应运而生', word_pinyin: 'yìngyùn ér shēng', word_en: 'to emerge as the times require', example_sentence: '网络购物应运而生。' },
-      { word_zh: '与时俱进', word_pinyin: 'yǔshí jùjìn', word_en: 'to keep pace with the times', example_sentence: '企业要与时俱进，不断创新。' },
-      { word_zh: '兼收并蓄', word_pinyin: 'jiān shōu bìng xù', word_en: 'to absorb and adopt eclectically', example_sentence: '中国文化兼收并蓄，博大精深。' },
-      { word_zh: '举足轻重', word_pinyin: 'jǔzú qīngzhòng', word_en: 'to be of decisive importance', example_sentence: '他在公司里举足轻重。' },
-      { word_zh: '错综复杂', word_pinyin: 'cuòzōng fùzá', word_en: 'intricate; complicated', example_sentence: '国际局势错综复杂。' },
-      { word_zh: '截然不同', word_pinyin: 'jiérán bùtóng', word_en: 'entirely different', example_sentence: '他们两人的性格截然不同。' },
-      { word_zh: '层出不穷', word_pinyin: 'céng chū bù qióng', word_en: 'to emerge in an endless stream', example_sentence: '新技术层出不穷。' },
-      { word_zh: '一脉相承', word_pinyin: 'yī mài xiāng chéng', word_en: 'to come from the same origin', example_sentence: '这两种思想一脉相承。' },
-      { word_zh: '触类旁通', word_pinyin: 'chù lèi páng tōng', word_en: 'to master one and understand all', example_sentence: '学好方法，就能触类旁通。' },
-    ],
-  },
-  {
-    name: 'Kitchen & Food',
-    description: 'Everyday food and kitchen words you can practice by pointing your camera at your meal. Theme-grouped for fast, practical learning.',
-    difficulty_level: 1,
-    words: [
-      { word_zh: '水', word_pinyin: 'shuǐ', word_en: 'water', example_sentence: '请给我一杯水。' },
-      { word_zh: '茶', word_pinyin: 'chá', word_en: 'tea', example_sentence: '我喜欢喝茶。' },
-      { word_zh: '咖啡', word_pinyin: 'kāfēi', word_en: 'coffee', example_sentence: '早上我要喝咖啡。' },
-      { word_zh: '米饭', word_pinyin: 'mǐfàn', word_en: 'cooked rice', example_sentence: '我每天吃米饭。' },
-      { word_zh: '面条', word_pinyin: 'miàntiáo', word_en: 'noodles', example_sentence: '这碗面条很好吃。' },
-      { word_zh: '鸡蛋', word_pinyin: 'jīdàn', word_en: 'egg', example_sentence: '早餐我吃了两个鸡蛋。' },
-      { word_zh: '面包', word_pinyin: 'miànbāo', word_en: 'bread', example_sentence: '我买了一些面包。' },
-      { word_zh: '牛奶', word_pinyin: 'niúnǎi', word_en: 'milk', example_sentence: '孩子每天喝牛奶。' },
-      { word_zh: '水果', word_pinyin: 'shuǐguǒ', word_en: 'fruit', example_sentence: '多吃水果对身体好。' },
-      { word_zh: '苹果', word_pinyin: 'píngguǒ', word_en: 'apple', example_sentence: '桌子上有一个苹果。' },
-      { word_zh: '蔬菜', word_pinyin: 'shūcài', word_en: 'vegetable', example_sentence: '我喜欢吃新鲜蔬菜。' },
-      { word_zh: '肉', word_pinyin: 'ròu', word_en: 'meat', example_sentence: '这道菜里有很多肉。' },
-      { word_zh: '鱼', word_pinyin: 'yú', word_en: 'fish', example_sentence: '我们晚饭吃鱼。' },
-      { word_zh: '盘子', word_pinyin: 'pánzi', word_en: 'plate', example_sentence: '请把盘子放在桌上。' },
-      { word_zh: '碗', word_pinyin: 'wǎn', word_en: 'bowl', example_sentence: '我要一碗汤。' },
-      { word_zh: '杯子', word_pinyin: 'bēizi', word_en: 'cup; glass', example_sentence: '这个杯子是新的。' },
-      { word_zh: '筷子', word_pinyin: 'kuàizi', word_en: 'chopsticks', example_sentence: '他会用筷子吃饭。' },
-      { word_zh: '勺子', word_pinyin: 'sháozi', word_en: 'spoon', example_sentence: '用勺子喝汤。' },
-      { word_zh: '刀', word_pinyin: 'dāo', word_en: 'knife', example_sentence: '这把刀很锋利。' },
-      { word_zh: '糖', word_pinyin: 'táng', word_en: 'sugar; candy', example_sentence: '咖啡里我不放糖。' },
-    ],
-  },
-  {
-    name: 'Numbers & Time',
-    description: 'Count, tell the time, and talk about days and dates. The essential scaffolding for everyday Mandarin conversations.',
-    difficulty_level: 1,
-    words: [
-      { word_zh: '一', word_pinyin: 'yī', word_en: 'one', example_sentence: '我有一个问题。' },
-      { word_zh: '二', word_pinyin: 'èr', word_en: 'two', example_sentence: '我要二号。' },
-      { word_zh: '三', word_pinyin: 'sān', word_en: 'three', example_sentence: '他有三个孩子。' },
-      { word_zh: '四', word_pinyin: 'sì', word_en: 'four', example_sentence: '一年有四个季节。' },
-      { word_zh: '五', word_pinyin: 'wǔ', word_en: 'five', example_sentence: '我五点下班。' },
-      { word_zh: '六', word_pinyin: 'liù', word_en: 'six', example_sentence: '现在六点了。' },
-      { word_zh: '七', word_pinyin: 'qī', word_en: 'seven', example_sentence: '一个星期有七天。' },
-      { word_zh: '八', word_pinyin: 'bā', word_en: 'eight', example_sentence: '他八岁了。' },
-      { word_zh: '九', word_pinyin: 'jiǔ', word_en: 'nine', example_sentence: '商店九点开门。' },
-      { word_zh: '十', word_pinyin: 'shí', word_en: 'ten', example_sentence: '我有十块钱。' },
-      { word_zh: '百', word_pinyin: 'bǎi', word_en: 'hundred', example_sentence: '这本书一百页。' },
-      { word_zh: '今天', word_pinyin: 'jīntiān', word_en: 'today', example_sentence: '今天天气很好。' },
-      { word_zh: '明天', word_pinyin: 'míngtiān', word_en: 'tomorrow', example_sentence: '明天我们去公园。' },
-      { word_zh: '昨天', word_pinyin: 'zuótiān', word_en: 'yesterday', example_sentence: '昨天我很忙。' },
-      { word_zh: '星期', word_pinyin: 'xīngqī', word_en: 'week', example_sentence: '这个星期我有空。' },
-      { word_zh: '月', word_pinyin: 'yuè', word_en: 'month', example_sentence: '下个月我去旅行。' },
-      { word_zh: '年', word_pinyin: 'nián', word_en: 'year', example_sentence: '新年快乐！' },
-      { word_zh: '点', word_pinyin: 'diǎn', word_en: "o'clock", example_sentence: '现在三点了。' },
-      { word_zh: '分钟', word_pinyin: 'fēnzhōng', word_en: 'minute', example_sentence: '还有五分钟。' },
-      { word_zh: '小时', word_pinyin: 'xiǎoshí', word_en: 'hour', example_sentence: '我等了一个小时。' },
-    ],
-  },
-  {
-    name: 'Colors & Shapes',
-    description: 'Describe what you see — colors, shapes, and sizes. Pairs perfectly with the camera to label objects around you.',
-    difficulty_level: 1,
-    words: [
-      { word_zh: '红色', word_pinyin: 'hóngsè', word_en: 'red', example_sentence: '她穿着红色的裙子。' },
-      { word_zh: '黄色', word_pinyin: 'huángsè', word_en: 'yellow', example_sentence: '香蕉是黄色的。' },
-      { word_zh: '蓝色', word_pinyin: 'lánsè', word_en: 'blue', example_sentence: '天空是蓝色的。' },
-      { word_zh: '绿色', word_pinyin: 'lǜsè', word_en: 'green', example_sentence: '树叶是绿色的。' },
-      { word_zh: '黑色', word_pinyin: 'hēisè', word_en: 'black', example_sentence: '我喜欢黑色的衣服。' },
-      { word_zh: '白色', word_pinyin: 'báisè', word_en: 'white', example_sentence: '墙是白色的。' },
-      { word_zh: '紫色', word_pinyin: 'zǐsè', word_en: 'purple', example_sentence: '她的包是紫色的。' },
-      { word_zh: '橙色', word_pinyin: 'chéngsè', word_en: 'orange', example_sentence: '橙子是橙色的。' },
-      { word_zh: '粉色', word_pinyin: 'fěnsè', word_en: 'pink', example_sentence: '她喜欢粉色。' },
-      { word_zh: '灰色', word_pinyin: 'huīsè', word_en: 'gray', example_sentence: '天空是灰色的。' },
-      { word_zh: '颜色', word_pinyin: 'yánsè', word_en: 'color', example_sentence: '你喜欢什么颜色？' },
-      { word_zh: '圆', word_pinyin: 'yuán', word_en: 'round; circle', example_sentence: '月亮是圆的。' },
-      { word_zh: '方', word_pinyin: 'fāng', word_en: 'square', example_sentence: '这张桌子是方的。' },
-      { word_zh: '长', word_pinyin: 'cháng', word_en: 'long', example_sentence: '这条路很长。' },
-      { word_zh: '短', word_pinyin: 'duǎn', word_en: 'short', example_sentence: '他的头发很短。' },
-      { word_zh: '大', word_pinyin: 'dà', word_en: 'big; large', example_sentence: '这个房间很大。' },
-      { word_zh: '小', word_pinyin: 'xiǎo', word_en: 'small', example_sentence: '这只猫很小。' },
-      { word_zh: '高', word_pinyin: 'gāo', word_en: 'tall; high', example_sentence: '那座山很高。' },
-      { word_zh: '新', word_pinyin: 'xīn', word_en: 'new', example_sentence: '这是我的新手机。' },
-      { word_zh: '旧', word_pinyin: 'jiù', word_en: 'old; used', example_sentence: '这本书很旧了。' },
-    ],
-  },
+function isHeaderOrFooter(line) {
+  return !line
+    || /^>{2}$/.test(line)
+    || /^New HSK Vocabulary/i.test(line)
+    || /^NEW HSK VOCABULARY/i.test(line)
+    || /^Level \d/i.test(line)
+    || /^ENTRIES$/i.test(line)
+    || /^NO\./i.test(line)
+    || /^MandarinBean\.com/i.test(line)
+    || /^Page \d+/i.test(line)
+    || /^⇨/.test(line);
+}
+
+function looksLikePartOfSpeech(text) {
+  return /\b(verb|noun|adjective|adverb|number|classifier|preposition|conjunction|pronoun|auxiliary|interjection|prefix|suffix|particle)\b/i.test(text)
+    || /^[、（）()，,; ]+$/.test(text);
+}
+
+function splitRow(line) {
+  const columns = line.trim().split(/\s{2,}/).map((part) => part.trim()).filter(Boolean);
+  if (!/^\d+$/.test(columns[0] || '') || columns.length < 4) return null;
+
+  const no = Number(columns[0]);
+  const word_zh = columns[1];
+  const word_pinyin = columns[2];
+  const rest = columns.slice(3);
+  const hasPos = looksLikePartOfSpeech(rest[0] || '');
+  const word_en = (hasPos ? rest.slice(1) : rest).join(' ').trim();
+
+  return {
+    no,
+    word_zh,
+    word_pinyin,
+    word_en,
+  };
+}
+
+function continuationText(line) {
+  const columns = line.trim().split(/\s{2,}/).map((part) => part.trim()).filter(Boolean);
+  if (columns.length > 1) return columns.at(-1);
+  return columns[0] || '';
+}
+
+function cleanEnglish(value) {
+  return value
+    .replace(/[（）]/g, (char) => char === '（' ? '(' : ')')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .trim();
+}
+
+function parseVocabularyPdf(level) {
+  const text = readTextFromPdf(PDF_PATHS[level]);
+  const rows = [];
+  let current = null;
+
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.replace(/\f/g, '').trimEnd();
+    const trimmed = line.trim();
+    if (isHeaderOrFooter(trimmed)) continue;
+
+    const row = splitRow(line);
+    if (row) {
+      if (current) rows.push(current);
+      current = row;
+      continue;
+    }
+
+    if (!current) continue;
+    const continuation = continuationText(line);
+    if (!continuation || looksLikePartOfSpeech(continuation)) continue;
+    current.word_en = cleanEnglish(`${current.word_en} ${continuation}`);
+  }
+
+  if (current) rows.push(current);
+
+  return rows
+    .filter((row) => row.word_zh && row.word_pinyin && row.word_en)
+    .map((row, index) => ({
+      word_zh: row.word_zh,
+      word_pinyin: row.word_pinyin,
+      word_en: cleanEnglish(row.word_en),
+      word_vi: null,
+      hsk_level: level,
+      sort_order: index + 1,
+    }));
+}
+
+function parseJsonObject(content) {
+  const clean = content.replace(/```json|```/g, '').trim();
+  const match = clean.match(/\{[\s\S]*\}/);
+  return JSON.parse(match ? match[0] : clean);
+}
+
+function loadTranslationCache() {
+  if (!TRANSLATION_CACHE_PATH || !fs.existsSync(TRANSLATION_CACHE_PATH)) return {};
+  return JSON.parse(fs.readFileSync(TRANSLATION_CACHE_PATH, 'utf8'));
+}
+
+function saveTranslationCache(cache) {
+  if (!TRANSLATION_CACHE_PATH) return;
+  fs.writeFileSync(TRANSLATION_CACHE_PATH, `${JSON.stringify(cache, null, 2)}\n`);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchJsonWithRetry(url, options, label) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const res = await fetch(url, options);
+    if (res.ok) return res.json();
+
+    const text = await res.text();
+    if (res.status !== 429 && res.status < 500) {
+      throw new Error(`${label} failed: ${res.status} ${text}`);
+    }
+
+    const retryAfter = Number(res.headers.get('retry-after'));
+    const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+      ? retryAfter * 1000
+      : 1500 * (attempt + 1);
+    console.log(`${label} throttled (${res.status}); retrying in ${waitMs}ms`);
+    await sleep(waitMs);
+  }
+
+  throw new Error(`${label} failed after retries.`);
+}
+
+const EXACT_VI = new Map(Object.entries({
+  'ah, oh': 'à, ồ',
+  'all, both': 'tất cả; cả hai',
+  'almost, similar; nearly': 'gần như; tương tự; suýt',
+  'aunt': 'dì; cô',
+  'backpack': 'ba lô',
+  'bad, poor; to lack': 'kém; thiếu',
+  'bed': 'giường',
+  'big': 'lớn; to',
+  'black': 'màu đen',
+  'bus': 'xe buýt',
+  'cinema': 'rạp chiếu phim',
+  'class, grade': 'lớp; khối lớp',
+  'class, team; (measure word for groups)': 'lớp; đội; lượng từ cho nhóm',
+  'common': 'phổ biến; thường gặp',
+  'commonly used': 'thường dùng',
+  'company': 'công ty',
+  'computer': 'máy tính',
+  'correct, right; to, toward, for; (to treat; pair)': 'đúng; đối với; cặp',
+  'cup, glass': 'cốc; ly',
+  'dad': 'bố; ba',
+  'daytime': 'ban ngày',
+  'different': 'khác nhau',
+  'eight': 'tám',
+  'everyone': 'mọi người',
+  'for example': 'ví dụ',
+  'from childhood': 'từ nhỏ',
+  'happy, glad': 'vui; phấn khởi',
+  'height, stature': 'chiều cao; vóc dáng',
+  'help': 'giúp đỡ',
+  'hotel': 'khách sạn',
+  'hundred': 'một trăm',
+  'illness, disease; to be ill': 'bệnh; bị bệnh',
+  'ice cream': 'kem',
+  'menu': 'thực đơn',
+  'movie, film': 'phim',
+  'newspaper': 'báo',
+  'not, no': 'không',
+  'not bad, pretty good': 'khá tốt; không tệ',
+  'not allowed, won\'t do; not good': 'không được; không ổn',
+  'not only': 'không những',
+  'notebook': 'vở; sổ tay',
+  'office': 'văn phòng',
+  'on time, on schedule': 'đúng giờ; đúng lịch',
+  'other': 'khác',
+  'other people': 'người khác',
+  'patient': 'bệnh nhân',
+  'pen; (measure word for writing tools)': 'bút; lượng từ cho bút',
+  'quiet': 'yên tĩnh',
+  'safe': 'an toàn',
+  'side; suffix indicating direction': 'bên; phía',
+  'song': 'bài hát',
+  'sorry': 'xin lỗi',
+  'sorry, apologetic': 'xin lỗi; áy náy',
+  'spouse': 'vợ/chồng',
+  'station': 'nhà ga; trạm',
+  'supermarket': 'siêu thị',
+  'taxi': 'taxi',
+  'tea': 'trà',
+  'telephone, phone call': 'điện thoại; cuộc gọi',
+  'television': 'tivi; truyền hình',
+  'thing, object': 'đồ vật; sự vật',
+  'to arrive': 'đến; tới',
+  'to arrange': 'sắp xếp',
+  'to be convenient for, to facilitate': 'thuận tiện cho; tạo điều kiện',
+  'to become, to turn into': 'trở thành; biến thành',
+  'to broadcast, to play': 'phát sóng; phát',
+  'to carry on the back': 'đeo; cõng',
+  'to celebrate the New Year': 'ăn Tết; đón năm mới',
+  'to change, to become': 'thay đổi; trở thành',
+  'to check': 'kiểm tra; tra cứu',
+  'to come out': 'đi ra; xuất hiện',
+  'to come over': 'đến đây; lại đây',
+  'to compare; quite, relatively; than': 'so sánh; khá; hơn',
+  'to compete; game, match': 'thi đấu; trận đấu',
+  'to disappear, to not see': 'biến mất; không thấy',
+  'to do, to handle': 'làm; xử lý',
+  'to eat': 'ăn',
+  'to fly': 'bay',
+  'to freeze': 'đóng băng',
+  'to give; (to, for)': 'cho; đưa cho',
+  'to go abroad': 'ra nước ngoài',
+  'to go out': 'đi ra ngoài',
+  'to go out, to leave': 'đi ra; rời đi',
+  'to go over': 'đi qua; đi tới',
+  'to guarantee, to ensure; guarantee, assurance': 'bảo đảm; cam đoan; sự bảo đảm',
+  'to handle matters, to take care of things': 'xử lý công việc; làm việc',
+  'to help': 'giúp; giúp đỡ',
+  'to hit, to play, to make': 'đánh; chơi; gọi/làm',
+  'to hold, to embrace, to hug': 'ôm; bế',
+  'to join, to attend': 'tham gia; tham dự',
+  'to light, to ignite; (point, dot; to order)': 'châm; đốt; điểm; gọi món',
+  'to like; hobby': 'thích; sở thích',
+  'to love': 'yêu',
+  'to make a phone call': 'gọi điện thoại',
+  'to move house': 'chuyển nhà',
+  'to move, to act': 'di chuyển; hành động',
+  'to open': 'mở',
+  'to perform, to act': 'biểu diễn; diễn',
+  'to press, to push; according to': 'ấn; nhấn; theo',
+  'to protect': 'bảo vệ',
+  'to read': 'đọc',
+  'to read a book': 'đọc sách',
+  'to sing': 'hát',
+  'to sign up, to register': 'đăng ký',
+  'to taste': 'nếm',
+  'to tell': 'nói cho biết; kể',
+  'to understand': 'hiểu',
+  'to wait; (and so on, until)': 'đợi; chờ; vân vân; đến khi',
+  'to wear': 'mặc; đội; đeo',
+  'university': 'đại học',
+  'university student': 'sinh viên đại học',
+  'vehicle, car': 'xe; ô tô',
+  'very, extremely': 'rất; cực kỳ',
+  'way, solution': 'cách; giải pháp',
+  'white': 'màu trắng',
+  'word, term': 'từ; thuật ngữ',
+  'work; to work': 'công việc; làm việc',
+  'wrong, mistaken': 'sai; nhầm',
+  'you\'re welcome': 'không có gì; đừng khách sáo',
+  'younger brother': 'em trai',
+}));
+
+const VI_REPLACEMENTS = [
+  ['measure word for', 'lượng từ cho'],
+  ['particle indicating', 'trợ từ biểu thị'],
+  ['according to', 'theo'],
+  ['in accordance with', 'theo đúng'],
+  ['no matter', 'bất kể'],
+  ['regardless of', 'bất kể'],
+  ['not necessary', 'không cần thiết'],
+  ['need not', 'không cần'],
+  ['not enough', 'không đủ'],
+  ['continuous', 'liên tục'],
+  ['constantly', 'không ngừng'],
+  ['inconvenient', 'bất tiện'],
+  ['to be short of money', 'thiếu tiền'],
+  ['to take a taxi', 'đi taxi'],
+  ['to wrap', 'gói'],
+  ['to pack', 'đóng gói'],
+  ['to compare', 'so sánh'],
+  ['to understand', 'hiểu'],
+  ['to move', 'di chuyển'],
+  ['to act', 'hành động'],
+  ['to pass', 'đi qua'],
+  ['to cross', 'băng qua'],
+  ['to follow', 'theo'],
+  ['to accompany', 'đi cùng'],
+  ['to change', 'thay đổi'],
+  ['to become', 'trở thành'],
+  ['to perform', 'biểu diễn'],
+  ['to disappear', 'biến mất'],
+  ['to attend', 'tham dự'],
+  ['to join', 'tham gia'],
+  ['to taste', 'nếm'],
+  ['to protect', 'bảo vệ'],
+  ['to guarantee', 'bảo đảm'],
+  ['to ensure', 'đảm bảo'],
+  ['to arrange', 'sắp xếp'],
+  ['to handle', 'xử lý'],
+  ['to apply for', 'đăng ký'],
+  ['to register', 'đăng ký'],
+  ['to broadcast', 'phát sóng'],
+  ['to play', 'chơi; phát'],
+  ['to combine', 'kết hợp'],
+  ['to merge', 'gộp lại'],
+  ['to press', 'ấn'],
+  ['to push', 'đẩy'],
+  ['to carry', 'mang; cầm'],
+  ['to love', 'yêu'],
+  ['to like', 'thích'],
+  ['to help', 'giúp đỡ'],
+  ['to sing', 'hát'],
+  ['to wear', 'mặc; đội; đeo'],
+  ['to arrive', 'đến'],
+  ['to read', 'đọc'],
+  ['to eat', 'ăn'],
+  ['to fly', 'bay'],
+  ['to give', 'cho'],
+  ['to hit', 'đánh'],
+  ['to make', 'làm'],
+  ['to tell', 'nói cho biết'],
+  ['to wait', 'đợi'],
+  ['actually', 'thực ra'],
+  ['adverb', 'trạng từ'],
+  ['adjective', 'tính từ'],
+  ['auxiliary', 'trợ từ'],
+  ['classifier', 'lượng từ'],
+  ['conjunction', 'liên từ'],
+  ['interjection', 'thán từ'],
+  ['number', 'số từ'],
+  ['noun', 'danh từ'],
+  ['particle', 'trợ từ'],
+  ['preposition', 'giới từ'],
+  ['pronoun', 'đại từ'],
+  ['suffix', 'hậu tố'],
+  ['prefix', 'tiền tố'],
+  ['verb', 'động từ'],
+  ['actually', 'thực ra'],
+  ['again', 'lại; lần nữa'],
+  ['airplane', 'máy bay'],
+  ['all', 'tất cả'],
+  ['almost', 'gần như'],
+  ['assurance', 'sự bảo đảm'],
+  ['backpack', 'ba lô'],
+  ['bad', 'kém; xấu'],
+  ['bag', 'túi'],
+  ['bed', 'giường'],
+  ['black', 'màu đen'],
+  ['brother', 'anh/em trai'],
+  ['bus', 'xe buýt'],
+  ['car', 'ô tô'],
+  ['cinema', 'rạp chiếu phim'],
+  ['class', 'lớp'],
+  ['company', 'công ty'],
+  ['compassion', 'lòng trắc ẩn'],
+  ['computer', 'máy tính'],
+  ['confirmation', 'xác nhận'],
+  ['correct', 'đúng'],
+  ['cup', 'cốc'],
+  ['dad', 'bố'],
+  ['daytime', 'ban ngày'],
+  ['degree', 'mức độ'],
+  ['department', 'bộ phận; phòng ban'],
+  ['direction', 'phương hướng'],
+  ['disease', 'bệnh'],
+  ['doctor', 'tiến sĩ; bác sĩ'],
+  ['eight', 'tám'],
+  ['everyone', 'mọi người'],
+  ['excellent', 'xuất sắc'],
+  ['excessive', 'quá mức'],
+  ['exam', 'kỳ thi'],
+  ['film', 'phim'],
+  ['floor', 'tầng'],
+  ['former', 'trước đây'],
+  ['frequent', 'thường xuyên'],
+  ['game', 'trận đấu; trò chơi'],
+  ['glass', 'ly'],
+  ['grade', 'khối lớp'],
+  ['great', 'tuyệt; lớn'],
+  ['grassland', 'bãi cỏ'],
+  ['grass', 'cỏ'],
+  ['guarantee', 'sự bảo đảm'],
+  ['handle', 'tay cầm; xử lý'],
+  ['height', 'chiều cao'],
+  ['hesitation', 'do dự'],
+  ['hobby', 'sở thích'],
+  ['hundred', 'trăm'],
+  ['illness', 'bệnh'],
+  ['layer', 'lớp'],
+  ['liquor', 'rượu mạnh'],
+  ['love', 'tình yêu'],
+  ['menu', 'thực đơn'],
+  ['metro', 'tàu điện ngầm'],
+  ['movie', 'phim'],
+  ['newspaper', 'báo'],
+  ['north', 'phía bắc'],
+  ['notebook', 'vở; sổ tay'],
+  ['office', 'văn phòng'],
+  ['original', 'ban đầu'],
+  ['patient', 'bệnh nhân'],
+  ['pen', 'bút'],
+  ['point', 'điểm'],
+  ['quiet', 'yên tĩnh'],
+  ['restaurant', 'nhà hàng'],
+  ['right', 'đúng'],
+  ['safe', 'an toàn'],
+  ['security check', 'kiểm tra an ninh'],
+  ['shop', 'cửa hàng'],
+  ['solution', 'giải pháp'],
+  ['song', 'bài hát'],
+  ['sorry', 'xin lỗi'],
+  ['spouse', 'vợ/chồng'],
+  ['station', 'nhà ga; trạm'],
+  ['student', 'sinh viên; học sinh'],
+  ['suggestion', 'gợi ý'],
+  ['supermarket', 'siêu thị'],
+  ['team', 'đội'],
+  ['telephone', 'điện thoại'],
+  ['television', 'tivi'],
+  ['thing', 'đồ vật'],
+  ['university', 'đại học'],
+  ['vehicle', 'xe cộ'],
+  ['white', 'màu trắng'],
+  ['word', 'từ'],
+  ['work', 'công việc; làm việc'],
+  ['wrong', 'sai'],
 ];
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+function generateVietnameseMeaning(word) {
+  const exact = EXACT_VI.get(word.word_en.toLowerCase());
+  if (exact) return exact;
 
-async function main() {
-  console.log('🌱 Seeding public HSK courses…\n');
-
-  for (const course of COURSES) {
-    // Idempotency guard: skip courses that already exist (matched by name +
-    // system-owned creator_id IS NULL) so re-running never duplicates them.
-    const existing = await req('GET', `/vocabulary_courses?select=id&creator_id=is.null&name=eq.${encodeURIComponent(course.name)}`);
-    try {
-      const rows = JSON.parse(existing.body);
-      if (Array.isArray(rows) && rows.length > 0) {
-        console.log(`  ⏭️  Skipping existing course: "${course.name}"`);
-        continue;
+  const parts = word.word_en
+    .split(/;|,(?![^()]*\))/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const lower = part.toLowerCase().replace(/[()]/g, '').trim();
+      if (EXACT_VI.has(lower)) return EXACT_VI.get(lower);
+      let translated = lower;
+      for (const [en, vi] of VI_REPLACEMENTS) {
+        translated = translated.replace(new RegExp(`\\b${en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi'), vi);
       }
-    } catch { /* fall through to insert */ }
+      return translated;
+    });
 
-    // 1. Insert course
-    const cr = await req('POST', '/vocabulary_courses', {
-      name: course.name,
-      description: course.description,
-      difficulty_level: course.difficulty_level,
+  return [...new Set(parts)].join('; ');
+}
+
+async function translateWithOpenRouter(words) {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is required to generate Vietnamese translations.');
+  }
+
+  const cache = loadTranslationCache();
+  for (const word of words) word.word_vi = cache[wordKey(word)] || null;
+
+  const missingWords = words.filter((word) => !word.word_vi);
+  for (let i = 0; i < missingWords.length; i += 50) {
+    const batch = missingWords.slice(i, i + 50);
+    const json = await fetchJsonWithRetry('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_TEXT_MODEL,
+        temperature: 0,
+        messages: [{
+          role: 'user',
+          content: [
+            'Translate these Mandarin vocabulary definitions to Vietnamese.',
+            'Return only a JSON object mapping each id to a concise Vietnamese meaning.',
+            'Keep the learner-facing meaning short but preserve multiple senses when important.',
+            JSON.stringify(batch.map((word) => ({
+              id: wordKey(word),
+              word_zh: word.word_zh,
+              word_pinyin: word.word_pinyin,
+              word_en: word.word_en,
+            }))),
+          ].join('\n'),
+        }],
+      }),
+    }, 'OpenRouter Vietnamese translation');
+    const translations = parseJsonObject(json.choices?.[0]?.message?.content || '{}');
+    for (const word of batch) {
+      word.word_vi = translations[wordKey(word)] || null;
+      if (word.word_vi) cache[wordKey(word)] = word.word_vi;
+    }
+    saveTranslationCache(cache);
+    console.log(`Translated ${Math.min(i + batch.length, missingWords.length)}/${missingWords.length} missing rows with OpenRouter`);
+  }
+
+  const missing = words.filter((word) => !word.word_vi);
+  if (missing.length) {
+    throw new Error(`Vietnamese translation incomplete for ${missing.length} rows. First missing: ${missing[0].word_zh}`);
+  }
+}
+
+async function translateWithGroq(words) {
+  if (!GROQ_API_KEY) {
+    throw new Error('GROQ_API_KEY is required for TRANSLATION_PROVIDER=groq.');
+  }
+
+  const cache = loadTranslationCache();
+  for (const word of words) word.word_vi = cache[wordKey(word)] || null;
+
+  const missingWords = words.filter((word) => !word.word_vi);
+  for (let i = 0; i < missingWords.length; i += 25) {
+    const batch = missingWords.slice(i, i + 25);
+    const json = await fetchJsonWithRetry('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_TEXT_MODEL,
+        temperature: 0,
+        response_format: { type: 'json_object' },
+        messages: [{
+          role: 'user',
+          content: [
+            'Translate these Mandarin vocabulary definitions to Vietnamese for a language-learning app.',
+            'Return only a JSON object mapping each id to a concise Vietnamese meaning.',
+            'Preserve multiple senses when useful, separated by semicolons.',
+            'Do not include English unless it is a standard Vietnamese loanword or proper name.',
+            JSON.stringify(batch.map((word) => ({
+              id: wordKey(word),
+              word_zh: word.word_zh,
+              word_pinyin: word.word_pinyin,
+              word_en: word.word_en,
+            }))),
+          ].join('\n'),
+        }],
+      }),
+    }, 'Groq Vietnamese translation');
+    const translations = parseJsonObject(json.choices?.[0]?.message?.content || '{}');
+    for (const word of batch) {
+      word.word_vi = translations[wordKey(word)] || null;
+      if (word.word_vi) cache[wordKey(word)] = word.word_vi;
+    }
+    saveTranslationCache(cache);
+    console.log(`Translated ${Math.min(i + batch.length, missingWords.length)}/${missingWords.length} missing rows with Groq`);
+  }
+
+  const missing = words.filter((word) => !word.word_vi);
+  if (missing.length) {
+    throw new Error(`Vietnamese translation incomplete for ${missing.length} rows. First missing: ${missing[0].word_zh}`);
+  }
+}
+
+async function translateToVietnamese(words) {
+  if (TRANSLATION_PROVIDER === 'groq') {
+    await translateWithGroq(words);
+    return;
+  }
+
+  if (TRANSLATION_PROVIDER === 'openrouter') {
+    await translateWithOpenRouter(words);
+    return;
+  }
+
+  if (TRANSLATION_PROVIDER !== 'local') {
+    throw new Error(`Unsupported TRANSLATION_PROVIDER: ${TRANSLATION_PROVIDER}`);
+  }
+
+  for (const word of words) word.word_vi = generateVietnameseMeaning(word);
+}
+
+async function upsertCourse(level) {
+  const meta = COURSE_META[level];
+  const found = await req('GET', `/vocabulary_courses?select=id&creator_id=is.null&name=eq.${encodeURIComponent(meta.name)}&limit=1`, null, 'return=representation');
+  if (found.status >= 300) throw new Error(`Course lookup failed for HSK ${level}: ${found.body}`);
+  const existing = JSON.parse(found.body)[0];
+
+  if (existing?.id) {
+    const patched = await req('PATCH', `/vocabulary_courses?id=eq.${existing.id}`, {
+      ...meta,
+      difficulty_level: level,
       is_published: true,
       creator_id: null,
-    }, 'return=representation,resolution=ignore-duplicates');
+    }, 'return=minimal');
+    if (patched.status >= 300) throw new Error(`Course update failed for HSK ${level}: ${patched.body}`);
+    return existing.id;
+  }
 
-    if (cr.status >= 300) {
-      console.error(`❌ Failed to insert course "${course.name}": ${cr.body}`);
-      continue;
+  const created = await req('POST', '/vocabulary_courses', {
+    ...meta,
+    difficulty_level: level,
+    is_published: true,
+    creator_id: null,
+  });
+  if (created.status >= 300) throw new Error(`Course insert failed for HSK ${level}: ${created.body}`);
+  return JSON.parse(created.body)[0].id;
+}
+
+async function upsertWords(courseId, words) {
+  const existingRes = await req('GET', `/course_vocabulary_items?select=id,word_zh,word_pinyin&course_id=eq.${courseId}`);
+  if (existingRes.status >= 300) throw new Error(`Existing word lookup failed: ${existingRes.body}`);
+  const existingRows = JSON.parse(existingRes.body);
+
+  if (REPLACE_HSK_WORDS && existingRows.length) {
+    let deleted = 0;
+    for (let i = 0; i < existingRows.length; i += 100) {
+      const ids = existingRows.slice(i, i + 100).map((row) => row.id).join(',');
+      const res = await req('DELETE', `/course_vocabulary_items?id=in.(${ids})`, null, 'return=minimal');
+      if (res.status >= 300) throw new Error(`Existing word clear failed: ${res.body}`);
+      deleted += existingRows.slice(i, i + 100).length;
     }
 
-    let courseId;
-    try {
-      const parsed = JSON.parse(cr.body);
-      courseId = Array.isArray(parsed) ? parsed[0]?.id : parsed?.id;
-    } catch {
-      console.error(`❌ Could not parse course ID for "${course.name}"`);
-      continue;
+    let inserted = 0;
+    for (let i = 0; i < words.length; i += 100) {
+      const batch = words.slice(i, i + 100).map((word) => ({ course_id: courseId, ...word }));
+      const res = await req('POST', '/course_vocabulary_items', batch, 'return=minimal');
+      if (res.status >= 300) throw new Error(`Word insert batch failed: ${res.body}`);
+      inserted += batch.length;
     }
 
-    if (!courseId) {
-      console.error(`❌ No ID returned for "${course.name}"`);
+    return { inserted, updated: 0, deleted };
+  }
+
+  const existing = new Map(existingRows.map((row) => [`${row.word_zh}|${row.word_pinyin}`, row.id]));
+  const desiredKeys = new Set(words.map(wordKey));
+
+  const inserts = [];
+  let updated = 0;
+  for (const word of words) {
+    const id = existing.get(wordKey(word));
+    if (!id) {
+      inserts.push({ course_id: courseId, ...word });
       continue;
     }
+    const patched = await req('PATCH', `/course_vocabulary_items?id=eq.${id}`, word, 'return=minimal');
+    if (patched.status >= 300) throw new Error(`Word update failed for ${word.word_zh}: ${patched.body}`);
+    updated += 1;
+  }
 
-    console.log(`  ✅ Course: "${course.name}" (${courseId})`);
+  let inserted = 0;
+  for (let i = 0; i < inserts.length; i += 100) {
+    const batch = inserts.slice(i, i + 100);
+    const res = await req('POST', '/course_vocabulary_items', batch, 'return=minimal');
+    if (res.status >= 300) throw new Error(`Word insert batch failed: ${res.body}`);
+    inserted += batch.length;
+  }
 
-    // 2. Insert vocabulary items for this course
-    const items = course.words.map((w, i) => ({
-      course_id: courseId,
-      word_zh: w.word_zh,
-      word_pinyin: w.word_pinyin,
-      word_en: w.word_en,
-      example_sentence: w.example_sentence,
-      hsk_level: course.difficulty_level,
-      sort_order: i + 1,
-    }));
+  const staleIds = [...existing.entries()]
+    .filter(([key]) => !desiredKeys.has(key))
+    .map(([, id]) => id);
+  let deleted = 0;
+  for (let i = 0; i < staleIds.length; i += 100) {
+    const ids = staleIds.slice(i, i + 100).join(',');
+    const res = await req('DELETE', `/course_vocabulary_items?id=in.(${ids})`, null, 'return=minimal');
+    if (res.status >= 300) throw new Error(`Stale word delete failed: ${res.body}`);
+    deleted += staleIds.slice(i, i + 100).length;
+  }
 
-    const ir = await req('POST', '/course_vocabulary_items', items, 'resolution=ignore-duplicates,return=minimal');
-    if (ir.status >= 300) {
-      console.error(`   ❌ Words failed: ${ir.body.slice(0, 120)}`);
+  return { inserted, updated, deleted };
+}
+
+async function seedThematicCourse(courseData) {
+  const { name, name_vi, description, description_vi, difficulty_level, words } = courseData;
+
+  // Look up existing course by name
+  const found = await req('GET', `/vocabulary_courses?select=id&creator_id=is.null&name=eq.${encodeURIComponent(name)}&limit=1`, null, 'return=representation');
+  if (found.status >= 300) throw new Error(`Thematic course lookup failed for "${name}": ${found.body}`);
+  const existing = JSON.parse(found.body)[0];
+
+  let courseId;
+  if (existing?.id) {
+    const patched = await req('PATCH', `/vocabulary_courses?id=eq.${existing.id}`, {
+      name, name_vi, description, description_vi, difficulty_level, is_published: true, creator_id: null,
+    }, 'return=minimal');
+    if (patched.status >= 300) throw new Error(`Thematic course update failed for "${name}": ${patched.body}`);
+    courseId = existing.id;
+  } else {
+    const created = await req('POST', '/vocabulary_courses', {
+      name, name_vi, description, description_vi, difficulty_level, is_published: true, creator_id: null,
+    });
+    if (created.status >= 300) throw new Error(`Thematic course insert failed for "${name}": ${created.body}`);
+    courseId = JSON.parse(created.body)[0].id;
+  }
+
+  // Fetch existing words to decide insert vs update
+  const existingWordsRes = await req('GET', `/course_vocabulary_items?select=id,word_zh&course_id=eq.${courseId}`);
+  if (existingWordsRes.status >= 300) throw new Error(`Word lookup failed for "${name}": ${existingWordsRes.body}`);
+  const existingWords = JSON.parse(existingWordsRes.body);
+  const existingMap = new Map(existingWords.map((w) => [w.word_zh, w.id]));
+
+  let inserted = 0, updated = 0;
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    const row = { course_id: courseId, word_zh: w.word_zh, word_pinyin: w.word_pinyin, word_en: w.word_en, word_vi: w.word_vi, sort_order: i + 1 };
+    if (existingMap.has(w.word_zh)) {
+      const upd = await req('PATCH', `/course_vocabulary_items?id=eq.${existingMap.get(w.word_zh)}`, row, 'return=minimal');
+      if (upd.status >= 300) throw new Error(`Word update failed: ${upd.body}`);
+      updated++;
     } else {
-      console.log(`     📚 ${items.length} words inserted`);
+      const ins = await req('POST', '/course_vocabulary_items', row);
+      if (ins.status >= 300) throw new Error(`Word insert failed: ${ins.body}`);
+      inserted++;
     }
   }
 
-  console.log('\n🎉 Done! Seeded 6 HSK courses + 3 thematic courses (Kitchen & Food, Numbers & Time, Colors & Shapes).');
+  return { courseId, inserted, updated };
 }
 
-main().catch((err) => { console.error('❌', err.message); process.exit(1); });
+async function main() {
+  const exportCourses = [];
+  const hskLevels = [1, 2, 3, 4, 5, 6];
+
+  for (const level of hskLevels) {
+    const pdfPath = PDF_PATHS[level];
+    if (!fs.existsSync(pdfPath)) {
+      console.log(`HSK ${level}: PDF not found at ${pdfPath}, skipping.`);
+      continue;
+    }
+
+    const words = parseVocabularyPdf(level);
+    const expected = EXPECTED_COUNTS[level];
+    const countStatus = words.length === expected ? 'ok' : `expected ${expected}`;
+    console.log(`HSK ${level}: parsed ${words.length} rows (${countStatus})`);
+
+    if (DRY_RUN && !EXPORT_JSON_PATH) continue;
+
+    await translateToVietnamese(words);
+
+    if (EXPORT_JSON_PATH) {
+      exportCourses.push({
+        ...COURSE_META[level],
+        difficulty_level: level,
+        words,
+      });
+      continue;
+    }
+
+    const courseId = await upsertCourse(level);
+    const result = await upsertWords(courseId, words);
+    console.log(`HSK ${level}: ${result.inserted} inserted, ${result.updated} updated, ${result.deleted} stale deleted`);
+  }
+
+  if (EXPORT_JSON_PATH) {
+    fs.writeFileSync(EXPORT_JSON_PATH, `${JSON.stringify(exportCourses, null, 2)}\n`);
+    console.log(`Exported bilingual course content to ${EXPORT_JSON_PATH}`);
+    return;
+  }
+
+  // Seed thematic courses (no PDFs required; always run unless DRY_RUN without SEED_THEMATIC=1)
+  if (!DRY_RUN || ENV['SEED_THEMATIC'] === '1') {
+    console.log('\nSeeding thematic courses…');
+    for (const courseData of THEMATIC_COURSES) {
+      if (DRY_RUN) {
+        console.log(`[DRY RUN] Would seed thematic course: "${courseData.name}" (${courseData.words.length} words)`);
+        continue;
+      }
+      const { courseId, inserted, updated } = await seedThematicCourse(courseData);
+      console.log(`Thematic "${courseData.name}": ${inserted} inserted, ${updated} updated (id=${courseId})`);
+    }
+  }
+
+  console.log(DRY_RUN ? 'Dry run complete. No translations or DB writes performed.' : 'Seed complete.');
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
