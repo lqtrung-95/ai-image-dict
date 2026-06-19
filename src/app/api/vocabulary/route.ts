@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     let listId: string | null = null;
     let search: string | null = null;
+    const locale = searchParams.get('locale') || 'en';
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100); // Max 100
     const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0); // Min 0
 
@@ -162,6 +163,24 @@ export async function GET(request: NextRequest) {
       }[];
     }
 
+    // For VI locale, overlay word_vi from course_vocabulary_items where available
+    let wordViMap: Map<string, string> = new Map();
+    if (locale === 'vi' && (data || []).length > 0) {
+      const wordZhSet = (data || []).map((item: VocabularyItemRaw) => item.word_zh);
+      const { data: courseWords } = await supabaseAdmin
+        .from('course_vocabulary_items')
+        .select('word_zh, word_vi')
+        .in('word_zh', wordZhSet)
+        .not('word_vi', 'is', null);
+      if (courseWords) {
+        for (const cw of courseWords) {
+          if (cw.word_vi && !wordViMap.has(cw.word_zh)) {
+            wordViMap.set(cw.word_zh, cw.word_vi);
+          }
+        }
+      }
+    }
+
     const items = (data || []).map((item: VocabularyItemRaw) => {
       const photoAnalysis = item.detected_objects?.photo_analyses;
       // Map snake_case database fields to camelCase for frontend
@@ -170,7 +189,7 @@ export async function GET(request: NextRequest) {
         userId: item.user_id,
         wordZh: item.word_zh,
         wordPinyin: item.word_pinyin,
-        wordEn: item.word_en,
+        wordEn: wordViMap.get(item.word_zh) ?? item.word_en,
         exampleSentence: item.example_sentence,
         isLearned: item.is_learned,
         createdAt: item.created_at,
