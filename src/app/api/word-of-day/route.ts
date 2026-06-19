@@ -17,11 +17,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const locale = request.nextUrl.searchParams.get('locale') || 'en';
     const today = new Date().toISOString().split('T')[0];
 
     // Deterministic per-day pick from the curated list
     const seed = parseInt(today.split('-').join(''), 10);
-    const word = HSK_SEED_WORDS[seed % HSK_SEED_WORDS.length];
+    const rawWord = HSK_SEED_WORDS[seed % HSK_SEED_WORDS.length];
+
+    // Return locale-appropriate translation fields
+    const word = {
+      ...rawWord,
+      word_en: locale === 'vi' ? (rawWord.word_vi ?? rawWord.word_en) : rawWord.word_en,
+      example_sentence_en: locale === 'vi'
+        ? (rawWord.example_sentence_vi ?? rawWord.example_sentence_en)
+        : rawWord.example_sentence_en,
+    };
 
     // Tell the client whether the user already has this word, so the card
     // can hide the "Save" action for words already in their library.

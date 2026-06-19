@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import { compressImage, extractBase64 } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
 
@@ -40,6 +41,7 @@ export function useAnalyze() {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const locale = useLocale();
 
   const analyze = useCallback(async (imageData: string) => {
     setStage('analyzing');
@@ -52,7 +54,7 @@ export function useAnalyze() {
 
       const response = await apiFetch('/api/analyze', {
         method: 'POST',
-        body: JSON.stringify({ image: base64 }),
+        body: JSON.stringify({ image: base64, locale }),
       });
 
       const data = await response.json();

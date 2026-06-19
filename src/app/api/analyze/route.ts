@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { image } = await request.json();
+    const { image, locale } = await request.json();
     if (!image) {
       return NextResponse.json({ error: 'Image required' }, { status: 400 });
     }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const base64Image = extractBase64(image);
 
     // Analyze with Groq AI
-    const analysis = await analyzeImage(base64Image);
+    const analysis = await analyzeImage(base64Image, locale || 'en');
 
     // Upload image to Supabase Storage
     const fileName = `${user.id}/${Date.now()}.jpg`;

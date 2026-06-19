@@ -12,10 +12,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Search, Settings, LogOut } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import { MobileSidebar } from './MobileSidebar';
+import { LocaleSwitcher } from '@/components/locale-switcher-dropdown';
 
 interface Profile {
   id: string;
@@ -27,6 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const router = useRouter();
+  const t = useTranslations('nav');
 
   useEffect(() => {
     if (user) fetchProfile();
@@ -73,7 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#bacbbe]" />
             <input
               className="w-full bg-[#1c2024] border border-white/5 rounded-lg pl-9 pr-4 py-2 text-sm text-[#e0e2e8] placeholder:text-[#bacbbe] focus:outline-none focus:ring-1 focus:ring-[#76ffbb]/50"
-              placeholder="Search vocabulary, characters..."
+              placeholder={t('searchPlaceholder')}
               type="text"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -85,8 +88,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* Right: avatar dropdown */}
+        {/* Right: locale switcher + avatar dropdown */}
         <div className="flex items-center gap-4 ml-auto">
+          <LocaleSwitcher />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-[#76ffbb]/50">
@@ -111,7 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={() => router.push('/settings')}
               >
                 <Settings size={16} className="mr-2" />
-                Settings
+                {t('settings')}
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-white/5" />
               <DropdownMenuItem
@@ -119,7 +123,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={signOut}
               >
                 <LogOut size={16} className="mr-2" />
-                Sign out
+                {t('signOut')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

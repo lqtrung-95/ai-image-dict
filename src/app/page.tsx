@@ -5,7 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { LocaleSwitcher } from '@/components/locale-switcher-dropdown';
 import { HeroSection } from '@/components/landing/hero-section';
 import { HowItWorksSection } from '@/components/landing/how-it-works-section';
 import { FeaturesSection } from '@/components/landing/features-section';
@@ -14,6 +16,7 @@ import { HskLevelsSection, StatsSection, CtaSection, LandingFooter } from '@/com
 export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const t = useTranslations('landing');
   const [activeWordIndex, setActiveWordIndex] = useState(0);
 
   useEffect(() => {
@@ -42,14 +45,15 @@ export default function HomePage() {
           <span className="text-base font-bold text-[#76ffbb]">Snap Mandarin</span>
         </div>
         <div className="flex items-center gap-3">
+          <LocaleSwitcher />
           <Link href="/login">
             <Button variant="ghost" className="text-[#bacbbe] hover:text-[#e0e2e8] hover:bg-[#272a2e]">
-              Sign In
+              {t('signIn')}
             </Button>
           </Link>
           <Link href="/signup">
             <Button className="bg-[#76ffbb] text-[#003822] font-semibold hover:opacity-90">
-              Get Started Free
+              {t('getStartedFree')}
             </Button>
           </Link>
         </div>

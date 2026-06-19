@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Camera, Upload, ArrowLeft, Sparkles } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
+import { useLocale } from 'next-intl';
 
 interface AnalysisData {
   id: string;
@@ -70,6 +71,7 @@ export default function TryPage() {
   const router = useRouter();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const locale = useLocale();
   const [mode, setMode] = useState<Mode>('choose');
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +113,7 @@ export default function TryPage() {
 
       const response = await apiFetch('/api/analyze-trial', {
         method: 'POST',
-        body: JSON.stringify({ image: base64 }),
+        body: JSON.stringify({ image: base64, locale }),
       });
 
       if (!response.ok) {

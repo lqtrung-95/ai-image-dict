@@ -262,6 +262,8 @@ export async function POST(
   try {
     const { id } = await params;
     const storyId = validateUUID(id);
+    const body = await request.json().catch(() => ({}));
+    const locale = body.locale || 'en';
     const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
@@ -290,7 +292,7 @@ export async function POST(
     }
 
     // Generate story with AI
-    const generatedStory = await generateStoryFromWords(words, story.title);
+    const generatedStory = await generateStoryFromWords(words, story.title, locale);
 
     // Save generated content
     const { data: updatedStory, error: updateError } = await supabase

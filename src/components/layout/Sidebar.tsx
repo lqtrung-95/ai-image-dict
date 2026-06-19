@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import {
@@ -17,22 +18,25 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-const NAV_ITEMS: { href: string; icon: LucideIcon; label: string }[] = [
-  { href: '/vocabulary', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/capture', icon: Camera, label: 'Capture' },
-  { href: '/practice', icon: GraduationCap, label: 'Practice' },
-  { href: '/stories', icon: BookOpen, label: 'Stories' },
-  { href: '/progress', icon: TrendingUp, label: 'Progress' },
-  { href: '/courses', icon: Users, label: 'Community' },
-  { href: '/games', icon: Puzzle, label: 'Games' },
+type NavItem = { href: string; icon: LucideIcon; labelKey: string };
+
+const NAV_ITEMS: NavItem[] = [
+  { href: '/vocabulary', icon: LayoutDashboard, labelKey: 'dashboard' },
+  { href: '/capture', icon: Camera, labelKey: 'capture' },
+  { href: '/practice', icon: GraduationCap, labelKey: 'practice' },
+  { href: '/stories', icon: BookOpen, labelKey: 'stories' },
+  { href: '/progress', icon: TrendingUp, labelKey: 'progress' },
+  { href: '/courses', icon: Users, labelKey: 'community' },
+  { href: '/games', icon: Puzzle, labelKey: 'games' },
 ];
 
-const BOTTOM_ITEMS: { href: string; icon: LucideIcon; label: string }[] = [
-  { href: '/settings', icon: Settings, label: 'Settings' },
+const BOTTOM_ITEMS: NavItem[] = [
+  { href: '/settings', icon: Settings, labelKey: 'settings' },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations('nav');
 
   const isActive = (href: string) => {
     if (href === '/vocabulary') return pathname === '/vocabulary' || pathname === '/';
@@ -57,14 +61,14 @@ export function Sidebar() {
         <Link href="/capture">
           <button className="w-full py-2.5 bg-[#76ffbb] text-[#003822] font-semibold rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity text-sm">
             <CameraIcon size={18} />
-            New Capture
+            {t('newCapture')}
           </button>
         </Link>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 flex flex-col gap-0.5 px-2">
-        {NAV_ITEMS.map(({ href, icon: Icon, label }) => (
+        {NAV_ITEMS.map(({ href, icon: Icon, labelKey }) => (
           <Link
             key={href}
             href={href}
@@ -76,14 +80,14 @@ export function Sidebar() {
             )}
           >
             <Icon size={20} />
-            <span>{label}</span>
+            <span>{t(labelKey as Parameters<typeof t>[0])}</span>
           </Link>
         ))}
       </nav>
 
       {/* Bottom */}
       <div className="px-2 mt-4 pt-4 border-t border-white/5">
-        {BOTTOM_ITEMS.map(({ href, icon: Icon, label }) => (
+        {BOTTOM_ITEMS.map(({ href, icon: Icon, labelKey }) => (
           <Link
             key={href}
             href={href}
@@ -95,7 +99,7 @@ export function Sidebar() {
             )}
           >
             <Icon size={20} />
-            <span>{label}</span>
+            <span>{t(labelKey as Parameters<typeof t>[0])}</span>
           </Link>
         ))}
       </div>

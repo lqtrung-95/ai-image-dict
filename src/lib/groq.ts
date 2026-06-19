@@ -1,6 +1,12 @@
 import { aiClient, VISION_MODEL, TEXT_MODEL } from './ai-client';
 
-export async function analyzeImage(base64Image: string) {
+export async function analyzeImage(base64Image: string, locale = 'en') {
+  const isVietnamese = locale === 'vi';
+  const translationLang = isVietnamese ? 'Vietnamese' : 'English';
+  const sceneDescLang = isVietnamese
+    ? 'Vietnamese (tiếng Việt)'
+    : 'English';
+
   const response = await aiClient.chat.completions.create({
     model: VISION_MODEL,
     messages: [
@@ -11,6 +17,8 @@ export async function analyzeImage(base64Image: string) {
             type: 'text',
             text: `Analyze this image and identify all visible objects, colors, and items.
 
+LANGUAGE INSTRUCTION: All "en" fields and "sceneDescription" must be written in ${translationLang}.
+
 IMPORTANT RULES - FOLLOW STRICTLY:
 1. For "zh" field: Return ONLY the single Chinese WORD (noun/adjective), NEVER a sentence. Examples: "盘子" (plate), "叉子" (fork), "刀" (knife), "书" (book), "包" (bag), "蓝色" (blue). ABSOLUTELY NO SENTENCES like "我用盘子装菜" or "我喜欢看书".
 2. For "example" field: This is where you put the complete sentence using the word.
@@ -18,11 +26,11 @@ IMPORTANT RULES - FOLLOW STRICTLY:
 4. Colors should be color adjectives visible.
 
 For each item, provide:
-- en: English word (single noun or adjective)
+- en: ${translationLang} word (single noun or adjective)
 - zh: Chinese word ONLY (1-3 characters max for objects, 2 characters for colors). NEVER include 我, 用, 喜欢, 是, etc.
 - pinyin: Pinyin with tone marks for the word only
 - hskLevel: 1-6 or null
-- example: Complete sentence USING the word (different from zh field)
+- example: Complete sentence USING the word (different from zh field), with "en" in ${translationLang}
 
 Example CORRECT output:
 { "en": "plate", "zh": "盘子", "pinyin": "pánzi", "hskLevel": 2, "example": { "zh": "我用盘子装菜。", "pinyin": "Wǒ yòng pánzi zhuāng cài.", "en": "I use a plate to serve food." } }
@@ -30,18 +38,18 @@ Example CORRECT output:
 Example INCORRECT (NEVER DO THIS):
 { "zh": "我用盘子装菜" } - This is a sentence, NOT a word!
 
-REQUIRED: Always fill sceneDescription, sceneDescriptionZh, and sceneDescriptionPinyin — write 1 short sentence describing the overall scene (even for simple photos, e.g. "A red apple on a wooden table.").
+REQUIRED: Always fill sceneDescription, sceneDescriptionZh, and sceneDescriptionPinyin — write 1 short sentence in ${sceneDescLang} describing the overall scene.
 
 Return ONLY valid JSON:
 {
-  "sceneDescription": "Scene description in English (REQUIRED, always fill)",
+  "sceneDescription": "Scene description in ${translationLang} (REQUIRED, always fill)",
   "sceneDescriptionZh": "一句话描述场景（必填）",
   "sceneDescriptionPinyin": "Yī jù huà miáoshù chǎngjǐng",
   "objects": [
-    { "en": "word", "zh": "词", "pinyin": "cí", "confidence": 0.95, "hskLevel": 1, "example": { "zh": "Example sentence.", "pinyin": "Example pinyin.", "en": "Example translation." } }
+    { "en": "word in ${translationLang}", "zh": "词", "pinyin": "cí", "confidence": 0.95, "hskLevel": 1, "example": { "zh": "Example sentence.", "pinyin": "Example pinyin.", "en": "Example translation in ${translationLang}." } }
   ],
   "colors": [
-    { "en": "color", "zh": "颜色", "pinyin": "yánsè", "hskLevel": 1, "example": { "zh": "Example.", "pinyin": "Example.", "en": "Example." } }
+    { "en": "color in ${translationLang}", "zh": "颜色", "pinyin": "yánsè", "hskLevel": 1, "example": { "zh": "Example.", "pinyin": "Example.", "en": "Example in ${translationLang}." } }
   ],
   "actions": []
 }`,
@@ -203,8 +211,11 @@ function extractItems(arrayContent: string): Array<Record<string, unknown>> {
 
 export async function generateStoryFromWords(
   words: Array<{ zh: string; pinyin: string; en: string }>,
-  storyTitle: string
+  storyTitle: string,
+  locale = 'en'
 ) {
+  const isVietnamese = locale === 'vi';
+  const translationLang = isVietnamese ? 'Vietnamese (tiếng Việt)' : 'English';
   const wordList = words.map(w => `${w.zh} (${w.pinyin}) - ${w.en}`).join('\n');
 
   const response = await aiClient.chat.completions.create({
@@ -213,6 +224,8 @@ export async function generateStoryFromWords(
       {
         role: 'user',
         content: `You are a Chinese language teacher writing a short story to help learners remember vocabulary.
+
+LANGUAGE INSTRUCTION: The "storyEn" field must be a natural translation in ${translationLang}.
 
 Story title: "${storyTitle}"
 
@@ -233,7 +246,7 @@ REQUIRED OUTPUT FORMAT — return EXACTLY this JSON, nothing else:
 {
   "storyZh": "Complete Chinese story as a single string",
   "storyPinyin": "Full pinyin with tone marks as a single string",
-  "storyEn": "Natural English translation as a single string",
+  "storyEn": "Natural translation in ${translationLang} as a single string",
   "usedWords": ["list", "of", "Chinese", "words", "actually", "used"]
 }
 

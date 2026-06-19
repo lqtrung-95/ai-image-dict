@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Manrope, JetBrains_Mono } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import { Toaster } from '@/components/ui/sonner';
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
 import { OnlineStatusProvider } from '@/components/online-status-provider';
@@ -104,19 +106,24 @@ export const viewport: Viewport = {
   themeColor: '#76ffbb',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" className="dark">
-<body className={`${manrope.variable} ${jetbrainsMono.variable} font-[family-name:var(--font-manrope)] antialiased bg-[#101417] text-[#e0e2e8]`}>
-        <OnlineStatusProvider>
-          {children}
-          <Toaster richColors position="top-center" />
-          <ServiceWorkerRegistration />
-        </OnlineStatusProvider>
+    <html lang={locale} className="dark">
+      <body className={`${manrope.variable} ${jetbrainsMono.variable} font-[family-name:var(--font-manrope)] antialiased bg-[#101417] text-[#e0e2e8]`}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <OnlineStatusProvider>
+            {children}
+            <Toaster richColors position="top-center" />
+            <ServiceWorkerRegistration />
+          </OnlineStatusProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

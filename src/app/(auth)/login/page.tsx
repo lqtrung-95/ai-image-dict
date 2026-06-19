@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AuthDivider, SocialAuthButtons } from '@/components/auth/social-auth-buttons';
+import { useTranslations } from 'next-intl';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations('auth');
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/';
   const authError = searchParams.get('error');
@@ -65,7 +67,7 @@ function LoginForm() {
 
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[#e0e2e8]">
-                Email
+                {t('email')}
               </Label>
               <Input
                 id="email"
@@ -81,13 +83,13 @@ function LoginForm() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-[#e0e2e8]">
-                  Password
+                  {t('password')}
                 </Label>
                 <Link
                   href="/forgot-password"
                   className="text-sm text-[#76ffbb] hover:text-[#76ffbb]/80"
                 >
-                  Forgot password?
+                  {t('forgotPassword')}
                 </Link>
               </div>
               <Input
@@ -106,14 +108,14 @@ function LoginForm() {
               className="w-full bg-[#76ffbb] hover:opacity-90 text-[#003822] font-semibold"
               disabled={loading}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? t('signingIn') : t('signIn')}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-[#bacbbe]">
-            Don&apos;t have an account?{' '}
+            {t('dontHaveAccount')}{' '}
             <Link href="/signup" className="text-[#76ffbb] hover:text-[#76ffbb]/80 font-medium">
-              Sign up
+              {t('signUp')}
             </Link>
           </div>
         </CardContent>

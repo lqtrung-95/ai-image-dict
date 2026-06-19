@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
 
     const searchParams = request.nextUrl.searchParams;
+    const locale = searchParams.get('locale') || 'en';
     const difficulty = searchParams.get('difficulty');
     const sort = searchParams.get('sort') || 'newest';
     const search = searchParams.get('q');
@@ -99,13 +100,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Transform data
+    // Transform data — serve locale-appropriate name/description
     const courses = (data || []).map(course => ({
       id: course.id,
       creatorId: course.creator_id,
       creatorName: course.profiles?.display_name || 'Anonymous',
-      name: course.name,
-      description: course.description,
+      name: (locale === 'vi' && course.name_vi) ? course.name_vi : course.name,
+      description: (locale === 'vi' && course.description_vi) ? course.description_vi : course.description,
       coverImageUrl: course.cover_image_url,
       difficultyLevel: course.difficulty_level,
       isPublished: course.is_published,
