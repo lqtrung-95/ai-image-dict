@@ -3,9 +3,15 @@ import { aiClient, VISION_MODEL, TEXT_MODEL } from './ai-client';
 export async function analyzeImage(base64Image: string, locale = 'en') {
   const isVietnamese = locale === 'vi';
   const translationLang = isVietnamese ? 'Vietnamese' : 'English';
-  const sceneDescLang = isVietnamese
-    ? 'Vietnamese (tiếng Việt)'
-    : 'English';
+
+  // Locale-specific examples so the model sees the expected output format in the target language
+  const exampleWord = isVietnamese ? 'đĩa' : 'plate';
+  const exampleSentenceEn = isVietnamese ? 'Tôi dùng đĩa để đựng thức ăn.' : 'I use a plate to serve food.';
+  const exampleColor = isVietnamese ? 'màu xanh lam' : 'blue';
+  const exampleColorSentenceEn = isVietnamese ? 'Bầu trời có màu xanh lam.' : 'The sky is blue.';
+  const sceneDescExample = isVietnamese
+    ? 'Hai bàn tay đang cầm nắm nhau trước một ngôi đền cổ.'
+    : 'Two hands are clasped in front of an ancient temple.';
 
   const response = await aiClient.chat.completions.create({
     model: VISION_MODEL,
@@ -17,39 +23,29 @@ export async function analyzeImage(base64Image: string, locale = 'en') {
             type: 'text',
             text: `Analyze this image and identify all visible objects, colors, and items.
 
-LANGUAGE INSTRUCTION: All "en" fields and "sceneDescription" must be written in ${translationLang}.
+⚠️ CRITICAL LANGUAGE RULE: You MUST write ALL "en" fields and "sceneDescription" in ${translationLang.toUpperCase()}. Do NOT use English if the target language is ${translationLang}. This is mandatory.
 
-IMPORTANT RULES - FOLLOW STRICTLY:
-1. For "zh" field: Return ONLY the single Chinese WORD (noun/adjective), NEVER a sentence. Examples: "盘子" (plate), "叉子" (fork), "刀" (knife), "书" (book), "包" (bag), "蓝色" (blue). ABSOLUTELY NO SENTENCES like "我用盘子装菜" or "我喜欢看书".
-2. For "example" field: This is where you put the complete sentence using the word.
-3. Objects should be physical items visible in the image (nouns only).
-4. Colors should be color adjectives visible.
+IMPORTANT RULES:
+1. For "zh" field: Return ONLY the single Chinese WORD (noun/adjective). Examples: "盘子", "叉子", "蓝色". NEVER a full sentence.
+2. For "en" field: The ${translationLang} translation of the Chinese word (single noun or adjective).
+3. For "example.en" field: A complete ${translationLang} sentence using the word.
 
-For each item, provide:
-- en: ${translationLang} word (single noun or adjective)
-- zh: Chinese word ONLY (1-3 characters max for objects, 2 characters for colors). NEVER include 我, 用, 喜欢, 是, etc.
-- pinyin: Pinyin with tone marks for the word only
-- hskLevel: 1-6 or null
-- example: Complete sentence USING the word (different from zh field), with "en" in ${translationLang}
+Example CORRECT output (${translationLang}):
+{ "en": "${exampleWord}", "zh": "盘子", "pinyin": "pánzi", "hskLevel": 2, "example": { "zh": "我用盘子装菜。", "pinyin": "Wǒ yòng pánzi zhuāng cài.", "en": "${exampleSentenceEn}" } }
 
-Example CORRECT output:
-{ "en": "plate", "zh": "盘子", "pinyin": "pánzi", "hskLevel": 2, "example": { "zh": "我用盘子装菜。", "pinyin": "Wǒ yòng pánzi zhuāng cài.", "en": "I use a plate to serve food." } }
-
-Example INCORRECT (NEVER DO THIS):
-{ "zh": "我用盘子装菜" } - This is a sentence, NOT a word!
-
-REQUIRED: Always fill sceneDescription, sceneDescriptionZh, and sceneDescriptionPinyin — write 1 short sentence in ${sceneDescLang} describing the overall scene.
+REQUIRED: Always fill sceneDescription in ${translationLang} — 1 short sentence describing the scene.
+Example sceneDescription: "${sceneDescExample}"
 
 Return ONLY valid JSON:
 {
-  "sceneDescription": "Scene description in ${translationLang} (REQUIRED, always fill)",
+  "sceneDescription": "${sceneDescExample}",
   "sceneDescriptionZh": "一句话描述场景（必填）",
   "sceneDescriptionPinyin": "Yī jù huà miáoshù chǎngjǐng",
   "objects": [
-    { "en": "word in ${translationLang}", "zh": "词", "pinyin": "cí", "confidence": 0.95, "hskLevel": 1, "example": { "zh": "Example sentence.", "pinyin": "Example pinyin.", "en": "Example translation in ${translationLang}." } }
+    { "en": "${exampleWord}", "zh": "盘子", "pinyin": "pánzi", "confidence": 0.95, "hskLevel": 2, "example": { "zh": "我用盘子装菜。", "pinyin": "Wǒ yòng pánzi zhuāng cài.", "en": "${exampleSentenceEn}" } }
   ],
   "colors": [
-    { "en": "color in ${translationLang}", "zh": "颜色", "pinyin": "yánsè", "hskLevel": 1, "example": { "zh": "Example.", "pinyin": "Example.", "en": "Example in ${translationLang}." } }
+    { "en": "${exampleColor}", "zh": "蓝色", "pinyin": "lánsè", "hskLevel": 1, "example": { "zh": "天空是蓝色的。", "pinyin": "Tiānkōng shì lánsè de.", "en": "${exampleColorSentenceEn}" } }
   ],
   "actions": []
 }`,
