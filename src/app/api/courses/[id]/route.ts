@@ -71,30 +71,39 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     //   learning → reviewed at least once, not yet mastered
     //   mastered → is_learned = true
     let annotatedWords = (words || []).map((w) => ({ ...w, state: 'new' as const }));
-    let progress = { total: words?.length || 0, learned: 0, learning: 0, due: 0 };
+    let progress = { total: totalWordCount || 0, learned: 0, learning: 0, due: 0 };
 
-    if (user && words && words.length > 0 && !wordsSearch) {
+    if (user) {
       const todayStr = new Date().toISOString().split('T')[0];
-      const { data: deck } = await supabase
-        .from('vocabulary_items')
-        .select('word_zh, is_learned, last_reviewed_at, next_review_date')
+      // Fetch ALL progress rows for this course (not just current page) for accurate totals
+      const { data: allProgress } = await supabase
+        .from('user_course_word_progress')
+        .select('course_vocabulary_item_id, is_learned, last_reviewed_at, next_review_date')
         .eq('user_id', user.id)
-        .in('word_zh', words.map((w) => w.word_zh));
+        .eq('course_id', id);
 
-      const byZh = new Map((deck ?? []).map((d) => [d.word_zh, d]));
-      annotatedWords = words.map((w) => {
-        const d = byZh.get(w.word_zh);
-        let state: 'new' | 'learning' | 'mastered' = 'new';
-        if (d) {
-          if (d.is_learned) state = 'mastered';
-          else if (d.last_reviewed_at) state = 'learning';
-        }
-        if (state === 'mastered') progress.learned += 1;
-        else if (state === 'learning') progress.learning += 1;
-        const isDue = d && !d.is_learned && (!d.next_review_date || d.next_review_date <= todayStr);
+      const byItemId = new Map((allProgress ?? []).map((d) => [d.course_vocabulary_item_id, d]));
+
+      // Compute full-course totals
+      for (const d of allProgress ?? []) {
+        if (d.is_learned) progress.learned += 1;
+        else if (d.last_reviewed_at) progress.learning += 1;
+        const isDue = !d.is_learned && (!d.next_review_date || d.next_review_date <= todayStr);
         if (isDue) progress.due += 1;
-        return { ...w, state };
-      });
+      }
+
+      // Annotate only the current page words with per-word state
+      if (words && words.length > 0 && !wordsSearch) {
+        annotatedWords = words.map((w) => {
+          const d = byItemId.get(w.id);
+          let state: 'new' | 'learning' | 'mastered' = 'new';
+          if (d) {
+            if (d.is_learned) state = 'mastered';
+            else if (d.last_reviewed_at) state = 'learning';
+          }
+          return { ...w, state };
+        });
+      }
     }
 
     // Check if user is subscribed

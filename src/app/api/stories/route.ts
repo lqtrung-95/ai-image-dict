@@ -58,6 +58,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const FREE_STORY_LIMIT = 3;
+
 // POST /api/stories - Create a new photo story
 export async function POST(request: NextRequest) {
   try {
@@ -68,6 +70,31 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+
+    // Check premium status and enforce story limit for free users
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_premium')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.is_premium) {
+      const { count } = await supabase
+        .from('photo_stories')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if ((count ?? 0) >= FREE_STORY_LIMIT) {
+        return NextResponse.json(
+          {
+            error: 'Story limit reached',
+            code: 'STORY_LIMIT_EXCEEDED',
+            limit: FREE_STORY_LIMIT,
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     const body = await request.json();
     const title = sanitizeString(body.title, 100);
