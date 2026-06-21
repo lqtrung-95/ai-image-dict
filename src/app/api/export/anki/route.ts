@@ -19,10 +19,15 @@ export async function GET(request: NextRequest) {
     const listId = searchParams.get('list');
     const hskLevel = searchParams.get('hsk');
 
-    // Build query
+    // Build query — join through detected_objects to photo_analyses to get original photo
     let query = supabase
       .from('vocabulary_items')
-      .select('*')
+      .select(`
+        *,
+        detected_objects(
+          photo_analyses(image_url)
+        )
+      `)
       .eq('user_id', user.id);
 
     if (listId) {
@@ -49,14 +54,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate TSV content for Anki
-    // Format: Front (Chinese + Pinyin) \t Back (English) \t Tags
-    const rows = (vocabulary || []).map((item) => {
-      const front = `${item.word_zh}<br><span style="color: #888;">${item.word_pinyin}</span>`;
-      const back = item.word_en;
+    // Format: Front (photo + Chinese + Pinyin) \t Back (English + example) \t Tags
+    const rows = (vocabulary || []).map((item: any) => {
+      const photoUrl = item.detected_objects?.photo_analyses?.image_url;
+      const photoHtml = photoUrl
+        ? `<img src="${photoUrl}" style="max-width:300px;max-height:200px;border-radius:8px;margin-bottom:8px;"><br>`
+        : '';
+      const front = `${photoHtml}${item.word_zh}<br><span style="color: #888;">${item.word_pinyin}</span>`;
       const example = item.example_sentence ? `<br><br><em>${item.example_sentence}</em>` : '';
+      const back = `${item.word_en}${example}`;
       const tags = item.hsk_level ? `HSK${item.hsk_level}` : '';
 
-      return `${front}\t${back}${example}\t${tags}`;
+      return `${front}\t${back}\t${tags}`;
     });
 
     // Add header
